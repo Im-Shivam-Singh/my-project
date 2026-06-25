@@ -18,6 +18,10 @@ import {
   Moon,
   Globe,
   Crown,
+  Trophy,
+  Zap,
+  Award,
+  Rocket,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -30,6 +34,7 @@ export function ProfileScreen() {
   const currentUser = useAppStore((s) => s.currentUser);
   const setScreen = useAppStore((s) => s.setScreen);
   const logout = useAppStore((s) => s.logout);
+  const savedCount = useAppStore((s) => s.savedPartyIds.length);
 
   const { data } = useQuery({
     queryKey: ["user", currentUser?.id],
@@ -40,6 +45,66 @@ export function ProfileScreen() {
   const user = data?.user ?? currentUser;
 
   if (!user) return null;
+
+  const vibeScore = Math.min(999, user.vibes + user.hosted * 10);
+  const tiers = [
+    { name: "Rookie", min: 0, icon: Rocket, color: "from-slate-400 to-slate-500" },
+    { name: "Riser", min: 50, icon: Zap, color: "from-cyan-400 to-blue-500" },
+    { name: "Vibe", min: 150, icon: Sparkles, color: "from-violet-400 to-purple-500" },
+    { name: "Legend", min: 400, icon: Crown, color: "from-amber-400 to-pink-500" },
+  ];
+  const currentTier = [...tiers].reverse().find((t) => vibeScore >= t.min) || tiers[0];
+  const nextTier = tiers.find((t) => t.min > vibeScore);
+  const tierProgress = nextTier
+    ? Math.round(
+        ((vibeScore - currentTier.min) / (nextTier.min - currentTier.min)) * 100,
+      )
+    : 100;
+
+  const achievements = [
+    {
+      icon: Rocket,
+      label: "First Steps",
+      desc: "Joined VibeMatch",
+      unlocked: true,
+      color: "text-cyan-400",
+    },
+    {
+      icon: Heart,
+      label: "Curator",
+      desc: "Saved 3+ parties",
+      unlocked: savedCount >= 3,
+      color: "text-rose-400",
+    },
+    {
+      icon: Flame,
+      label: "Host",
+      desc: "Hosted a party",
+      unlocked: user.hosted >= 1,
+      color: "text-amber-400",
+    },
+    {
+      icon: Star,
+      label: "Rising Star",
+      desc: "Reach 100 vibes",
+      unlocked: user.vibes >= 100,
+      color: "text-violet-400",
+    },
+    {
+      icon: Award,
+      label: "Social Butterfly",
+      desc: "5+ conversations",
+      unlocked: false,
+      color: "text-pink-400",
+    },
+    {
+      icon: Crown,
+      label: "Legend",
+      desc: "Reach 400 vibe score",
+      unlocked: vibeScore >= 400,
+      color: "text-amber-300",
+    },
+  ];
 
   return (
     <div className="flex h-full flex-col">
@@ -96,7 +161,7 @@ export function ProfileScreen() {
           <Stat icon={<Star className="h-4 w-4 text-violet" />} label="Rating" value={user.rating.toFixed(1)} />
         </section>
 
-        {/* Vibe score card */}
+        {/* Vibe score card with tier + progress */}
         <section className="mt-4 overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-pink/10 via-violet/10 to-cyan/10 p-5">
           <div className="flex items-center justify-between">
             <div>
@@ -104,18 +169,74 @@ export function ProfileScreen() {
                 Vibe score
               </p>
               <p className="font-display text-3xl font-extrabold">
-                <span className="vibe-gradient-text">
-                  {Math.min(999, user.vibes + user.hosted * 10)}
-                </span>
+                <span className="vibe-gradient-text">{vibeScore}</span>
               </p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl vibe-gradient-bg">
-              <Sparkles className="h-6 w-6 text-white" />
+            <div
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg",
+                currentTier.color,
+              )}
+            >
+              <currentTier.icon className="h-6 w-6 text-white" />
             </div>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Host more parties & get vibes from guests to climb the leaderboard.
+
+          {/* Tier + progress */}
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-semibold text-foreground">
+                {currentTier.name} tier
+              </span>
+              {nextTier ? (
+                <span className="text-muted-foreground">
+                  {nextTier.min - vibeScore} to {nextTier.name}
+                </span>
+              ) : (
+                <span className="text-amber-300">Max tier reached 👑</span>
+              )}
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full vibe-gradient-bg transition-all duration-700"
+                style={{ width: `${tierProgress}%` }}
+              />
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Host parties & get vibes from guests to climb the leaderboard.
           </p>
+        </section>
+
+        {/* Achievements / badges */}
+        <section className="mt-4">
+          <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <Trophy className="h-3.5 w-3.5 text-amber-400" /> Achievements
+          </h3>
+          <div className="grid grid-cols-3 gap-2">
+            {achievements.map((a) => (
+              <div
+                key={a.label}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-2xl border p-3 text-center transition",
+                  a.unlocked
+                    ? "border-border/60 bg-card/60"
+                    : "border-border/40 bg-card/20 opacity-50 grayscale",
+                )}
+              >
+                <div
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-full",
+                    a.unlocked ? "bg-white/5" : "bg-white/5",
+                  )}
+                >
+                  <a.icon className={cn("h-5 w-5", a.unlocked ? a.color : "text-muted-foreground")} />
+                </div>
+                <p className="text-[10px] font-semibold leading-tight">{a.label}</p>
+                <p className="text-[9px] leading-tight text-muted-foreground">{a.desc}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* Activity */}
@@ -145,8 +266,8 @@ export function ProfileScreen() {
             <Row
               icon={<Heart className="h-4 w-4 text-rose-400" />}
               label="Saved parties"
-              sub="Your wishlist"
-              onClick={() => toast.info("Saved parties coming soon")}
+              sub={`${savedCount} saved`}
+              onClick={() => setScreen("saved")}
               last
             />
           </div>

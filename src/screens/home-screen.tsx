@@ -2,10 +2,19 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, X, MapPin, CalendarClock, Flame, TrendingUp } from "lucide-react";
+import {
+  Search,
+  X,
+  MapPin,
+  CalendarClock,
+  Flame,
+  TrendingUp,
+  Heart,
+  Sparkles,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
-import { CITIES, VIBE_TAGS, parseVibes } from "@/lib/types";
+import { CITIES, VIBE_TAGS, VIBE_EMOJI, parseVibes } from "@/lib/types";
 import { PartyCard } from "@/components/vibe/party-card";
 import { EmptyState } from "@/components/vibe/empty-state";
 import { cn } from "@/lib/utils";
@@ -21,6 +30,7 @@ export function HomeScreen() {
   const setSelectedPartyId = useAppStore((s) => s.setSelectedPartyId);
   const setScreen = useAppStore((s) => s.setScreen);
   const openCreate = useAppStore((s) => s.openCreate);
+  const savedCount = useAppStore((s) => s.savedPartyIds.length);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["parties", cityFilter, vibeFilter, searchQuery],
@@ -34,7 +44,6 @@ export function HomeScreen() {
 
   const parties = data?.parties ?? [];
 
-  // "Hot tonight" = parties happening today/tomorrow
   const hotTonight = useMemo(
     () =>
       parties.filter((p) => {
@@ -56,10 +65,10 @@ export function HomeScreen() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-20 space-y-3 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 space-y-3 px-4 pb-2 pt-[max(env(safe-area-inset-top),12px)]">
         <div className="glass -mx-4 px-4 pb-3 pt-2 border-b border-border/60">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
                 Tonight in {cityFilter || "India"}
               </p>
@@ -67,13 +76,27 @@ export function HomeScreen() {
                 <span className="vibe-gradient-text">Explore</span> vibes
               </h1>
             </div>
-            <button
-              onClick={openCreate}
-              className="flex h-10 items-center gap-1.5 rounded-full vibe-gradient-bg px-3 text-xs font-semibold text-white shadow-[0_8px_24px_-6px_rgba(236,72,153,0.6)]"
-            >
-              <Flame className="h-4 w-4" />
-              Host
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setScreen("saved")}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-card/40 text-foreground transition hover:border-pink/40"
+                aria-label="Saved parties"
+              >
+                <Heart className="h-4 w-4" />
+                {savedCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
+                    {savedCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={openCreate}
+                className="flex h-10 items-center gap-1.5 rounded-full vibe-gradient-bg px-3 text-xs font-semibold text-white shadow-[0_8px_24px_-6px_rgba(236,72,153,0.6)]"
+              >
+                <Flame className="h-4 w-4" />
+                Host
+              </button>
+            </div>
           </div>
 
           {/* Search */}
@@ -96,8 +119,27 @@ export function HomeScreen() {
           </div>
         </div>
 
+        {/* Stories-style vibe carousel */}
+        <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 py-1">
+          <VibeStory
+            label="All"
+            active={!vibeFilter}
+            onClick={() => setVibeFilter(null)}
+            highlight
+          />
+          {VIBE_TAGS.map((v) => (
+            <VibeStory
+              key={v}
+              label={v}
+              emoji={VIBE_EMOJI[v]}
+              active={vibeFilter === v}
+              onClick={() => setVibeFilter(vibeFilter === v ? null : v)}
+            />
+          ))}
+        </div>
+
         {/* City chips */}
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
           <CityChip
             label="All cities"
             active={!cityFilter}
@@ -109,24 +151,6 @@ export function HomeScreen() {
               label={c}
               active={cityFilter === c}
               onClick={() => setCityFilter(cityFilter === c ? null : c)}
-            />
-          ))}
-        </div>
-
-        {/* Vibe chips */}
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-          <CityChip
-            label="All vibes"
-            icon={<SlidersHorizontal className="h-3 w-3" />}
-            active={!vibeFilter}
-            onClick={() => setVibeFilter(null)}
-          />
-          {VIBE_TAGS.map((v) => (
-            <CityChip
-              key={v}
-              label={v}
-              active={vibeFilter === v}
-              onClick={() => setVibeFilter(vibeFilter === v ? null : v)}
             />
           ))}
         </div>
@@ -186,6 +210,22 @@ export function HomeScreen() {
 
         {!isLoading && !isError && parties.length > 0 && (
           <>
+            {vibeFilter && (
+              <div className="flex items-center justify-between rounded-2xl border border-pink/30 bg-pink/5 px-3 py-2">
+                <span className="inline-flex items-center gap-1.5 text-xs text-foreground">
+                  <Sparkles className="h-3.5 w-3.5 text-pink" />
+                  Filtered by{" "}
+                  <span className="font-semibold">{vibeFilter}</span>
+                </span>
+                <button
+                  onClick={() => setVibeFilter(null)}
+                  className="text-xs font-medium text-pink hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
             {hotTonight.length > 0 && (
               <section>
                 <div className="mb-2 flex items-center gap-1.5">
@@ -221,6 +261,48 @@ export function HomeScreen() {
         )}
       </div>
     </div>
+  );
+}
+
+function VibeStory({
+  label,
+  emoji,
+  active,
+  onClick,
+  highlight,
+}: {
+  label: string;
+  emoji?: string;
+  active?: boolean;
+  onClick: () => void;
+  highlight?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex shrink-0 flex-col items-center gap-1.5"
+    >
+      <span
+        className={cn(
+          "flex h-16 w-16 items-center justify-center rounded-full border-2 text-2xl transition",
+          active
+            ? "border-pink vibe-gradient-bg shadow-[0_8px_24px_-8px_rgba(236,72,153,0.6)]"
+            : highlight
+              ? "border-violet/50 bg-violet/10"
+              : "border-border bg-card/60 hover:border-pink/40",
+        )}
+      >
+        {emoji || (highlight ? <Sparkles className="h-6 w-6 text-violet" /> : "✨")}
+      </span>
+      <span
+        className={cn(
+          "text-[10px] font-medium",
+          active ? "text-pink" : "text-muted-foreground",
+        )}
+      >
+        {label}
+      </span>
+    </button>
   );
 }
 

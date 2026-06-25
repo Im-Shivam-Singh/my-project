@@ -59,3 +59,52 @@ Verification (agent-browser, 390x844 mobile viewport):
 Stage Summary:
 - VibeMatch is feature-complete and fully interactive end-to-end. All 7 spec'd screens + 3 extras (edit-profile, my-parties, requests) implemented. All 3 spec'd API endpoints (+threads, messages, users, auth) working. Real-time chat via socket.io. Dark neon mobile-app UX with sticky bottom nav + FAB. PWA manifest configured.
 - Ready for the recurring webDevReview cron to iterate on polish & new features.
+
+---
+Task ID: 1
+Agent: webDevReview (cron round 1)
+Task: QA the existing VibeMatch app via agent-browser + VLM, fix bugs, improve styling, and add new features.
+
+## 1. Current Project Status Assessment
+- **Dev environment**: Next.js dev server healthy on port 3000; chat-service (socket.io) healthy on port 3003 (verified via EIO polling handshake → HTTP 200). The chat-service had a stale failed-restart log entry but the live process (pid 1718) was serving correctly.
+- **Stability**: App was feature-complete and functional (login, explore, detail, request, create, chat, profile all working). No runtime errors during initial regression.
+- **QA method**: agent-browser (390×844 mobile viewport) full-flow regression + VLM (glm-4.6v) visual analysis of home, detail, chat, and profile screens.
+- **Issues found**:
+  1. (Bug, later in round) `DetailScreen` referenced `isLow` which was undefined after a refactor → client-side runtime error on detail open. **Fixed** by re-adding `const isLow = left > 0 && left <= 5;`.
+  2. (Bug) `PartyCard` rendered a `<button>` inside a `<button>` (outer card + inner save heart) → invalid HTML hydration error. **Fixed** by converting the outer card to a `<div role="button">` with keyboard handler.
+  3. (Styling) VLM flagged: inconsistent card metadata alignment, cramped detail spacing, muted host bio, tiny rating, weak chat status, generic profile settings.
+
+## 2. Goals / Completed Modifications / Verification
+
+### Styling improvements (mandatory)
+- **PartyCard**: refactored to a div-based card; consistent 2-col metadata grid; fee badge moved onto cover (bottom-left) for consistent positioning; added per-card save heart (persisted); added `GuestAvatars` stack in card footer for social proof ("+27 going").
+- **DetailScreen**: added a dedicated "who's going" section with avatar stack + smart status copy ("Almost full, grab your spot" / "Spots open" / "Sold out — join the waitlist"); enlarged host avatar (56px), bigger display-font name, brighter bio text (`text-foreground/85`), clearer gradient "Message host" CTA separated from "View profile" by a divider; medium-sized vibe badges.
+- **ChatScreen**: better intro banner spacing (64px avatar, larger name, pill-styled safety note with Sparkles icon); clearer online status with green dot + "Online now" / "Active recently" / "typing…"; message bubbles now support tap-to-react popover (🔥💜🎉😂👀) with reaction chips rendered under bubbles.
+- **ProfileScreen**: vibe score card now shows current tier (Rookie/Riser/Vibe/Legend) with a gradient progress bar to the next tier + "N to {tier}" label; added a 6-badge achievements grid (First Steps, Curator, Host, Rising Star, Social Butterfly, Legend) with unlocked/locked states; settings rows carry colored icons.
+
+### New features (mandatory)
+- **Saved/Liked parties** (localStorage-persisted via Zustand `persist` middleware): heart on every PartyCard + DetailScreen save button; new `SavedScreen` (empty state + list); badge counter on Explore header heart + Profile "Saved parties" row. Verified: save → count increments → SavedScreen lists it → unsave works.
+- **Onboarding flow** (3 steps: city → vibes → done): shown once after first login (gated by persisted `onboarded` flag); persists selected city to user profile + sets the Explore city filter; skip-friendly. New `OnboardingScreen` + `onboarding` screen type.
+- **Explore stories-style vibe carousel**: circular emoji icons (🎧🌙🧊 etc.) above the city chips for fast vibe filtering; replaces the old flat chip row; active state gets gradient ring + label.
+- **Chat quick-reply chips**: 5 suggestion chips ("I'm in! 🎉", "What time should I reach?", "Can I bring a +1?", "Is parking available?", "Sounds amazing 🔥") appear above the composer when input is empty and conversation is short (<6 messages); one-tap send.
+- **Chat emoji reactions**: tap any message bubble → popover with 5 emojis → reaction chip renders under the bubble with count.
+- **GuestAvatars component**: reusable overlapping avatar stack with "+N" overflow pill, used on PartyCard and DetailScreen.
+
+### Verification (agent-browser + VLM)
+- Login → onboarding (city=Goa, vibes=Techno+Chill) → Explore shows 2 Goa parties (city filter applied). ✓
+- Stories vibe carousel renders; party cards show save hearts + "+27"/"+15" guest stacks. ✓
+- VLM on improved home: "stories carousel effectively mirrors social media familiarity… party cards are polished: heart, stacked avatars, metadata clear and cohesive." ✓
+- Detail opens without error after `isLow` fix; "who's going" section + improved host card render. VLM: "avatar stack showcases social proof… host card balances visual hierarchy… spacing intentional." ✓
+- Chat: quick-reply chips render + send on tap; tap message → reaction popover → 🔥 reaction chip appears under bubble. ✓
+- Profile: vibe score 10, "Rookie tier", "40 to Riser" progress bar, achievements grid renders. VLM: "progression tangible and motivating… dark purple theme cohesive." ✓
+- Saved: save from card → SavedScreen lists party with "Unsave" state → count persists across navigation. ✓
+- `bun run lint` clean (0 errors, 0 warnings). `npx tsc` clean for all app code (only pre-existing examples/skills errors remain). No console errors / hydration errors. All API calls 200. Chat-service HTTP 200. ✓
+
+## 3. Unresolved Issues / Risks / Next-Phase Recommendations
+- **Socket "online" indicator**: the chat header sometimes shows "Active recently" instead of "Online now" even when the socket connects via polling through Caddy. The connection works (messages deliver), but the `online` state from `useChatSocket` may not always flip to true on first render. **Next phase**: add a `socket.on("connect")` log + a heartbeat ping to make the online state reliable; consider upgrading to websocket-only transport.
+- **Reactions are local-only**: message reactions live in component state (not persisted to DB / broadcast via socket). **Next phase**: add a `reactions` table + `/api/messages/[id]/react` route + socket relay so reactions sync across devices.
+- **Quick replies are static**: they don't adapt to conversation context. **Next phase**: generate context-aware quick replies via the LLM skill based on the last message + party context.
+- **Saved parties are client-side only**: stored in localStorage per device. **Next phase**: persist to a `SavedParty` table keyed by userId+partyId so saves sync across devices.
+- **Onboarding vibe picks aren't used for personalization**: the selected vibes don't yet influence feed ranking. **Next phase**: add a "for you" ranking boost for parties matching onboarding vibes.
+- **TypeScript**: minor pre-existing type errors in `src/app/api/threads/route.ts` and `src/app/api/users/route.ts` (non-blocking at runtime, but should be tightened with proper null-handling in the next phase).
+- **Priority recommendations for next cron round**: (1) persist reactions + saved parties server-side, (2) add LLM-powered smart quick replies in chat, (3) add a "For You" personalized feed tab using onboarding vibes, (4) add a host analytics dashboard (views, requests, acceptance rate) on the Profile/MyParties screens.

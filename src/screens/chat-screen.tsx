@@ -14,6 +14,7 @@ import {
   Smile,
   Check,
   CheckCheck,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -44,6 +45,16 @@ import { cn } from "@/lib/utils";
 
 const QUICK_EMOJIS = ["🔥", "💜", "🎉", "🍻", "👀", "😂"];
 
+const QUICK_REPLIES = [
+  "I'm in! 🎉",
+  "What time should I reach?",
+  "Can I bring a +1?",
+  "Is parking available?",
+  "Sounds amazing 🔥",
+];
+
+const MESSAGE_REACTIONS = ["🔥", "💜", "🎉", "😂", "👀"];
+
 export function ChatScreen() {
   const threadId = useAppStore((s) => s.selectedThreadId);
   const goBack = useAppStore((s) => s.goBack);
@@ -58,6 +69,9 @@ export function ChatScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  // messageId -> emoji -> count (local-only reactions for demo)
+  const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({});
+  const [reactingFor, setReactingFor] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -132,6 +146,15 @@ export function ChatScreen() {
     },
     [text, currentUser, other, sendMutation],
   );
+
+  const react = useCallback((messageId: string, emoji: string) => {
+    setReactions((prev) => {
+      const msgReactions = { ...(prev[messageId] || {}) };
+      msgReactions[emoji] = (msgReactions[emoji] || 0) + 1;
+      return { ...prev, [messageId]: msgReactions };
+    });
+    setReactingFor(null);
+  }, []);
 
   const onType = (v: string) => {
     setText(v);
@@ -224,8 +247,26 @@ export function ChatScreen() {
             <UserAvatar name={other.name} src={other.avatarUrl} size={40} ring />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{other.name}</p>
-              <p className="text-[11px] text-emerald-400">
-                {isTyping ? "typing…" : online ? "online" : "last seen recently"}
+              <p
+                className={cn(
+                  "flex items-center gap-1 text-[11px]",
+                  isTyping
+                    ? "text-pink"
+                    : online
+                      ? "text-emerald-400"
+                      : "text-muted-foreground",
+                )}
+              >
+                {isTyping ? (
+                  "typing…"
+                ) : (
+                  <>
+                    {online && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    )}
+                    {online ? "Online now" : "Active recently"}
+                  </>
+                )}
               </p>
             </div>
           </button>
@@ -259,17 +300,20 @@ export function ChatScreen() {
         className="fancy-scrollbar flex-1 space-y-1 overflow-y-auto px-3 py-4"
       >
         {/* Intro banner */}
-        <div className="mb-4 flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card/40 p-4 text-center">
-          <UserAvatar name={other.name} src={other.avatarUrl} size={56} ring />
+        <div className="mb-5 flex flex-col items-center gap-2.5 rounded-2xl border border-border/60 bg-card/50 p-5 text-center">
+          <UserAvatar name={other.name} src={other.avatarUrl} size={64} ring />
           <div className="flex items-center gap-2">
-            <p className="font-display font-semibold">{other.name}</p>
+            <p className="font-display text-base font-semibold">{other.name}</p>
             <RatingPill rating={other.rating} />
           </div>
           {other.bio && (
-            <p className="max-w-xs text-xs text-muted-foreground">{other.bio}</p>
+            <p className="max-w-xs text-[13px] leading-relaxed text-foreground/80">
+              {other.bio}
+            </p>
           )}
-          <p className="text-[11px] text-muted-foreground">
-            You connected over a party. Be kind, be safe ✨
+          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet/10 px-3 py-1 text-[11px] text-violet-200">
+            <Sparkles className="h-3 w-3" />
+            You connected over a party. Be kind, be safe.
           </p>
         </div>
 
@@ -285,11 +329,15 @@ export function ChatScreen() {
               const prev = items[i - 1];
               const showAvatar =
                 !mine && (!prev || prev.senderId !== m.senderId);
+              const msgReactions = reactions[m.id] || {};
+              const reactionEntries = Object.entries(msgReactions).filter(
+                ([, c]) => c > 0,
+              );
               return (
                 <div
                   key={m.id}
                   className={cn(
-                    "flex items-end gap-2",
+                    "group relative flex items-end gap-2",
                     mine ? "justify-end" : "justify-start",
                   )}
                 >
@@ -303,29 +351,79 @@ export function ChatScreen() {
                     ) : (
                       <span className="w-6" />
                     ))}
-                  <div
-                    className={cn(
-                      "max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm",
-                      mine
-                        ? "rounded-br-md vibe-gradient-bg text-white"
-                        : "rounded-bl-md border border-border/60 bg-card/70 text-foreground",
-                    )}
-                  >
-                    <p className="whitespace-pre-line break-words">{m.content}</p>
+                  <div className="relative max-w-[75%]">
                     <div
+                      onClick={() =>
+                        setReactingFor((cur) => (cur === m.id ? null : m.id))
+                      }
                       className={cn(
-                        "mt-0.5 flex items-center justify-end gap-1 text-[10px]",
-                        mine ? "text-white/70" : "text-muted-foreground",
+                        "cursor-pointer rounded-2xl px-3 py-2 text-sm shadow-sm transition",
+                        mine
+                          ? "rounded-br-md vibe-gradient-bg text-white"
+                          : "rounded-bl-md border border-border/60 bg-card/70 text-foreground",
+                        reactingFor === m.id && "ring-2 ring-pink/60",
                       )}
                     >
-                      {relativeTime(m.createdAt)}
-                      {mine &&
-                        (m.read ? (
-                          <CheckCheck className="h-3 w-3 text-cyan-200" />
-                        ) : (
-                          <Check className="h-3 w-3" />
-                        ))}
+                      <p className="whitespace-pre-line break-words">
+                        {m.content}
+                      </p>
+                      <div
+                        className={cn(
+                          "mt-0.5 flex items-center justify-end gap-1 text-[10px]",
+                          mine ? "text-white/70" : "text-muted-foreground",
+                        )}
+                      >
+                        {relativeTime(m.createdAt)}
+                        {mine &&
+                          (m.read ? (
+                            <CheckCheck className="h-3 w-3 text-cyan-200" />
+                          ) : (
+                            <Check className="h-3 w-3" />
+                          ))}
+                      </div>
                     </div>
+
+                    {/* Reaction chips under bubble */}
+                    {reactionEntries.length > 0 && (
+                      <div
+                        className={cn(
+                          "mt-1 flex flex-wrap gap-1",
+                          mine ? "justify-end" : "justify-start",
+                        )}
+                      >
+                        {reactionEntries.map(([emoji, count]) => (
+                          <span
+                            key={emoji}
+                            className="inline-flex items-center gap-0.5 rounded-full border border-pink/30 bg-pink/10 px-1.5 py-0.5 text-[11px]"
+                          >
+                            {emoji} {count > 1 && count}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reaction picker popover */}
+                    {reactingFor === m.id && (
+                      <div
+                        className={cn(
+                          "absolute -top-10 z-10 flex gap-0.5 rounded-full border border-border/60 glass px-1.5 py-1 shadow-lg",
+                          mine ? "right-0" : "left-0",
+                        )}
+                      >
+                        {MESSAGE_REACTIONS.map((e) => (
+                          <button
+                            key={e}
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              react(m.id, e);
+                            }}
+                            className="flex h-7 w-7 items-center justify-center rounded-full text-base transition hover:scale-125 hover:bg-white/10"
+                          >
+                            {e}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -347,6 +445,20 @@ export function ChatScreen() {
 
       {/* Composer */}
       <footer className="relative border-t border-border/60 glass px-2 py-2 safe-bottom">
+        {/* Quick reply suggestions (only when input is empty) */}
+        {!text.trim() && messages.length < 6 && (
+          <div className="no-scrollbar mb-2 flex gap-2 overflow-x-auto px-1">
+            {QUICK_REPLIES.map((q) => (
+              <button
+                key={q}
+                onClick={() => send(q)}
+                className="shrink-0 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-foreground/90 transition hover:border-pink/40 hover:bg-pink/5"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
         {showEmoji && (
           <div className="absolute inset-x-2 bottom-full mb-2 flex gap-2 rounded-2xl border border-border/60 glass p-2">
             {QUICK_EMOJIS.map((e) => (

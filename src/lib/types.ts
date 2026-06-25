@@ -132,6 +132,7 @@ export interface ChatMessage {
 
 export type Screen =
   | "login"
+  | "onboarding"
   | "home"
   | "create"
   | "detail"
@@ -140,7 +141,8 @@ export type Screen =
   | "profile"
   | "edit-profile"
   | "my-parties"
-  | "requests";
+  | "requests"
+  | "saved";
 
 export function parseVibes(vibes: string): string[] {
   if (!vibes) return [];
@@ -197,4 +199,26 @@ export function relativeTime(iso: string): string {
 
 export function slotsLeft(maxGuests: number, guestCount: number): number {
   return Math.max(0, maxGuests - guestCount);
+}
+
+// Demo guest avatars used for the "who's going" social-proof stack.
+// In production this would come from RSVP records.
+export const GUEST_AVATARS = [
+  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=80&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=80&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=80&q=80&auto=format&fit=crop",
+];
+
+export function pickGuestAvatars(seed: string, count: number): string[] {
+  // deterministic pick based on seed string
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  const out: string[] = [];
+  for (let i = 0; i < Math.min(count, GUEST_AVATARS.length); i++) {
+    out.push(GUEST_AVATARS[(h + i * 7) % GUEST_AVATARS.length]);
+  }
+  return out;
 }

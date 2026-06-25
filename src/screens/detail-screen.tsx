@@ -26,11 +26,13 @@ import {
   formatFee,
   formatTime,
   parseVibes,
+  pickGuestAvatars,
   slotsLeft,
 } from "@/lib/types";
 import { VibeBadge } from "@/components/vibe/vibe-badge";
 import { UserAvatar } from "@/components/vibe/user-avatar";
 import { RatingPill } from "@/components/vibe/rating-pill";
+import { GuestAvatars } from "@/components/vibe/guest-avatars";
 import {
   Drawer,
   DrawerContent,
@@ -54,7 +56,10 @@ export function DetailScreen() {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [intro, setIntro] = useState("");
-  const [saved, setSaved] = useState(false);
+  const saved = useAppStore((s) =>
+    id ? s.savedPartyIds.includes(id) : false,
+  );
+  const toggleSaved = useAppStore((s) => s.toggleSaved);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["party", id],
@@ -139,6 +144,7 @@ export function DetailScreen() {
   const { party, host, vibes } = data;
   const left = slotsLeft(party.maxGuests, party.guestCount);
   const isFull = left === 0;
+  const isLow = left > 0 && left <= 5;
   const isOwn = currentUser && host && currentUser.id === host.id;
 
   return (
@@ -170,8 +176,10 @@ export function DetailScreen() {
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  setSaved((s) => !s);
-                  toast.success(saved ? "Removed from saved" : "Saved!");
+                  toggleSaved(id!);
+                  toast.success(saved ? "Removed from saved" : "Saved!", {
+                    duration: 1500,
+                  });
                 }}
                 className="flex h-9 w-9 items-center justify-center rounded-full glass border border-white/10"
                 aria-label="Save"
@@ -196,33 +204,63 @@ export function DetailScreen() {
 
         {/* Body */}
         <div className="space-y-6 p-4">
-          {/* Title + slots */}
-          <section className="space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <h1 className="font-display text-2xl font-extrabold leading-tight">
-                {party.title}
-              </h1>
-            </div>
+          {/* Title + vibes */}
+          <section className="space-y-3">
+            <h1 className="font-display text-2xl font-extrabold leading-tight">
+              {party.title}
+            </h1>
             <div className="flex flex-wrap gap-1.5">
               {vibes.map((v) => (
-                <VibeBadge key={v} vibe={v} />
+                <VibeBadge key={v} vibe={v} size="md" />
               ))}
             </div>
-            <div
+          </section>
+
+          {/* Who's going — social proof */}
+          <section className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/50 p-3">
+            <div className="flex min-w-0 items-center gap-3">
+              {party.guestCount > 0 ? (
+                <GuestAvatars
+                  avatars={pickGuestAvatars(party.id, Math.min(5, party.guestCount))}
+                  total={party.guestCount}
+                  size={32}
+                  max={4}
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">
+                  {party.guestCount} going
+                  {!isFull && (
+                    <span className="ml-1 text-muted-foreground">
+                      · {left} slots left
+                    </span>
+                  )}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isFull
+                    ? "Sold out — join the waitlist"
+                    : isLow
+                      ? "Almost full, grab your spot"
+                      : "Spots open"}
+                </p>
+              </div>
+            </div>
+            <span
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold",
                 isFull
                   ? "bg-rose-500/15 text-rose-200 border border-rose-400/30"
-                  : left <= 5
+                  : isLow
                     ? "bg-amber-500/15 text-amber-200 border border-amber-400/30"
                     : "bg-emerald-500/15 text-emerald-200 border border-emerald-400/30",
               )}
             >
-              <Users className="h-3.5 w-3.5" />
-              {isFull
-                ? "Sold out"
-                : `${left} of ${party.maxGuests} slots left`}
-            </div>
+              {isFull ? "Sold out" : `${left}/${party.maxGuests}`}
+            </span>
           </section>
 
           {/* Quick facts */}
@@ -251,37 +289,42 @@ export function DetailScreen() {
 
           {/* Host card */}
           {host && (
-            <section className="rounded-2xl border border-border/60 bg-card/60 p-4">
-              <div className="flex items-center gap-3">
-                <UserAvatar name={host.name} src={host.avatarUrl} size={48} ring />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className="truncate font-semibold">{host.name}</p>
-                    <ShieldCheck className="h-3.5 w-3.5 text-violet" />
+            <section className="overflow-hidden rounded-2xl border border-border/60 bg-card/60">
+              <div className="p-4">
+                <div className="flex items-center gap-3">
+                  <UserAvatar name={host.name} src={host.avatarUrl} size={56} ring />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate font-display text-base font-semibold">
+                        {host.name}
+                      </p>
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-violet" />
+                    </div>
+                    <p className="truncate text-xs text-muted-foreground">
+                      @{host.username} · {host.hosted} hosted
+                    </p>
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">
-                    @{host.username} · {host.hosted} hosted
-                  </p>
+                  <RatingPill rating={host.rating} count={host.ratingCount} />
                 </div>
-                <RatingPill rating={host.rating} count={host.ratingCount} />
+                {host.bio && (
+                  <p className="mt-3 text-sm leading-relaxed text-foreground/85">
+                    {host.bio}
+                  </p>
+                )}
               </div>
-              {host.bio && (
-                <p className="mt-3 text-sm text-muted-foreground">{host.bio}</p>
-              )}
-              <div className="mt-3 flex gap-2">
+              <div className="flex gap-2 border-t border-border/60 p-3">
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="flex-1 rounded-full border-border/60"
+                  className="flex-1 rounded-xl vibe-gradient-bg font-semibold"
                   onClick={messageHost}
                 >
-                  <MessageCircle className="mr-1.5 h-3.5 w-3.5" />
+                  <MessageCircle className="mr-1.5 h-4 w-4" />
                   Message host
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-border/60"
+                  className="rounded-xl border-border/60"
                   onClick={() =>
                     toast.info("Profile coming soon", {
                       description: `View ${host.name}'s full profile`,
