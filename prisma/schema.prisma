@@ -37,6 +37,7 @@ model User {
   recvMessages  Message[]    @relation("RecvMessages")
   threadsA      ChatThread[] @relation("ThreadUserA")
   threadsB      ChatThread[] @relation("ThreadUserB")
+  savedParties  SavedParty[]
 }
 
 model Party {
@@ -60,6 +61,8 @@ model Party {
 
   host    User?         @relation("HostedParties", fields: [hostId], references: [id])
   requests JoinRequest[]
+  savedBy   SavedParty[]
+  views     PartyView[]
 }
 
 model JoinRequest {
@@ -102,4 +105,27 @@ model Message {
   thread   ChatThread @relation(fields: [threadId], references: [id])
   sender   User       @relation("SentMessages", fields: [senderId], references: [id])
   receiver User       @relation("RecvMessages", fields: [receiverId], references: [id])
+}
+
+// Server-side saved/liked parties — syncs across devices
+model SavedParty {
+  id        String   @id @default(cuid())
+  userId    String
+  partyId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  party Party @relation(fields: [partyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, partyId])
+}
+
+// Party view tracking — for analytics + "For You" ranking
+model PartyView {
+  id        String   @id @default(cuid())
+  partyId   String
+  userId    String?  // null for anonymous views
+  createdAt DateTime @default(now())
+
+  party Party @relation(fields: [partyId], references: [id], onDelete: Cascade)
 }

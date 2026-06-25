@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { VibeUser } from "@/lib/types";
 
-function serializeUser(u: any): VibeUser {
+function serializeUser(u: { id: string; name: string; username: string | null; bio: string | null; avatarUrl: string | null; city: string | null; instagram: string | null; vibes: number; hosted: number; rating: number; ratingCount: number }): VibeUser {
   return {
     id: u.id,
     name: u.name,
@@ -18,7 +18,27 @@ function serializeUser(u: any): VibeUser {
   };
 }
 
-// GET /api/threads?userId=... — list chat threads for a user, with last message + unread count
+interface ThreadListItem {
+  id: string;
+  userAId: string;
+  userBId: string;
+  partyId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  otherUser: VibeUser | undefined;
+  lastMessage: {
+    id: string;
+    threadId: string;
+    senderId: string;
+    receiverId: string;
+    content: string;
+    read: boolean;
+    createdAt: string;
+  } | undefined;
+  unreadCount: number;
+}
+
+// GET /api/threads?userId=...
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");
@@ -33,7 +53,7 @@ export async function GET(req: NextRequest) {
     orderBy: { updatedAt: "desc" },
   });
 
-  const result = [];
+  const result: ThreadListItem[] = [];
   for (const t of threads) {
     const otherId = t.userAId === userId ? t.userBId : t.userAId;
     const otherUser = await db.user.findUnique({ where: { id: otherId } });
@@ -54,7 +74,12 @@ export async function GET(req: NextRequest) {
       otherUser: otherUser ? serializeUser(otherUser) : undefined,
       lastMessage: lastMessage
         ? {
-            ...lastMessage,
+            id: lastMessage.id,
+            threadId: lastMessage.threadId,
+            senderId: lastMessage.senderId,
+            receiverId: lastMessage.receiverId,
+            content: lastMessage.content,
+            read: lastMessage.read,
             createdAt: lastMessage.createdAt.toISOString(),
           }
         : undefined,
@@ -65,7 +90,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ threads: result });
 }
 
-// POST /api/threads — create or get a thread between two users (optionally tied to a party)
+// POST /api/threads
 export async function POST(req: NextRequest) {
   let body: { userAId: string; userBId: string; partyId?: string };
   try {

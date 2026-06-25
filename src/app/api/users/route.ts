@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { VibeUser } from "@/lib/types";
 
-function serializeUser(u: any): VibeUser {
+function serializeUser(u: { id: string; name: string; username: string | null; bio: string | null; avatarUrl: string | null; city: string | null; instagram: string | null; vibes: number; hosted: number; rating: number; ratingCount: number }): VibeUser {
   return {
     id: u.id,
     name: u.name,
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const phone = searchParams.get("phone");
   const id = searchParams.get("id");
 
-  let user = null;
+  let user: Awaited<ReturnType<typeof db.user.findUnique>> = null;
   if (phone) {
     user = await db.user.findUnique({ where: { phone } });
   } else if (id) {
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ user: serializeUser(user) });
 }
 
-// PATCH /api/users?id=... — update profile fields
+// PATCH /api/users?id=...
 export async function PATCH(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

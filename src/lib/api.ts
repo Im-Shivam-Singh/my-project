@@ -109,4 +109,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ step: "verify", phone, otp, name }),
     }),
+
+  // saved parties (server-side)
+  listSaved: (userId: string) =>
+    jfetch<{ saved: any[]; partyIds: string[] }>(`/api/saved?userId=${userId}`),
+  toggleSaved: (userId: string, partyId: string) =>
+    jfetch<{ saved: boolean; partyId: string }>(`/api/saved`, {
+      method: "POST",
+      body: JSON.stringify({ userId, partyId }),
+    }),
 };
