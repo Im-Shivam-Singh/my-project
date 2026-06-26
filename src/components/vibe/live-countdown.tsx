@@ -22,26 +22,26 @@ const STATUS_STYLES: Record<
   { bg: string; text: string; icon: typeof Radio; label: (c: string) => string }
 > = {
   live: {
-    bg: "bg-rose-500/20 border-rose-400/40",
-    text: "text-rose-200",
+    bg: "bg-gold/20 border-gold/50",
+    text: "text-gold-light",
     icon: Radio,
     label: () => "Live now",
   },
   "starting-soon": {
-    bg: "bg-amber-500/20 border-amber-400/40",
-    text: "text-amber-200",
+    bg: "bg-gold-bright/20 border-gold-bright/45",
+    text: "text-gold-light",
     icon: Hourglass,
     label: (c: string) => `Starts ${c}`,
   },
   today: {
-    bg: "bg-emerald-500/15 border-emerald-400/30",
-    text: "text-emerald-200",
+    bg: "bg-gold/15 border-gold/35",
+    text: "text-gold-light",
     icon: CalendarClock,
     label: (c: string) => `Today · ${c}`,
   },
   upcoming: {
-    bg: "bg-violet-500/15 border-violet-400/30",
-    text: "text-violet-200",
+    bg: "bg-gold-deep/20 border-gold/30",
+    text: "text-gold-light/90",
     icon: CalendarClock,
     label: (c: string) => `Starts ${c}`,
   },

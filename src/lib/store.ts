@@ -46,6 +46,11 @@ interface AppState {
   exploreScope: "all" | "saved";
   setExploreScope: (s: "all" | "saved") => void;
 
+  // user location for the map view — defaults to city center; can be
+  // overridden with the browser geolocation API.
+  userLocation: { lat: number; lng: number; label: string } | null;
+  setUserLocation: (loc: { lat: number; lng: number; label: string } | null) => void;
+
   openCreate: () => void;
 }
 
@@ -103,6 +108,9 @@ export const useAppStore = create<AppState>()(
       exploreScope: "all",
       setExploreScope: (s) => set({ exploreScope: s }),
 
+      userLocation: null,
+      setUserLocation: (loc) => set({ userLocation: loc }),
+
       openCreate: () =>
         set((state) => ({ prevScreen: state.screen, screen: "create" })),
     }),
@@ -116,6 +124,7 @@ export const useAppStore = create<AppState>()(
         currentUser: state.currentUser,
         authed: state.authed,
         cityFilter: state.cityFilter,
+        userLocation: state.userLocation,
       }),
     },
   ),

@@ -306,3 +306,123 @@ Task: QA VibeMatch via agent-browser, fix bugs, add new features (For You feed, 
 4. **Public host profile view**: the chat header + detail host card both currently toast "Profile coming soon". Build a `HostProfileScreen` showing the host's bio, vibe score, all hosted parties, reviews received, and a "Message host" CTA.
 5. **Push notifications UI**: round 1 left "Notifications coming soon" as a toast. Build a notifications screen (likes, requests, messages, reviews) with a bell badge on the bottom nav.
 6. **Dev server stability investigation**: see above — this round's biggest time sink was the dev server dying mid-QA. Worth root-causing.
+
+---
+Task ID: 3
+Agent: webDevReview (cron round 3 — user-requested restyle + map feature)
+Task: User asked to (1) make the theme "more classic — dark black and gold" with glassmorphism, and (2) add a map view where users can see parties within a few kilometres as icons, with animation on each icon showing "how fun" the party is.
+
+## 1. Current Project Status Assessment
+- **Dev environment**: Next.js dev server on port 3000 + chat-service (socket.io) on port 3003 both running. Dev server was restarted once mid-round to pick up the new Prisma schema (Party.lat / Party.lng) after `bun run db:push` — the previous server instance was holding a stale Prisma Client and returning `null` for the new fields.
+- **Stability**: clean lint, clean `tsc --noEmit`, no runtime errors in `dev.log`. All API routes return 200.
+- **QA method**: agent-browser (mobile viewport) + VLM (glm-4.6v) visual analysis on key screenshots + curl probes for the new proximity API.
+- **Bugs found & fixed this round**:
+  1. **Stale Prisma Client after schema push**: after adding `lat`/`lng` to Party and running `bun run db:push`, the running dev server still returned `lat: null, lng: null`. Fixed by killing the old dev process, clearing `.next/`, and restarting `bun run dev`. Verified: `/api/parties?lat=...&lng=...&radiusKm=...` now returns real coordinates.
+  2. **City double-filter on map**: clicking a city dot set `userLocation` but left the explore `cityFilter` at the previous city, so the proximity query was filtering by both the new city's coords AND the old city's name → 0 results. Fixed by having `switchCity()` also call `setCityFilter()` so the store stays consistent.
+  3. **"You are here" rings blocking pin clicks**: the pulsing rings around the center marker had `absolute` positioning without `pointer-events-none`, so agent-browser's hit-tester (and any nearby pin click) landed on the ring instead of the pin. Fixed by adding `pointer-events-none` to the ring spans.
+  4. **Bottom sheet list clipped by bottom nav**: added `mb-20` to the map's bottom sheet `<section>` + bumped the list's `pb-6` so the last party card is never hidden behind the fixed bottom nav.
+
+## 2. Goals / Completed Modifications / Verification
+
+### A. Theme overhaul — classic black + gold + glassmorphism (mandatory)
+
+**`src/app/globals.css`** — full rewrite of the palette + utilities:
+- New gold family: `--gold #d4af37`, `--gold-bright #f0c75e`, `--gold-deep #8b6914`, `--gold-light #f9e4a0`.
+- Background `#060606` (near-black), foreground `#f5e9c8` (warm cream), card `#0e0c08` (warm dark brown).
+- Aliased `--pink`/`--violet`/`--cyan` → all gold-family so legacy utilities (`text-pink`, `bg-violet/30`, etc.) automatically pick up the new theme without touching every component.
+- Body background: triple radial gradient (gold top-right, champagne mid-left, deep gold bottom-center) for a warm luxury vignette.
+- New utilities: `.glass-strong` (denser frosted panel for headers/bottom sheets), `.gold-foil` (premium emphasis surface), `.glow-gold` / `.glow-gold-strong` (warm gold shadows).
+- `.glass` upgraded: translucent dark gradient + `backdrop-filter: blur(20px) saturate(150%)` + inset gold inner glow.
+- `.vibe-gradient-text` / `.vibe-gradient-bg` / `.vibe-gradient-border` all now use gold gradients.
+- New "fun-meter" keyframes: `fun-breathe`, `fun-pulse`, `fun-bounce`, `fun-lit`, `fun-sparkle-ring`, `fun-spark` (driving the map pin animations).
+- `here-pulse` keyframe for the "you are here" marker.
+
+**Component restyles (gold theme)**:
+- `party-card.tsx`: hover border `gold/50`, glow `rgba(212,175,55)`, fee badge `text-gold-light`, save heart `fill-gold`, metadata icons `text-gold/80`, footer divider `border-gold/12`.
+- `vibe-badge.tsx`: fallback + `VIBE_COLORS` rewritten to a unified amber/yellow/gold palette (no more fuchsia/purple/cyan).
+- `bottom-nav.tsx`: FAB is now a gold disc with a black `+` icon and an inner foil highlight; nav bar uses `glass-strong` with `border-gold/15`; active state `text-gold` + `bg-gold/15`.
+- `live-countdown.tsx`: all status styles now use gold tones (`bg-gold/20 border-gold/50 text-gold-light`) instead of rose/amber/violet.
+- `home-screen.tsx`: header buttons `text-gold hover:bg-gold/10`, search input `border-gold/20 focus:border-gold/60`, Host CTA `vibe-gradient-bg text-black`, VibeStory active = gold border + gold gradient, CityChip active = gold gradient, For You banner uses `gold-foil` surface.
+- `login-screen.tsx`: brighter gold background blobs (opacity bumped from /15 → /30) so the glassmorphism reads through the translucent card; card restyled with explicit `linear-gradient(180deg, rgba(24,20,13,0.55), rgba(10,8,5,0.45))` + `backdrop-blur-2xl` + gold inset shadow + `vibe-gradient-border`.
+
+**VLM verification (glm-4.6v)**:
+- Login screen: "black + gold luxury theme", "subtly translucent, frosted-glass effect", "soft gold glow emanates from the edges", "glowing gold blobs in the background", "classic and premium look". ✓
+- Explore feed + map: "deep black, with gold accents for text, icons, buttons" — confirmed across all screens.
+
+### B. Map view — parties within a few km as animated fun-level icons (mandatory)
+
+**New schema + data**:
+- `prisma/schema.prisma`: added `lat Float?` + `lng Float?` to `Party`. Pushed to DB.
+- `scripts/seed-geo.ts`: new seed script that walks every party and assigns real lat/lng based on its area (hand-picked offsets for Hauz Khas, Bandstand, Indiranagar, Koregaon Park, Anjuna, etc.) with a deterministic hash fallback. Seeded all 9 existing parties with coords.
+
+**New types/helpers** (`src/lib/types.ts`):
+- `Party.lat?` + `Party.lng?` + `PartyCreateInput.lat/lng?`.
+- `CITY_CENTERS` — real lat/lng for Delhi / Mumbai / Bangalore / Goa / Pune.
+- `haversineKm(a, b)` — great-circle distance in km.
+- `projectLatLng(point, center, pixelsPerKm)` — equirectangular projection for the local map (good enough for a few-km view).
+- `funScore(p)` → 0..100: crowd fill ×50 + vibe variety ×20 + live bonus (25/18/10/0) + free-entry bonus ×5.
+- `funTier(score)` → `"low" | "warm" | "lively" | "lit"`.
+- `FUN_TIER_META` — per-tier ring class, animation class, glow class, label.
+- `partyGeoFallback(seed, city)` + `partyCoords(p)` — resolve coords for parties without stored lat/lng.
+- `VIBE_COLORS` rewritten to a unified gold palette.
+
+**New API**:
+- `GET /api/parties?lat=..&lng=..&radiusKm=..` — proximity filter using haversine + fallback coords. Keeps existing `city`/`vibe`/`q` filters composable.
+- `api.listPartiesNear({ lat, lng, radiusKm, city })` client helper.
+- Serializers in `parties/route.ts`, `parties/[id]/route.ts`, `parties/for-you/route.ts` all updated to include `lat`/`lng`.
+
+**Store** (`src/lib/store.ts`):
+- New `userLocation: { lat, lng, label } | null` + `setUserLocation`. Persisted to localStorage so the map remembers the user's chosen city across refreshes.
+
+**Map screen rewrite** (`src/screens/map-screen.tsx` — full rewrite):
+- Real local map centered on the user's location (stored userLocation → cityFilter center → India midpoint).
+- Concentric distance rings (25/50/75/100% of active radius) with km labels.
+- "You are here" marker in the center with `here-pulse` rings + gold disc.
+- Each party is a glassy gold disc pin with the vibe emoji, projected at its real lat/lng offset from center. Pin size + animation scale with fun tier:
+  - **low** (0-34): 32px, `fun-breathe` (3.2s gentle scale)
+  - **warm** (35-59): 36px, `fun-pulse` (2.2s soft pulse + halo)
+  - **lively** (60-79): 40px, `fun-bounce` (1.6s cubic-bezier bounce)
+  - **lit** (80-100): 44px, `fun-lit` (1.3s energetic bounce + brightness pulse) + rotating `fun-sparkle-ring` + 3 floating `fun-spark` particles
+- Each pin shows a distance chip (`5.4k` / `800m`) at its base.
+- Hover/tap tooltip with title + tier label + score.
+- Pin tail (rotated square) pointing down to the exact spot.
+- Radius selector pills: 1km / 2km / 5km / 10km / 25km.
+- "Live only" filter toggle (gold ring pulse when active).
+- "My GPS" button — uses `navigator.geolocation` to center on the user's real location.
+- City switcher dots: India / Delhi / Mumbai / Bangalore / Goa / Pune.
+- Bottom sheet lists nearby parties sorted by distance, each with a distance chip + fun-tier chip overlay.
+
+**VLM verification**:
+- "Black + gold theme" ✓
+- "Party pins visible as circular gold disc icons on the map" ✓
+- "Distance rings with labels (6.25km, 12.5km, 18.75km, 25km)" ✓
+- "'You' marker is centered on the map" ✓
+- "Bottom sheet lists 3 parties, with distance chips (e.g., 4.4 km)" ✓
+- "Subtle glow or pulse effect" on pins ✓
+- "No obvious overlap or clipping" ✓
+
+### Verification
+- `bun run lint`: 0 errors, 0 warnings.
+- `npx tsc --noEmit`: 0 errors in app code.
+- API probes: `/api/parties?lat=28.55&lng=77.19&radiusKm=5` → 1 party (Hauz Khas), `/api/parties?lat=19.076&lng=72.8777&radiusKm=25` → 3 Mumbai parties. ✓
+- agent-browser flow verified: login → onboarding (Delhi + Techno/Chill/EDM) → Explore → open map → switch to Mumbai → 25km → 3 pins render with distances (4.4km, 7.9km, 9.3km) + tiers (Warming up, Low-key, Warming up) → click pin → Detail screen loads. ✓
+- agent-browser flow verified: switch to Delhi → 25km → 2 pins (5.4km, 7.0km) → click pin → Detail. ✓
+
+## 3. Unresolved Issues / Risks / Next-Phase Recommendations
+
+### Known limitations from this round
+- **Fun score is heuristic, not learned**: `funScore` combines crowd fill + vibe variety + live status + free entry. It doesn't yet factor in real-time signals (recent joins, message velocity, photo uploads). **Next phase**: incorporate live RSVP velocity + chat activity into the score.
+- **Map projection is equirectangular**: fine for a 1-25km view but distorts at country scale. The "India" city-dot falls back to mid-India (20.59, 78.96) which makes the local-map rings meaningless at that zoom. **Next phase**: either hide the rings when `radius > 50km`, or swap to a real map library (Leaflet/MapLibre) if a true pan-and-zoom map is wanted.
+- **Pin collision at small radii**: when 2+ parties share the same venue (rare in seed data), their pins overlap exactly. No collision-aware layout yet. **Next phase**: add a small angular jitter when pins are within ~8px of each other.
+- **No geolocation permission prompt UI**: `useMyLocation` silently fails if the user denies. **Next phase**: show a toast guiding the user to enable location permissions.
+- **Live-only filter doesn't dim non-live pins**: it hides them entirely. Could instead dim them so the user still sees context. **Next phase**: toggle between "hide" and "dim" modes.
+- **Glassmorphism depends on backdrop content**: on screens with no background blobs (e.g. chat, inbox) the glass panels read as near-opaque dark. Consider adding a subtle gold radial behind every screen for consistency.
+
+### Priority recommendations for next cron round
+1. **Carry the gold theme through the remaining screens** that weren't touched this round: `detail-screen`, `create-screen`, `inbox-screen`, `chat-screen`, `profile-screen`, `edit-profile-screen`, `my-parties-screen`, `requests-screen`, `saved-screen`, `onboarding-screen`. They still use legacy `border-pink/40`, `text-violet`, `from-violet/40` etc. — which now alias to gold so they're not broken, but they could be polished to use the new `gold`/`gold-bright`/`gold-light` tokens directly for crisper theming.
+2. **Persist message reactions server-side** (flagged since round 1, still open): add a `Reaction` model + `/api/messages/[id]/react` route + socket relay.
+3. **RSVP / "I'm going" flow** to power real attendee lists instead of deterministic demo avatars — would also feed real crowd data into `funScore`.
+4. **Public host profile screen** — the chat header + detail host card still toast "Profile coming soon".
+5. **Push notifications screen** — bell badge on bottom nav + a notifications screen (likes, requests, messages, reviews).
+6. **LLM-powered smart quick replies in chat** — use the LLM skill to generate context-aware replies based on the last message + party context.
+7. **Map "directions" button** — on the detail screen, add a "Get directions" button that opens Google Maps with the party's lat/lng.

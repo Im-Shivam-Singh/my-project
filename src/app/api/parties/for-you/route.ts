@@ -17,6 +17,8 @@ function serialize(p: any): Party {
     hostName: p.hostName,
     hostId: p.hostId,
     coverUrl: p.coverUrl,
+    lat: p.lat,
+    lng: p.lng,
     guestCount: p.guestCount,
     createdAt: p.createdAt.toISOString(),
   };

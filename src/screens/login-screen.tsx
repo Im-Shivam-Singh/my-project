@@ -62,18 +62,20 @@ export function LoginScreen() {
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col overflow-hidden">
-      {/* Animated background blobs */}
+      {/* Animated gold background blobs — brighter so glassmorphism reads */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-pink/20 blur-3xl vibe-float" />
-        <div className="absolute top-1/3 -left-20 h-72 w-72 rounded-full bg-violet/25 blur-3xl vibe-float" style={{ animationDelay: "0.6s" }} />
-        <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-cyan/15 blur-3xl vibe-float" style={{ animationDelay: "1.2s" }} />
+        <div className="absolute -top-24 -right-16 h-80 w-80 rounded-full bg-gold/30 blur-3xl vibe-float" />
+        <div className="absolute top-1/3 -left-20 h-80 w-80 rounded-full bg-gold-bright/25 blur-3xl vibe-float" style={{ animationDelay: "0.6s" }} />
+        <div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-gold-deep/35 blur-3xl vibe-float" style={{ animationDelay: "1.2s" }} />
+        {/* faint diagonal sheen */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-gold-bright/5" />
       </div>
 
       {/* Header / brand */}
       <div className="flex flex-1 flex-col justify-center px-6 pt-16">
         <div className="mb-8 animate-slide-up text-center">
-          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl vibe-gradient-bg shadow-[0_15px_50px_-10px_rgba(236,72,153,0.6)] vibe-pulse">
-            <Sparkles className="h-10 w-10 text-white" />
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl vibe-gradient-bg shadow-[0_15px_50px_-10px_rgba(212,175,55,0.6)] vibe-pulse">
+            <Sparkles className="h-10 w-10 text-black" />
           </div>
           <h1 className="font-display text-4xl font-extrabold tracking-tight">
             <span className="vibe-gradient-text">VibeMatch</span>
@@ -83,8 +85,17 @@ export function LoginScreen() {
           </p>
         </div>
 
-        {/* Card */}
-        <div className="animate-slide-up rounded-3xl border border-border bg-card/60 p-6 backdrop-blur-xl vibe-gradient-border" style={{ animationDelay: "0.08s" }}>
+        {/* Card — glassmorphism: translucent so the gold blobs behind read through */}
+        <div
+          className="animate-slide-up rounded-3xl border border-gold/25 p-6 backdrop-blur-2xl vibe-gradient-border"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(24,20,13,0.55) 0%, rgba(10,8,5,0.45) 100%)",
+            boxShadow:
+              "inset 0 1px 0 0 rgba(212,175,55,0.18), inset 0 0 0 1px rgba(212,175,55,0.06), 0 20px 60px -20px rgba(0,0,0,0.7)",
+            animationDelay: "0.08s",
+          }}
+        >
           {step === "phone" ? (
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -125,7 +136,7 @@ export function LoginScreen() {
               <Button
                 onClick={sendOtp}
                 disabled={loading}
-                className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-semibold shadow-[0_10px_30px_-8px_rgba(236,72,153,0.6)] hover:opacity-95"
+                className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-bold text-black shadow-[0_10px_30px_-8px_rgba(212,175,55,0.6)] hover:opacity-95"
               >
                 {loading ? "Sending…" : "Send OTP"}
                 <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -168,14 +179,14 @@ export function LoginScreen() {
 
               {devOtp && (
                 <p className="text-center text-[11px] text-muted-foreground">
-                  Dev OTP: <span className="font-mono text-pink">{devOtp}</span> (auto-fill in dev)
+                  Dev OTP: <span className="font-mono text-gold">{devOtp}</span> (auto-fill in dev)
                 </p>
               )}
 
               <Button
                 onClick={verifyOtp}
                 disabled={loading}
-                className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-semibold"
+                className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-bold text-black"
               >
                 {loading ? "Verifying…" : "Verify & Continue"}
                 <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -192,7 +203,7 @@ export function LoginScreen() {
         </div>
 
         <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5 text-violet" />
+          <ShieldCheck className="h-3.5 w-3.5 text-gold" />
           By continuing you agree to be respectful & follow community guidelines.
         </p>
       </div>

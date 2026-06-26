@@ -38,9 +38,16 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Brand accent aliases — kept as --pink/--violet/--cyan so existing
+     components pick up the new gold theme automatically. All three now
+     point to gold-family tones for a unified classic black + gold look. */
   --color-violet: var(--violet);
   --color-pink: var(--pink);
   --color-cyan: var(--cyan);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-light: var(--gold-light);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -48,67 +55,79 @@
 }
 
 :root {
-  /* VibeMatch dark theme by default */
+  /* VibeMatch classic — black + gold */
   --radius: 0.875rem;
-  --violet: #a855f7;
-  --pink: #ec4899;
-  --cyan: #22d3ee;
 
-  --background: #0a0612;
-  --foreground: #f4f0fb;
-  --card: #140d22;
-  --card-foreground: #f4f0fb;
-  --popover: #140d22;
-  --popover-foreground: #f4f0fb;
-  --primary: #ec4899;
-  --primary-foreground: #fff;
-  --secondary: #1c1230;
-  --secondary-foreground: #f4f0fb;
-  --muted: #1a1129;
-  --muted-foreground: #9b8db5;
-  --accent: #a855f7;
-  --accent-foreground: #fff;
-  --destructive: #f43f5e;
-  --border: rgba(168, 85, 247, 0.16);
-  --input: rgba(168, 85, 247, 0.18);
-  --ring: #a855f7;
-  --chart-1: #ec4899;
-  --chart-2: #a855f7;
-  --chart-3: #22d3ee;
-  --chart-4: #f59e0b;
-  --chart-5: #10b981;
-  --sidebar: #0a0612;
-  --sidebar-foreground: #f4f0fb;
-  --sidebar-primary: #ec4899;
-  --sidebar-primary-foreground: #fff;
-  --sidebar-accent: #1c1230;
-  --sidebar-accent-foreground: #f4f0fb;
-  --sidebar-border: rgba(168, 85, 247, 0.16);
-  --sidebar-ring: #a855f7;
+  /* Gold family — the single accent palette */
+  --gold: #d4af37;        /* classic gold — primary accent */
+  --gold-bright: #f0c75e; /* bright champagne gold — highlights */
+  --gold-deep: #8b6914;   /* deep antique gold — borders / muted */
+  --gold-light: #f9e4a0;  /* pale gold — text on dark */
+
+  /* Aliases so legacy `pink`/`violet`/`cyan` utilities stay on-brand */
+  --violet: #d4af37;
+  --pink: #d4af37;
+  --cyan: #f0c75e;
+
+  --background: #060606;
+  --foreground: #f5e9c8;
+  --card: #0e0c08;
+  --card-foreground: #f5e9c8;
+  --popover: #0e0c08;
+  --popover-foreground: #f5e9c8;
+  --primary: #d4af37;
+  --primary-foreground: #0a0a0a;
+  --secondary: #181410;
+  --secondary-foreground: #f5e9c8;
+  --muted: #14110b;
+  --muted-foreground: #a89570;
+  --accent: #f0c75e;
+  --accent-foreground: #0a0a0a;
+  --destructive: #b91c1c;
+  --border: rgba(212, 175, 55, 0.18);
+  --input: rgba(212, 175, 55, 0.20);
+  --ring: #d4af37;
+  --chart-1: #d4af37;
+  --chart-2: #f0c75e;
+  --chart-3: #b8941f;
+  --chart-4: #f9e4a0;
+  --chart-5: #8b6914;
+  --sidebar: #060606;
+  --sidebar-foreground: #f5e9c8;
+  --sidebar-primary: #d4af37;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #181410;
+  --sidebar-accent-foreground: #f5e9c8;
+  --sidebar-border: rgba(212, 175, 55, 0.18);
+  --sidebar-ring: #d4af37;
 }
 
 .dark {
-  --violet: #a855f7;
-  --pink: #ec4899;
-  --cyan: #22d3ee;
-  --background: #0a0612;
-  --foreground: #f4f0fb;
-  --card: #140d22;
-  --card-foreground: #f4f0fb;
-  --popover: #140d22;
-  --popover-foreground: #f4f0fb;
-  --primary: #ec4899;
-  --primary-foreground: #fff;
-  --secondary: #1c1230;
-  --secondary-foreground: #f4f0fb;
-  --muted: #1a1129;
-  --muted-foreground: #9b8db5;
-  --accent: #a855f7;
-  --accent-foreground: #fff;
-  --destructive: #f43f5e;
-  --border: rgba(168, 85, 247, 0.16);
-  --input: rgba(168, 85, 247, 0.18);
-  --ring: #a855f7;
+  --gold: #d4af37;
+  --gold-bright: #f0c75e;
+  --gold-deep: #8b6914;
+  --gold-light: #f9e4a0;
+  --violet: #d4af37;
+  --pink: #d4af37;
+  --cyan: #f0c75e;
+  --background: #060606;
+  --foreground: #f5e9c8;
+  --card: #0e0c08;
+  --card-foreground: #f5e9c8;
+  --popover: #0e0c08;
+  --popover-foreground: #f5e9c8;
+  --primary: #d4af37;
+  --primary-foreground: #0a0a0a;
+  --secondary: #181410;
+  --secondary-foreground: #f5e9c8;
+  --muted: #14110b;
+  --muted-foreground: #a89570;
+  --accent: #f0c75e;
+  --accent-foreground: #0a0a0a;
+  --destructive: #b91c1c;
+  --border: rgba(212, 175, 55, 0.18);
+  --input: rgba(212, 175, 55, 0.20);
+  --ring: #d4af37;
 }
 
 @layer base {
@@ -121,34 +140,44 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Subtle gold radial glow + warm vignette — classic luxury feel */
     background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(168, 85, 247, 0.18), transparent 60%),
-      radial-gradient(900px 500px at -10% 10%, rgba(236, 72, 153, 0.14), transparent 55%),
+      radial-gradient(1100px 580px at 80% -10%, rgba(212, 175, 55, 0.10), transparent 60%),
+      radial-gradient(900px 520px at -10% 12%, rgba(240, 199, 94, 0.07), transparent 55%),
+      radial-gradient(700px 700px at 50% 110%, rgba(139, 105, 20, 0.10), transparent 60%),
       var(--background);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  /* selection */
+  ::selection {
+    background: rgba(212, 175, 55, 0.32);
+    color: #fff;
+  }
 }
 
-/* ===== VibeMatch utility classes ===== */
+/* ===== VibeMatch utility classes — classic black + gold ===== */
 @layer utilities {
   .font-display {
     font-family: var(--font-syne), var(--font-geist-sans), sans-serif;
     letter-spacing: -0.02em;
   }
 
+  /* Gold gradient text — replaces the old neon gradient */
   .vibe-gradient-text {
-    background: linear-gradient(90deg, #ec4899 0%, #a855f7 60%, #22d3ee 100%);
+    background: linear-gradient(95deg, #f9e4a0 0%, #f0c75e 35%, #d4af37 70%, #b8941f 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
+  /* Gold gradient background — used on primary CTAs, FAB, active chips */
   .vibe-gradient-bg {
-    background: linear-gradient(120deg, #ec4899 0%, #a855f7 100%);
+    background: linear-gradient(135deg, #f0c75e 0%, #d4af37 50%, #b8941f 100%);
   }
 
+  /* Gold edge border — wraps cards/buttons with a thin gold foil edge */
   .vibe-gradient-border {
     position: relative;
     background-clip: padding-box;
@@ -159,7 +188,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.6), rgba(168, 85, 247, 0.35), rgba(34, 211, 238, 0.25));
+    background: linear-gradient(135deg, rgba(249, 228, 160, 0.7), rgba(212, 175, 55, 0.35), rgba(139, 105, 20, 0.25));
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -168,17 +197,48 @@
     pointer-events: none;
   }
 
+  /* Glassmorphism — translucent dark panel with a soft gold inner glow */
   .glass {
-    background: rgba(20, 13, 34, 0.72);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    background: linear-gradient(180deg, rgba(20, 17, 11, 0.78) 0%, rgba(10, 8, 5, 0.62) 100%);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow:
+      inset 0 1px 0 0 rgba(212, 175, 55, 0.10),
+      inset 0 0 0 1px rgba(212, 175, 55, 0.06);
   }
 
+  /* Stronger glass for elevated panels (bottom sheet, header) */
+  .glass-strong {
+    background: linear-gradient(180deg, rgba(24, 20, 13, 0.92) 0%, rgba(12, 10, 6, 0.85) 100%);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    box-shadow:
+      inset 0 1px 0 0 rgba(212, 175, 55, 0.14),
+      inset 0 0 0 1px rgba(212, 175, 55, 0.08);
+  }
+
+  /* Gold foil card surface — for premium emphasis blocks */
+  .gold-foil {
+    background:
+      linear-gradient(135deg, rgba(249, 228, 160, 0.18) 0%, rgba(212, 175, 55, 0.06) 40%, rgba(139, 105, 20, 0.04) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.28);
+  }
+
+  /* Glow variants — replace the old neon glows with warm gold light */
   .glow-pink {
-    box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.35), 0 8px 30px -6px rgba(236, 72, 153, 0.5);
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35), 0 8px 30px -6px rgba(212, 175, 55, 0.5);
   }
   .glow-violet {
-    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.35), 0 8px 30px -6px rgba(168, 85, 247, 0.55);
+    box-shadow: 0 0 0 1px rgba(240, 199, 94, 0.35), 0 8px 30px -6px rgba(240, 199, 94, 0.55);
+  }
+  .glow-gold {
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.40), 0 10px 36px -8px rgba(212, 175, 55, 0.6);
+  }
+  .glow-gold-strong {
+    box-shadow:
+      0 0 0 1px rgba(249, 228, 160, 0.55),
+      0 0 24px -2px rgba(240, 199, 94, 0.7),
+      0 0 48px -8px rgba(212, 175, 55, 0.55);
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -197,7 +257,7 @@
     background: transparent;
   }
   .fancy-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(236, 72, 153, 0.5), rgba(168, 85, 247, 0.5));
+    background: linear-gradient(180deg, rgba(240, 199, 94, 0.55), rgba(139, 105, 20, 0.45));
     border-radius: 999px;
   }
 
@@ -209,7 +269,7 @@
   }
 }
 
-/* Marquee / shimmer animations */
+/* ===== Shimmer / sheen animations (gold) ===== */
 @keyframes vibe-shimmer {
   0% {
     background-position: -200% 0;
@@ -221,9 +281,9 @@
 .vibe-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(168, 85, 247, 0.08) 25%,
-    rgba(236, 72, 153, 0.18) 37%,
-    rgba(168, 85, 247, 0.08) 63%
+    rgba(139, 105, 20, 0.08) 25%,
+    rgba(240, 199, 94, 0.22) 37%,
+    rgba(139, 105, 20, 0.08) 63%
   );
   background-size: 200% 100%;
   animation: vibe-shimmer 1.6s ease infinite;
@@ -314,7 +374,7 @@
   animation: vibe-stagger-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Skeleton shimmer (more vivid than default) */
+/* Skeleton shimmer — gold-toned */
 @keyframes vibe-skeleton {
   0% {
     background-position: -200% 0;
@@ -326,9 +386,9 @@
 .vibe-skeleton {
   background: linear-gradient(
     90deg,
-    rgba(168, 85, 247, 0.06) 25%,
-    rgba(236, 72, 153, 0.14) 50%,
-    rgba(168, 85, 247, 0.06) 75%
+    rgba(139, 105, 20, 0.05) 25%,
+    rgba(240, 199, 94, 0.16) 50%,
+    rgba(139, 105, 20, 0.05) 75%
   );
   background-size: 200% 100%;
   animation: vibe-skeleton 1.4s ease infinite;
@@ -352,16 +412,16 @@
   animation: vibe-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* Live pulse ring — for "Live now" badges */
+/* Live pulse ring — for "Live now" badges (kept warm gold instead of red) */
 @keyframes vibe-live-ring {
   0% {
-    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+    box-shadow: 0 0 0 0 rgba(240, 199, 94, 0.75);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(244, 63, 94, 0);
+    box-shadow: 0 0 0 10px rgba(240, 199, 94, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+    box-shadow: 0 0 0 0 rgba(240, 199, 94, 0);
   }
 }
 .vibe-live-ring {
@@ -385,8 +445,133 @@
 
 /* Press feedback — for tap-friendly cards */
 .press-feedback {
-  transition: transform 0.12s ease;
+  transition: transform 0.12s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .press-feedback:active {
   transform: scale(0.97);
+}
+
+/* ===== Map pin "fun meter" animations =====
+   Each tier maps to a CSS animation class used by the map view.
+   The animation intensity grows with the party's fun score:
+     low     → gentle breathing
+     warm    → soft pulsing
+     lively  → bouncy pulse with halo
+     lit     → energetic bounce + sparkle ring */
+
+@keyframes fun-breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.25);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 12px -2px rgba(212, 175, 55, 0.35);
+  }
+}
+.fun-breathe {
+  animation: fun-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes fun-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(240, 199, 94, 0.45);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 18px -2px rgba(240, 199, 94, 0.6);
+  }
+}
+.fun-pulse {
+  animation: fun-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes fun-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-3px) scale(1.05);
+  }
+  60% {
+    transform: translateY(0) scale(1.08);
+  }
+}
+.fun-bounce {
+  animation: fun-bounce 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+/* "Lit" — energetic bounce + a sweeping sparkle ring */
+@keyframes fun-lit {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+  25% {
+    transform: translateY(-5px) scale(1.12);
+    filter: brightness(1.15);
+  }
+  50% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1.25);
+  }
+  75% {
+    transform: translateY(-3px) scale(1.08);
+    filter: brightness(1.15);
+  }
+}
+.fun-lit {
+  animation: fun-lit 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+/* Rotating sparkle ring — only for "lit" pins */
+@keyframes fun-sparkle-ring {
+  0% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: rotate(360deg) scale(1.15);
+    opacity: 0;
+  }
+}
+.fun-sparkle-ring {
+  animation: fun-sparkle-ring 1.6s linear infinite;
+}
+
+/* Confetti-ish floating dots — emit upward from lit pins */
+@keyframes fun-spark {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx, 0px), var(--dy, -16px)) scale(1);
+    opacity: 0;
+  }
+}
+.fun-spark {
+  animation: fun-spark 1.4s ease-out infinite;
+}
+
+/* Soft pulse for the "you are here" location marker */
+@keyframes here-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+.here-pulse {
+  animation: here-pulse 2.4s ease-out infinite;
 }

@@ -41,6 +41,20 @@ export const api = {
     const qs = sp.toString();
     return jfetch<{ parties: Party[] }>(`/api/parties${qs ? `?${qs}` : ""}`);
   },
+  // parties within a radius of a lat/lng — used by the map view
+  listPartiesNear: (params: {
+    lat: number;
+    lng: number;
+    radiusKm: number;
+    city?: string | null;
+  }) => {
+    const sp = new URLSearchParams();
+    sp.set("lat", String(params.lat));
+    sp.set("lng", String(params.lng));
+    sp.set("radiusKm", String(params.radiusKm));
+    if (params.city) sp.set("city", params.city);
+    return jfetch<{ parties: Party[] }>(`/api/parties?${sp.toString()}`);
+  },
   getParty: (id: string) =>
     jfetch<{ party: Party; host?: VibeUser; vibes: string[]; requests?: any[] }>(
       `/api/parties/${id}`,

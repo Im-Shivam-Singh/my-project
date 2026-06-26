@@ -93,10 +93,10 @@ export function HomeScreen() {
     <div className="flex h-full flex-col">
       {/* Header */}
       <header className="sticky top-0 z-20 space-y-3 px-4 pb-2 pt-[max(env(safe-area-inset-top),12px)]">
-        <div className="glass -mx-4 px-4 pb-3 pt-2 border-b border-border/60">
+        <div className="glass -mx-4 px-4 pb-3 pt-2 border-b border-gold/15">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                 Tonight in {cityFilter || "India"}
               </p>
               <h1 className="font-display text-2xl font-extrabold leading-tight">
@@ -106,26 +106,26 @@ export function HomeScreen() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setScreen("map")}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-card/40 text-foreground transition hover:border-pink/40"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/25 bg-card/50 text-gold transition hover:border-gold/60 hover:bg-gold/10"
                 aria-label="Open vibe map"
               >
                 <MapIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setScreen("saved")}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-card/40 text-foreground transition hover:border-pink/40"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gold/25 bg-card/50 text-gold transition hover:border-gold/60 hover:bg-gold/10"
                 aria-label="Saved parties"
               >
                 <Heart className="h-4 w-4" />
                 {savedCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-black">
                     {savedCount}
                   </span>
                 )}
               </button>
               <button
                 onClick={openCreate}
-                className="flex h-10 items-center gap-1.5 rounded-full vibe-gradient-bg px-3 text-xs font-semibold text-white shadow-[0_8px_24px_-6px_rgba(236,72,153,0.6)]"
+                className="flex h-10 items-center gap-1.5 rounded-full vibe-gradient-bg px-3 text-xs font-bold text-black shadow-[0_8px_24px_-6px_rgba(212,175,55,0.7)]"
               >
                 <Flame className="h-4 w-4" />
                 Host
@@ -135,12 +135,12 @@ export function HomeScreen() {
 
           {/* Search */}
           <div className="relative mt-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold/70" />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search parties, areas, vibes…"
-              className="h-11 w-full rounded-xl border border-border/60 bg-background/60 pl-9 pr-9 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-pink/50"
+              className="h-11 w-full rounded-xl border border-gold/20 bg-background/60 pl-9 pr-9 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-gold/60 focus:ring-2 focus:ring-gold/20"
             />
             {searchQuery && (
               <button
@@ -191,13 +191,13 @@ export function HomeScreen() {
 
         {/* For You / All tab toggle — only when no search/vibe filter is active */}
         {!searchQuery && !vibeFilter && (
-          <div className="flex gap-1 rounded-full border border-border/60 bg-card/40 p-1">
+          <div className="flex gap-1 rounded-full border border-gold/20 bg-card/40 p-1">
             <button
               onClick={() => setTab("for-you")}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-semibold transition",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition",
                 tab === "for-you"
-                  ? "vibe-gradient-bg text-white shadow-[0_4px_16px_-6px_rgba(236,72,153,0.6)]"
+                  ? "vibe-gradient-bg text-black shadow-[0_4px_16px_-6px_rgba(212,175,55,0.7)]"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -207,9 +207,9 @@ export function HomeScreen() {
             <button
               onClick={() => setTab("all")}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-semibold transition",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition",
                 tab === "all"
-                  ? "vibe-gradient-bg text-white shadow-[0_4px_16px_-6px_rgba(236,72,153,0.6)]"
+                  ? "vibe-gradient-bg text-black shadow-[0_4px_16px_-6px_rgba(212,175,55,0.7)]"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -276,13 +276,13 @@ export function HomeScreen() {
           <>
             {/* For You banner — shown when on the personalized tab with no filters */}
             {showForYou && (
-              <div className="overflow-hidden rounded-2xl border border-violet/30 bg-gradient-to-br from-violet/10 via-pink/5 to-cyan/10 p-3">
+              <div className="overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-gold-bright/5 to-gold-deep/10 p-3 gold-foil">
                 <div className="flex items-center gap-2">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full vibe-gradient-bg">
-                    <Wand2 className="h-4 w-4 text-white" />
+                    <Wand2 className="h-4 w-4 text-black" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold">
+                    <p className="text-sm font-semibold text-gold-light">
                       Tuned for your vibe
                     </p>
                     <p className="text-[11px] text-muted-foreground">
@@ -297,7 +297,7 @@ export function HomeScreen() {
                     {matchedVibes.map((v) => (
                       <span
                         key={v}
-                        className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-foreground/80"
+                        className="rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-medium text-gold-light border border-gold/20"
                       >
                         {VIBE_EMOJI[v]} {v}
                       </span>
@@ -308,15 +308,15 @@ export function HomeScreen() {
             )}
 
             {vibeFilter && (
-              <div className="flex items-center justify-between rounded-2xl border border-pink/30 bg-pink/5 px-3 py-2">
+              <div className="flex items-center justify-between rounded-2xl border border-gold/30 bg-gold/5 px-3 py-2">
                 <span className="inline-flex items-center gap-1.5 text-xs text-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-pink" />
+                  <Sparkles className="h-3.5 w-3.5 text-gold" />
                   Filtered by{" "}
-                  <span className="font-semibold">{vibeFilter}</span>
+                  <span className="font-semibold text-gold-light">{vibeFilter}</span>
                 </span>
                 <button
                   onClick={() => setVibeFilter(null)}
-                  className="text-xs font-medium text-pink hover:underline"
+                  className="text-xs font-medium text-gold hover:underline"
                 >
                   Clear
                 </button>
@@ -327,8 +327,8 @@ export function HomeScreen() {
             {!showForYou && hotTonight.length > 0 && (
               <section>
                 <div className="mb-2 flex items-center gap-1.5">
-                  <TrendingUp className="h-4 w-4 text-pink" />
-                  <h2 className="font-display text-sm font-semibold">
+                  <TrendingUp className="h-4 w-4 text-gold" />
+                  <h2 className="font-display text-sm font-semibold text-gold-light">
                     Hot tonight & tomorrow
                   </h2>
                 </div>
@@ -388,18 +388,18 @@ function VibeStory({
         className={cn(
           "flex h-16 w-16 items-center justify-center rounded-full border-2 text-2xl transition",
           active
-            ? "border-pink vibe-gradient-bg shadow-[0_8px_24px_-8px_rgba(236,72,153,0.6)]"
+            ? "border-gold vibe-gradient-bg shadow-[0_8px_24px_-8px_rgba(212,175,55,0.7)]"
             : highlight
-              ? "border-violet/50 bg-violet/10"
-              : "border-border bg-card/60 hover:border-pink/40",
+              ? "border-gold/50 bg-gold/10"
+              : "border-gold/15 bg-card/60 hover:border-gold/40",
         )}
       >
-        {emoji || (highlight ? <Sparkles className="h-6 w-6 text-violet" /> : "✨")}
+        {emoji || (highlight ? <Sparkles className="h-6 w-6 text-gold" /> : "✨")}
       </span>
       <span
         className={cn(
           "text-[10px] font-medium",
-          active ? "text-pink" : "text-muted-foreground",
+          active ? "text-gold" : "text-muted-foreground",
         )}
       >
         {label}
@@ -425,8 +425,8 @@ function CityChip({
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition",
         active
-          ? "border-transparent vibe-gradient-bg text-white shadow-[0_6px_20px_-8px_rgba(236,72,153,0.7)]"
-          : "border-border/60 bg-card/60 text-muted-foreground hover:text-foreground hover:border-pink/40",
+          ? "border-transparent vibe-gradient-bg text-black shadow-[0_6px_20px_-8px_rgba(212,175,55,0.7)]"
+          : "border-gold/15 bg-card/60 text-muted-foreground hover:text-foreground hover:border-gold/40",
       )}
     >
       {icon}

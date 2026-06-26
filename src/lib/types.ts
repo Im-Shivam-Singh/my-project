@@ -34,15 +34,18 @@ export const VIBE_EMOJI: Record<string, string> = {
   Retro: "📼",
 };
 
+// Vibe tag colors — unified gold/champagne palette to match the classic
+// black + gold theme. Each tag uses a slightly different gold tone for
+// visual variety while staying within the brand.
 export const VIBE_COLORS: Record<string, string> = {
-  Techno: "from-fuchsia-500/20 to-purple-500/20 text-fuchsia-200 border-fuchsia-500/30",
-  Bollywood: "from-amber-500/20 to-rose-500/20 text-amber-200 border-amber-500/30",
-  BYOB: "from-emerald-500/20 to-teal-500/20 text-emerald-200 border-emerald-500/30",
-  Boardgames: "from-cyan-500/20 to-blue-500/20 text-cyan-200 border-cyan-500/30",
-  "Lo-fi": "from-indigo-500/20 to-violet-500/20 text-indigo-200 border-indigo-500/30",
-  Chill: "from-sky-500/20 to-cyan-500/20 text-sky-200 border-sky-500/30",
-  EDM: "from-pink-500/20 to-fuchsia-500/20 text-pink-200 border-pink-500/30",
-  Retro: "from-orange-500/20 to-amber-500/20 text-orange-200 border-orange-500/30",
+  Techno: "from-amber-500/25 to-yellow-600/20 text-amber-200 border-amber-400/40",
+  Bollywood: "from-yellow-500/25 to-amber-600/20 text-yellow-100 border-yellow-400/40",
+  BYOB: "from-amber-400/25 to-amber-700/20 text-amber-100 border-amber-300/40",
+  Boardgames: "from-yellow-600/25 to-amber-500/20 text-yellow-100 border-yellow-500/40",
+  "Lo-fi": "from-amber-200/20 to-yellow-700/20 text-amber-100 border-amber-300/30",
+  Chill: "from-yellow-400/20 to-amber-500/20 text-yellow-100 border-yellow-400/30",
+  EDM: "from-amber-500/25 to-yellow-400/20 text-amber-100 border-amber-400/40",
+  Retro: "from-yellow-600/25 to-amber-400/20 text-yellow-100 border-yellow-500/40",
 };
 
 export interface Party {
@@ -59,6 +62,8 @@ export interface Party {
   hostName: string;
   hostId?: string | null;
   coverUrl?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   guestCount: number;
   createdAt: string;
 }
@@ -75,6 +80,8 @@ export interface PartyCreateInput {
   description: string;
   hostName: string;
   coverUrl?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface JoinRequest {
@@ -335,4 +342,152 @@ export function pickGuestAvatars(seed: string, count: number): string[] {
     out.push(GUEST_AVATARS[(h + i * 7) % GUEST_AVATARS.length]);
   }
   return out;
+}
+
+
+// ===== Geographic helpers for the local map view =====
+
+// Real lat/lng centers for each city — used to default the user's location
+// when geolocation is unavailable, and to seed parties with coords.
+export const CITY_CENTERS: Record<string, { lat: number; lng: number }> = {
+  Delhi: { lat: 28.6139, lng: 77.209 },
+  Mumbai: { lat: 19.076, lng: 72.8777 },
+  Bangalore: { lat: 12.9716, lng: 77.5946 },
+  Goa: { lat: 15.2993, lng: 74.124 },
+  Pune: { lat: 18.5204, lng: 73.8567 },
+};
+
+// Haversine distance in kilometres between two lat/lng points.
+export function haversineKm(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): number {
+  const R = 6371; // earth radius, km
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const lat1 = (a.lat * Math.PI) / 180;
+  const lat2 = (b.lat * Math.PI) / 180;
+  const sinDLat = Math.sin(dLat / 2);
+  const sinDLng = Math.sin(dLng / 2);
+  const h =
+    sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+// Project a lat/lng to viewport pixels relative to a center point using
+// an equirectangular approximation (good enough for a few-km view).
+// Returns {x, y} in pixels where (0,0) is the center; y is inverted so
+// north = up.
+export function projectLatLng(
+  point: { lat: number; lng: number },
+  center: { lat: number; lng: number },
+  pixelsPerKm: number,
+): { x: number; y: number } {
+  const dxKm = haversineKm(
+    { lat: center.lat, lng: center.lng },
+    { lat: center.lat, lng: point.lng },
+  ) * (point.lng < center.lng ? -1 : 1);
+  const dyKm = haversineKm(
+    { lat: center.lat, lng: center.lng },
+    { lat: point.lat, lng: center.lng },
+  ) * (point.lat < center.lat ? 1 : -1);
+  return { x: dxKm * pixelsPerKm, y: dyKm * pixelsPerKm };
+}
+
+// ===== "Fun score" — drives the animation intensity on map pins =====
+// 0..100. Combines crowd fill, vibe variety, live status, and free entry.
+
+export type FunTier = "low" | "warm" | "lively" | "lit";
+
+export function funScore(p: {
+  guestCount: number;
+  maxGuests: number;
+  vibes: string;
+  date: string;
+  time: string;
+  fee: number;
+}): number {
+  const fillRatio =
+    p.maxGuests > 0 ? Math.min(1, p.guestCount / p.maxGuests) : 0;
+  const crowd = fillRatio * 50; // 0..50 — a packed house is half the score
+  const vibeCount = parseVibes(p.vibes).length;
+  const vibeScore = Math.min(20, vibeCount * 5); // 0..20 — variety matters
+  const status = partyLiveStatus(p.date, p.time);
+  const liveBonus =
+    status === "live"
+      ? 25
+      : status === "starting-soon"
+        ? 18
+        : status === "today"
+          ? 10
+          : 0;
+  const freeBonus = p.fee === 0 ? 5 : 0;
+  return Math.round(crowd + vibeScore + liveBonus + freeBonus);
+}
+
+export function funTier(score: number): FunTier {
+  if (score >= 80) return "lit";
+  if (score >= 60) return "lively";
+  if (score >= 35) return "warm";
+  return "low";
+}
+
+// Tier metadata for the map pin animation
+export const FUN_TIER_META: Record<
+  FunTier,
+  { label: string; ringClass: string; animClass: string; glowClass: string }
+> = {
+  low: {
+    label: "Low-key",
+    ringClass: "border-amber-700/50",
+    animClass: "fun-breathe",
+    glowClass: "shadow-[0_0_10px_-4px_rgba(212,175,55,0.4)]",
+  },
+  warm: {
+    label: "Warming up",
+    ringClass: "border-amber-500/60",
+    animClass: "fun-pulse",
+    glowClass: "shadow-[0_0_14px_-4px_rgba(212,175,55,0.6)]",
+  },
+  lively: {
+    label: "Lively",
+    ringClass: "border-amber-400/70",
+    animClass: "fun-bounce",
+    glowClass: "shadow-[0_0_18px_-3px_rgba(240,199,94,0.8)]",
+  },
+  lit: {
+    label: "Lit 🔥",
+    ringClass: "border-yellow-300/80",
+    animClass: "fun-lit",
+    glowClass: "shadow-[0_0_22px_-2px_rgba(249,228,160,0.95)]",
+  },
+};
+
+// Pick a deterministic small offset within a city for parties without
+// explicit lat/lng. Uses the area name + id as the seed so the same party
+// always lands at the same spot.
+export function partyGeoFallback(
+  seed: string,
+  city: string,
+): { lat: number; lng: number } {
+  const center = CITY_CENTERS[city] ?? { lat: 28.6139, lng: 77.209 };
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  // ±0.04 degrees ≈ ±4.4 km — keeps fallback pins inside the city
+  const dLat = ((h % 800) - 400) / 10000; // -0.04..+0.04
+  const dLng = (((h >> 8) % 800) - 400) / 10000;
+  return { lat: center.lat + dLat, lng: center.lng + dLng };
+}
+
+// Resolve a party's coordinates — uses stored lat/lng if present, else fallback.
+export function partyCoords(p: {
+  lat?: number | null;
+  lng?: number | null;
+  id: string;
+  city: string;
+}): { lat: number; lng: number } {
+  if (typeof p.lat === "number" && typeof p.lng === "number") {
+    return { lat: p.lat, lng: p.lng };
+  }
+  return partyGeoFallback(p.id, p.city);
 }

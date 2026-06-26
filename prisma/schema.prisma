@@ -57,6 +57,9 @@ model Party {
   hostName    String
   hostId      String?
   coverUrl    String?
+  // geographic coordinates for the map view (party venue pin)
+  lat         Float?
+  lng         Float?
   // denormalized stats for fast reads
   guestCount  Int      @default(0)
   createdAt   DateTime @default(now())

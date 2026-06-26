@@ -30,12 +30,12 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-[480px] items-end justify-around px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-2"
       aria-label="Primary"
     >
-      <div className="pointer-events-none absolute inset-x-3 bottom-2 top-0 -z-10 rounded-3xl border border-border/70 glass shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.6)]" />
+      <div className="pointer-events-none absolute inset-x-3 bottom-2 top-0 -z-10 rounded-3xl border border-gold/15 glass-strong shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.7)]" />
 
       {/* Explore */}
       <NavButton
         item={NAV_ITEMS[0]}
-        active={screen === "home" || screen === "detail"}
+        active={screen === "home" || screen === "detail" || screen === "map" || screen === "saved"}
         onClick={() => setScreen("home")}
       />
 
@@ -46,14 +46,16 @@ export function BottomNav() {
         onClick={() => setScreen("inbox")}
       />
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button — gold disc */}
       <button
         onClick={openCreate}
         aria-label="Launch a vibe"
-        className="relative -mt-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-full vibe-gradient-bg text-white shadow-[0_10px_30px_-6px_rgba(236,72,153,0.7)] ring-4 ring-background transition-transform active:scale-90 hover:scale-105"
+        className="relative -mt-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-full vibe-gradient-bg text-black shadow-[0_10px_30px_-6px_rgba(212,175,55,0.7)] ring-4 ring-background transition-transform active:scale-90 hover:scale-105"
       >
-        <span className="absolute inset-0 rounded-full bg-pink/40 blur-md -z-10" />
-        <Plus className="h-7 w-7" strokeWidth={2.5} />
+        <span className="absolute inset-0 rounded-full bg-gold-bright/50 blur-md -z-10" />
+        {/* inner foil highlight */}
+        <span className="absolute inset-1 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent pointer-events-none" />
+        <Plus className="relative h-7 w-7 text-black" strokeWidth={2.5} />
       </button>
 
       {/* Profile (right of FAB) */}
@@ -91,20 +93,20 @@ function NavButton({
       aria-current={active ? "page" : undefined}
       className={cn(
         "group flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
-        active ? "text-pink" : "text-muted-foreground hover:text-foreground",
+        active ? "text-gold" : "text-muted-foreground hover:text-foreground",
       )}
     >
       <span
         className={cn(
           "relative flex h-9 w-9 items-center justify-center rounded-xl transition-all",
           active
-            ? "bg-pink/15 shadow-[0_0_20px_-4px_rgba(236,72,153,0.6)]"
+            ? "bg-gold/15 shadow-[0_0_20px_-4px_rgba(212,175,55,0.6)]"
             : "group-hover:bg-white/5",
         )}
       >
         <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
         {active && (
-          <span className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-pink" />
+          <span className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-gold" />
         )}
       </span>
       {item.label}

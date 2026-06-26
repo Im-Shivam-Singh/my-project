@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { parseVibes, type Party, type PartyCreateInput } from "@/lib/types";
+import {
+  parseVibes,
+  partyCoords,
+  haversineKm,
+  type Party,
+  type PartyCreateInput,
+} from "@/lib/types";
 
 function serialize(p: any): Party {
   return {
@@ -17,24 +23,35 @@ function serialize(p: any): Party {
     hostName: p.hostName,
     hostId: p.hostId,
     coverUrl: p.coverUrl,
+    lat: p.lat,
+    lng: p.lng,
     guestCount: p.guestCount,
     createdAt: p.createdAt.toISOString(),
   };
 }
 
 // GET /api/parties?city=Delhi&vibe=Techno&q=rooftop
+// GET /api/parties?lat=28.61&lng=77.20&radiusKm=5  — proximity filter (map view)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const city = searchParams.get("city");
   const vibe = searchParams.get("vibe");
   const q = searchParams.get("q")?.trim().toLowerCase();
 
+  const lat = searchParams.get("lat");
+  const lng = searchParams.get("lng");
+  const radiusKm = searchParams.get("radiusKm");
+  const hasProximity =
+    lat !== null && lng !== null && radiusKm !== null &&
+    !Number.isNaN(parseFloat(lat)) && !Number.isNaN(parseFloat(lng)) &&
+    !Number.isNaN(parseFloat(radiusKm));
+
   const parties = await db.party.findMany({
     where: {
       ...(city ? { city } : {}),
     },
     orderBy: { createdAt: "desc" },
-    take: 100,
+    take: 200,
   });
 
   let filtered = parties;
@@ -48,6 +65,23 @@ export async function GET(req: NextRequest) {
         p.area.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q),
     );
+  }
+
+  // Proximity filter — keep only parties within radiusKm of (lat,lng).
+  // Falls back to partyGeoFallback (via partyCoords) when the party has no
+  // stored lat/lng, so older seeded parties still appear on the map.
+  if (hasProximity) {
+    const center = { lat: parseFloat(lat!), lng: parseFloat(lng!) };
+    const radius = parseFloat(radiusKm!);
+    filtered = filtered.filter((p) => {
+      const coords = partyCoords({
+        lat: p.lat,
+        lng: p.lng,
+        id: p.id,
+        city: p.city,
+      });
+      return haversineKm(center, coords) <= radius;
+    });
   }
 
   return NextResponse.json({ parties: filtered.map(serialize) });
@@ -74,6 +108,8 @@ export async function POST(req: NextRequest) {
     description,
     hostName,
     coverUrl,
+    lat,
+    lng,
   } = body;
 
   if (!title || !city || !area || !date || !time || !hostName) {
@@ -100,6 +136,8 @@ export async function POST(req: NextRequest) {
       hostName,
       hostId: host?.id,
       coverUrl: coverUrl || null,
+      lat: typeof lat === "number" ? lat : null,
+      lng: typeof lng === "number" ? lng : null,
       guestCount: 0,
     },
   });
