@@ -34,18 +34,18 @@ export const VIBE_EMOJI: Record<string, string> = {
   Retro: "📼",
 };
 
-// Vibe tag colors — unified gold/champagne palette to match the classic
-// black + gold theme. Each tag uses a slightly different gold tone for
-// visual variety while staying within the brand.
+// Vibe tag colors — Gen Z neon palette. Each tag gets its own neon hue so the
+// feed reads like a colorful sticker pack: cyan techno, magenta EDM, violet
+// lo-fi, lime boardgames, coral Bollywood, amber BYOB, sky chill, rose retro.
 export const VIBE_COLORS: Record<string, string> = {
-  Techno: "from-amber-500/25 to-yellow-600/20 text-amber-200 border-amber-400/40",
-  Bollywood: "from-yellow-500/25 to-amber-600/20 text-yellow-100 border-yellow-400/40",
-  BYOB: "from-amber-400/25 to-amber-700/20 text-amber-100 border-amber-300/40",
-  Boardgames: "from-yellow-600/25 to-amber-500/20 text-yellow-100 border-yellow-500/40",
-  "Lo-fi": "from-amber-200/20 to-yellow-700/20 text-amber-100 border-amber-300/30",
-  Chill: "from-yellow-400/20 to-amber-500/20 text-yellow-100 border-yellow-400/30",
-  EDM: "from-amber-500/25 to-yellow-400/20 text-amber-100 border-amber-400/40",
-  Retro: "from-yellow-600/25 to-amber-400/20 text-yellow-100 border-yellow-500/40",
+  Techno: "from-cyan-500/30 to-blue-600/20 text-cyan-200 border-cyan-400/50",
+  Bollywood: "from-orange-500/30 to-rose-600/20 text-orange-200 border-orange-400/50",
+  BYOB: "from-amber-400/30 to-yellow-600/20 text-amber-100 border-amber-300/50",
+  Boardgames: "from-lime-400/30 to-green-600/20 text-lime-100 border-lime-300/50",
+  "Lo-fi": "from-violet-500/30 to-purple-700/20 text-violet-200 border-violet-400/50",
+  Chill: "from-sky-400/30 to-cyan-600/20 text-sky-100 border-sky-300/50",
+  EDM: "from-pink-500/30 to-fuchsia-700/20 text-pink-200 border-pink-400/50",
+  Retro: "from-rose-500/30 to-pink-700/20 text-rose-200 border-rose-400/50",
 };
 
 export interface Party {
@@ -432,34 +432,63 @@ export function funTier(score: number): FunTier {
   return "low";
 }
 
-// Tier metadata for the map pin animation
+// Tier metadata for the map pin animation — each tier is a distinct Gen Z neon.
+//   low    → cyan     (chill / low-key)
+//   warm   → violet   (warming up)
+//   lively → hot pink (lively)
+//   lit    → lime+coral (absolutely lit 🔥)
 export const FUN_TIER_META: Record<
   FunTier,
-  { label: string; ringClass: string; animClass: string; glowClass: string }
+  {
+    label: string;
+    ringClass: string;
+    animClass: string;
+    glowClass: string;
+    dotClass: string;
+    textClass: string;
+    chipClass: string;
+    sparkClass: string;
+  }
 > = {
   low: {
     label: "Low-key",
-    ringClass: "border-amber-700/50",
+    ringClass: "border-cyan-400/60",
     animClass: "fun-breathe",
-    glowClass: "shadow-[0_0_10px_-4px_rgba(212,175,55,0.4)]",
+    glowClass: "shadow-[0_0_14px_-3px_rgba(0,240,255,0.65)]",
+    dotClass: "bg-cyan-400",
+    textClass: "text-cyan-200",
+    chipClass: "bg-cyan-500/15 text-cyan-200 border-cyan-400/40",
+    sparkClass: "bg-cyan-300",
   },
   warm: {
     label: "Warming up",
-    ringClass: "border-amber-500/60",
+    ringClass: "border-violet-400/70",
     animClass: "fun-pulse",
-    glowClass: "shadow-[0_0_14px_-4px_rgba(212,175,55,0.6)]",
+    glowClass: "shadow-[0_0_18px_-3px_rgba(157,78,221,0.75)]",
+    dotClass: "bg-violet-400",
+    textClass: "text-violet-200",
+    chipClass: "bg-violet-500/15 text-violet-200 border-violet-400/40",
+    sparkClass: "bg-violet-300",
   },
   lively: {
     label: "Lively",
-    ringClass: "border-amber-400/70",
+    ringClass: "border-pink-400/75",
     animClass: "fun-bounce",
-    glowClass: "shadow-[0_0_18px_-3px_rgba(240,199,94,0.8)]",
+    glowClass: "shadow-[0_0_22px_-3px_rgba(255,46,151,0.85)]",
+    dotClass: "bg-pink-400",
+    textClass: "text-pink-200",
+    chipClass: "bg-pink-500/15 text-pink-200 border-pink-400/45",
+    sparkClass: "bg-pink-300",
   },
   lit: {
     label: "Lit 🔥",
-    ringClass: "border-yellow-300/80",
+    ringClass: "border-lime-300/80",
     animClass: "fun-lit",
-    glowClass: "shadow-[0_0_22px_-2px_rgba(249,228,160,0.95)]",
+    glowClass: "shadow-[0_0_26px_-2px_rgba(199,255,0,0.95)]",
+    dotClass: "bg-lime-300",
+    textClass: "text-lime-200",
+    chipClass: "bg-lime-400/15 text-lime-100 border-lime-300/50",
+    sparkClass: "bg-orange-400",
   },
 };
 

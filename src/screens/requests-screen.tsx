@@ -75,30 +75,30 @@ export function RequestsScreen() {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="sticky top-0 z-20 glass border-b border-border/60 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+    <div className="flex h-full flex-col animate-screen-in">
+      <header className="sticky top-0 z-20 glass-strong border-b border-border/60 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <div className="flex items-center gap-2">
           <button
             onClick={goBack}
-            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-cyan transition hover:bg-cyan/10 hover:text-cyan hover:glow-cyan"
             aria-label="Back"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <h1 className="flex-1 font-display text-lg font-bold">
-            Join requests
+            <span className="vibe-gradient-text">Requests</span>
           </h1>
         </div>
         {/* Tabs */}
-        <div className="mt-3 flex gap-1 rounded-full border border-border/60 bg-card/40 p-1">
+        <div className="mt-3 flex gap-1 rounded-full glass p-1 ring-1 ring-border/40">
           {(["all", "pending", "accepted"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "flex-1 rounded-full py-1.5 text-xs font-medium capitalize transition",
+                "flex-1 rounded-full py-1.5 text-xs font-semibold capitalize transition",
                 tab === t
-                  ? "vibe-gradient-bg text-white"
+                  ? "vibe-gradient-bg text-white glow-pink"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -117,7 +117,7 @@ export function RequestsScreen() {
             action={
               <button
                 onClick={() => setScreen("create")}
-                className="rounded-full vibe-gradient-bg px-4 py-2 text-sm font-semibold text-white"
+                className="rounded-full vibe-gradient-bg px-4 py-2 text-sm font-semibold text-white glow-pink"
               >
                 Launch a vibe
               </button>
@@ -130,12 +130,12 @@ export function RequestsScreen() {
             {[0, 1].map((i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 p-3"
+                className="flex items-center gap-3 rounded-2xl glass-strong p-3"
               >
-                <div className="h-10 w-10 rounded-full bg-white/5" />
+                <div className="h-10 w-10 rounded-full vibe-skeleton" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 w-1/3 rounded bg-white/5" />
-                  <div className="h-2 w-2/3 rounded bg-white/5" />
+                  <div className="h-3 w-1/3 rounded vibe-skeleton" />
+                  <div className="h-2 w-2/3 rounded vibe-skeleton" />
                 </div>
               </div>
             ))}
@@ -155,16 +155,21 @@ export function RequestsScreen() {
             {requests.map((r) => (
               <li
                 key={r.id}
-                className="rounded-2xl border border-border/60 bg-card/50 p-3"
+                className="rounded-2xl glass-strong vibe-gradient-border p-3"
               >
                 <div className="flex items-start gap-3">
-                  <UserAvatar name={r.requesterName} size={40} />
+                  <span className="relative block shrink-0 rounded-full">
+                    <span className="absolute -inset-0.5 rounded-full vibe-gradient-bg opacity-80 blur-[1px]" />
+                    <span className="relative block rounded-full ring-2 ring-background">
+                      <UserAvatar name={r.requesterName} size={40} />
+                    </span>
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-semibold">
                         {r.requesterName}
                       </p>
-                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                      <span className="shrink-0 text-[11px] font-medium text-cyan/80">
                         {relativeTime(r.createdAt)}
                       </span>
                     </div>
@@ -175,13 +180,13 @@ export function RequestsScreen() {
                       <div className="mt-2 flex gap-2">
                         <button
                           onClick={() => act(r.id, "accepted")}
-                          className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25"
+                          className="inline-flex items-center gap-1 rounded-full vibe-gradient-bg-acid px-3 py-1 text-xs font-bold text-black glow-acid transition active:scale-95"
                         >
                           <Check className="h-3.5 w-3.5" /> Accept
                         </button>
                         <button
                           onClick={() => act(r.id, "rejected")}
-                          className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-3 py-1 text-xs font-semibold text-rose-300 border border-rose-500/30 hover:bg-rose-500/25"
+                          className="inline-flex items-center gap-1 rounded-full glass px-3 py-1 text-xs font-semibold text-rose-300 ring-1 ring-rose-500/40 transition hover:bg-rose-500/15 hover:text-rose-200"
                         >
                           <X className="h-3.5 w-3.5" /> Decline
                         </button>
@@ -189,10 +194,10 @@ export function RequestsScreen() {
                     ) : (
                       <span
                         className={cn(
-                          "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                          "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1",
                           r.status === "accepted"
-                            ? "bg-emerald-500/15 text-emerald-300"
-                            : "bg-rose-500/15 text-rose-300",
+                            ? "bg-lime-400/15 text-lime-300 ring-lime-400/40"
+                            : "bg-rose-500/15 text-rose-300 ring-rose-500/40",
                         )}
                       >
                         <Clock className="h-3 w-3" />

@@ -196,7 +196,7 @@ export function ChatScreen() {
 
   if (isLoading || !data) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col animate-screen-in">
         <ChatHeaderSkeleton />
         <div className="flex-1 space-y-3 p-4">
           {[0, 1, 2, 3].map((i) => (
@@ -204,7 +204,7 @@ export function ChatScreen() {
               key={i}
               className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}
             >
-              <Skeleton className="h-10 w-40 rounded-2xl" />
+              <Skeleton className="h-10 w-40 rounded-2xl vibe-skeleton" />
             </div>
           ))}
         </div>
@@ -214,7 +214,7 @@ export function ChatScreen() {
 
   if (!other) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center animate-screen-in">
         <p className="text-sm text-muted-foreground">
           This conversation couldn't be loaded.
         </p>
@@ -229,13 +229,13 @@ export function ChatScreen() {
   const grouped = groupByDay(messages);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col animate-screen-in">
       {/* Header */}
-      <header className="sticky top-0 z-20 glass border-b border-border/60 px-2 py-2 pt-[max(env(safe-area-inset-top),10px)]">
+      <header className="sticky top-0 z-20 glass-strong border-b border-border/60 px-2 py-2 pt-[max(env(safe-area-inset-top),10px)]">
         <div className="flex items-center gap-2">
           <button
             onClick={goBack}
-            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-cyan transition hover:bg-cyan/10 hover:text-cyan hover:glow-cyan"
             aria-label="Back"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -244,16 +244,21 @@ export function ChatScreen() {
             onClick={() => toast.info("Profile view coming soon")}
             className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
           >
-            <UserAvatar name={other.name} src={other.avatarUrl} size={40} ring />
+            <span className="relative block rounded-full">
+              <span className="absolute -inset-0.5 rounded-full vibe-gradient-bg opacity-80 blur-[1px]" />
+              <span className="relative block rounded-full ring-2 ring-background">
+                <UserAvatar name={other.name} src={other.avatarUrl} size={40} />
+              </span>
+            </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{other.name}</p>
               <p
                 className={cn(
-                  "flex items-center gap-1 text-[11px]",
+                  "flex items-center gap-1 text-[11px] font-medium",
                   isTyping
-                    ? "text-pink"
+                    ? "text-pink text-glow-pink"
                     : online
-                      ? "text-emerald-400"
+                      ? "text-lime-300 text-glow-lime"
                       : "text-muted-foreground",
                 )}
               >
@@ -262,7 +267,7 @@ export function ChatScreen() {
                 ) : (
                   <>
                     {online && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-lime-300 shadow-[0_0_6px_rgba(199,255,0,0.8)]" />
                     )}
                     {online ? "Online now" : "Active recently"}
                   </>
@@ -272,24 +277,24 @@ export function ChatScreen() {
           </button>
           <button
             onClick={() => toast.info("Calling coming soon")}
-            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-violet/10 hover:text-violet"
             aria-label="Call"
           >
-            <Phone className="h-4 w-4 text-muted-foreground" />
+            <Phone className="h-4 w-4" />
           </button>
           <button
             onClick={() => toast.info("Video coming soon")}
-            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-violet/10 hover:text-violet"
             aria-label="Video"
           >
-            <Video className="h-4 w-4 text-muted-foreground" />
+            <Video className="h-4 w-4" />
           </button>
           <button
             onClick={() => setSheetOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-pink/10 hover:text-pink"
             aria-label="More"
           >
-            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+            <MoreVertical className="h-4 w-4" />
           </button>
         </div>
       </header>
@@ -300,8 +305,13 @@ export function ChatScreen() {
         className="fancy-scrollbar flex-1 space-y-1 overflow-y-auto px-3 py-4"
       >
         {/* Intro banner */}
-        <div className="mb-5 flex flex-col items-center gap-2.5 rounded-2xl border border-border/60 bg-card/50 p-5 text-center">
-          <UserAvatar name={other.name} src={other.avatarUrl} size={64} ring />
+        <div className="mb-5 flex flex-col items-center gap-2.5 rounded-2xl glass vibe-gradient-border p-5 text-center vibe-float">
+          <span className="relative block rounded-full">
+            <span className="absolute -inset-0.5 rounded-full vibe-gradient-bg opacity-80 blur-[1px]" />
+            <span className="relative block rounded-full ring-2 ring-background">
+              <UserAvatar name={other.name} src={other.avatarUrl} size={64} />
+            </span>
+          </span>
           <div className="flex items-center gap-2">
             <p className="font-display text-base font-semibold">{other.name}</p>
             <RatingPill rating={other.rating} />
@@ -311,8 +321,8 @@ export function ChatScreen() {
               {other.bio}
             </p>
           )}
-          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet/10 px-3 py-1 text-[11px] text-violet-200">
-            <Sparkles className="h-3 w-3" />
+          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet/15 px-3 py-1 text-[11px] font-medium text-violet-200 ring-1 ring-violet/30">
+            <Sparkles className="h-3 w-3 text-cyan" />
             You connected over a party. Be kind, be safe.
           </p>
         </div>
@@ -320,7 +330,7 @@ export function ChatScreen() {
         {grouped.map(({ label, items }) => (
           <div key={label} className="space-y-1">
             <div className="my-3 flex justify-center">
-              <span className="rounded-full bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <span className="rounded-full glass px-3 py-1 text-[10px] uppercase tracking-wide text-cyan/70">
                 {label}
               </span>
             </div>
@@ -357,11 +367,11 @@ export function ChatScreen() {
                         setReactingFor((cur) => (cur === m.id ? null : m.id))
                       }
                       className={cn(
-                        "cursor-pointer rounded-2xl px-3 py-2 text-sm shadow-sm transition",
+                        "cursor-pointer rounded-2xl px-3 py-2 text-sm transition",
                         mine
-                          ? "rounded-br-md vibe-gradient-bg text-white"
-                          : "rounded-bl-md border border-border/60 bg-card/70 text-foreground",
-                        reactingFor === m.id && "ring-2 ring-pink/60",
+                          ? "rounded-br-md vibe-gradient-bg text-white glow-pink"
+                          : "rounded-bl-md glass text-foreground ring-1 ring-border/40",
+                        reactingFor === m.id && "ring-2 ring-cyan/70",
                       )}
                     >
                       <p className="whitespace-pre-line break-words">
@@ -370,13 +380,13 @@ export function ChatScreen() {
                       <div
                         className={cn(
                           "mt-0.5 flex items-center justify-end gap-1 text-[10px]",
-                          mine ? "text-white/70" : "text-muted-foreground",
+                          mine ? "text-white/80" : "text-muted-foreground",
                         )}
                       >
                         {relativeTime(m.createdAt)}
                         {mine &&
                           (m.read ? (
-                            <CheckCheck className="h-3 w-3 text-cyan-200" />
+                            <CheckCheck className="h-3 w-3 text-cyan-100" />
                           ) : (
                             <Check className="h-3 w-3" />
                           ))}
@@ -434,17 +444,17 @@ export function ChatScreen() {
         {isTyping && (
           <div className="flex items-end gap-2">
             <UserAvatar name={other.name} src={other.avatarUrl} size={24} />
-            <div className="flex gap-1 rounded-2xl rounded-bl-md border border-border/60 bg-card/70 px-3 py-2.5">
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground" />
+            <div className="flex gap-1 rounded-2xl rounded-bl-md glass px-3 py-2.5 ring-1 ring-border/40">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-pink [animation-delay:-0.3s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet [animation-delay:-0.15s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan" />
             </div>
           </div>
         )}
       </div>
 
       {/* Composer */}
-      <footer className="relative border-t border-border/60 glass px-2 py-2 safe-bottom">
+      <footer className="relative border-t border-border/60 glass-strong px-2 py-2 safe-bottom">
         {/* Quick reply suggestions (only when input is empty) */}
         {!text.trim() && messages.length < 6 && (
           <div className="no-scrollbar mb-2 flex gap-2 overflow-x-auto px-1">
@@ -452,7 +462,7 @@ export function ChatScreen() {
               <button
                 key={q}
                 onClick={() => send(q)}
-                className="shrink-0 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-foreground/90 transition hover:border-pink/40 hover:bg-pink/5"
+                className="shrink-0 rounded-full glass px-3 py-1.5 text-xs text-foreground/90 ring-1 ring-border/40 transition hover:ring-pink/50 hover:text-pink"
               >
                 {q}
               </button>
@@ -460,7 +470,7 @@ export function ChatScreen() {
           </div>
         )}
         {showEmoji && (
-          <div className="absolute inset-x-2 bottom-full mb-2 flex gap-2 rounded-2xl border border-border/60 glass p-2">
+          <div className="absolute inset-x-2 bottom-full mb-2 flex gap-2 rounded-2xl glass-strong p-2 ring-1 ring-border/40">
             {QUICK_EMOJIS.map((e) => (
               <button
                 key={e}
@@ -468,7 +478,7 @@ export function ChatScreen() {
                   send(e);
                   setShowEmoji(false);
                 }}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-lg hover:bg-white/5"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:scale-125 hover:bg-pink/15"
               >
                 {e}
               </button>
@@ -480,7 +490,7 @@ export function ChatScreen() {
             onClick={() => setShowEmoji((s) => !s)}
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-full transition",
-              showEmoji ? "bg-pink/15 text-pink" : "text-muted-foreground hover:bg-white/5",
+              showEmoji ? "bg-pink/15 text-pink" : "text-muted-foreground hover:bg-violet/10 hover:text-violet",
             )}
             aria-label="Emoji"
           >
@@ -496,12 +506,12 @@ export function ChatScreen() {
               }
             }}
             placeholder={`Message ${other.name.split(" ")[0]}…`}
-            className="h-10 flex-1 rounded-full border-border/60 bg-background/60"
+            className="h-10 flex-1 rounded-full border-border/60 bg-card/60 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
           />
           <button
             onClick={() => send()}
             disabled={!text.trim()}
-            className="flex h-10 w-10 items-center justify-center rounded-full vibe-gradient-bg text-white shadow-[0_6px_20px_-6px_rgba(236,72,153,0.7)] transition active:scale-90 disabled:opacity-40"
+            className="flex h-10 w-10 items-center justify-center rounded-full vibe-gradient-bg text-white glow-pink transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
             aria-label="Send"
           >
             <Send className="h-4 w-4" />
@@ -513,11 +523,11 @@ export function ChatScreen() {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent
           side="bottom"
-          className="mx-auto max-w-[480px] rounded-t-3xl border-border/60 bg-card/95"
+          className="mx-auto max-w-[480px] rounded-t-3xl border-border/60 glass-strong"
         >
           <SheetHeader>
             <SheetTitle className="font-display">
-              {other.name}
+              <span className="vibe-gradient-text">{other.name}</span>
             </SheetTitle>
             <SheetDescription className="sr-only">
               Chat options
@@ -555,9 +565,11 @@ export function ChatScreen() {
 
       {/* Report dialog */}
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="max-w-[420px] rounded-3xl border-border/60 bg-card">
+        <DialogContent className="max-w-[420px] rounded-3xl border-border/60 glass-strong">
           <DialogHeader>
-            <DialogTitle className="font-display">Report {other.name}?</DialogTitle>
+            <DialogTitle className="font-display">
+              Report <span className="vibe-gradient-text">{other.name}</span>?
+            </DialogTitle>
             <DialogDescription>
               Help us keep VibeMatch safe. Our team reviews every report.
             </DialogDescription>
@@ -574,9 +586,9 @@ export function ChatScreen() {
                 key={r}
                 onClick={() => setReportReason(r)}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition",
+                  "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition glass",
                   reportReason === r
-                    ? "border-pink bg-pink/10"
+                    ? "border-pink ring-1 ring-pink/50 text-pink"
                     : "border-border/60 hover:border-pink/40",
                 )}
               >
@@ -633,13 +645,13 @@ function SheetButton({
 
 function ChatHeaderSkeleton() {
   return (
-    <header className="sticky top-0 z-20 glass border-b border-border/60 px-2 py-2">
+    <header className="sticky top-0 z-20 glass-strong border-b border-border/60 px-2 py-2">
       <div className="flex items-center gap-2">
-        <Skeleton className="h-9 w-9 rounded-full" />
-        <Skeleton className="h-10 w-10 rounded-full" />
+        <Skeleton className="h-9 w-9 rounded-full vibe-skeleton" />
+        <Skeleton className="h-10 w-10 rounded-full vibe-skeleton" />
         <div className="flex-1 space-y-1">
-          <Skeleton className="h-3 w-24" />
-          <Skeleton className="h-2 w-16" />
+          <Skeleton className="h-3 w-24 vibe-skeleton" />
+          <Skeleton className="h-2 w-16 vibe-skeleton" />
         </div>
       </div>
     </header>

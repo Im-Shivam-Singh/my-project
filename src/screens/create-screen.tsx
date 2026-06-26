@@ -6,7 +6,16 @@ import { ChevronLeft, ImagePlus, CalendarDays, Clock, IndianRupee, Users, Check,
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
-import { CITIES, VIBE_TAGS, type PartyCreateInput } from "@/lib/types";
+import {
+  CITIES,
+  VIBE_TAGS,
+  VIBE_EMOJI,
+  VIBE_COLORS,
+  formatDateLabel,
+  formatFee,
+  formatTime,
+  type PartyCreateInput,
+} from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -96,19 +105,19 @@ export function CreateScreen() {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col animate-screen-in">
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-border/60 glass px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-violet/30 glass px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <button
           onClick={goBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
+          className="flex h-10 w-10 items-center justify-center rounded-full glass border border-cyan/30 text-cyan hover:bg-cyan/10 active:scale-95 transition"
           aria-label="Back"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
           <h1 className="font-display text-lg font-bold leading-tight">
-            Launch a <span className="vibe-gradient-text">Vibe</span>
+            Launch a <span className="vibe-gradient-text text-glow-pink">Vibe</span>
           </h1>
           <p className="text-[11px] text-muted-foreground">
             Fill the details and go live in seconds
@@ -116,242 +125,333 @@ export function CreateScreen() {
         </div>
       </header>
 
-      <div className="fancy-scrollbar flex-1 space-y-6 overflow-y-auto p-4">
-        {/* Cover preview */}
-        <section className="space-y-2">
-          <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-            Cover
-          </Label>
-          <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-border/60">
-            {form.coverUrl && (
-              <img
-                src={form.coverUrl}
-                alt="Cover preview"
-                className="h-full w-full object-cover"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 text-[10px] text-white backdrop-blur">
-              <ImagePlus className="h-3 w-3" /> Tap a preset below
+      <div className="fancy-scrollbar flex-1 overflow-y-auto p-4">
+        <div className="glass-strong vibe-gradient-border rounded-3xl p-4 space-y-6">
+          {/* Cover preview */}
+          <section className="space-y-2">
+            <Label className="text-xs uppercase tracking-wide text-cyan flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan glow-cyan" aria-hidden />
+              Cover
+            </Label>
+            <div className="relative aspect-[16/9] overflow-hidden rounded-2xl vibe-gradient-border">
+              {form.coverUrl && (
+                <img
+                  src={form.coverUrl}
+                  alt="Cover preview"
+                  className="h-full w-full object-cover"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-cyan/10" />
+              <div className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full glass border border-violet/30 px-2 py-1 text-[10px] text-foreground backdrop-blur">
+                <ImagePlus className="h-3 w-3 text-acid" /> Tap a preset below
+              </div>
             </div>
-          </div>
-          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
-            {COVER_PRESETS.map((url) => (
-              <button
-                key={url}
-                onClick={() => set("coverUrl", url)}
-                className={cn(
-                  "relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border transition",
-                  form.coverUrl === url
-                    ? "border-pink ring-2 ring-pink/50"
-                    : "border-border/60 hover:border-pink/40",
-                )}
-              >
-                <img src={url} alt="" className="h-full w-full object-cover" />
-                {form.coverUrl === url && (
-                  <span className="absolute inset-0 flex items-center justify-center bg-pink/30">
-                    <Check className="h-4 w-4 text-white" />
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Title */}
-        <section className="space-y-1.5">
-          <Label htmlFor="title">Party title</Label>
-          <Input
-            id="title"
-            placeholder="e.g. Neon Rooftop: Techno Till Dawn"
-            value={form.title}
-            onChange={(e) => set("title", e.target.value)}
-            className="h-12 rounded-xl"
-            maxLength={80}
-          />
-        </section>
-
-        {/* City + Area */}
-        <section className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label>City</Label>
-            <select
-              value={form.city}
-              onChange={(e) => set("city", e.target.value)}
-              className="h-12 w-full rounded-xl border border-border/60 bg-background/60 px-3 text-sm outline-none focus:border-pink/50"
-            >
-              {CITIES.map((c) => (
-                <option key={c} value={c} className="bg-card">
-                  {c}
-                </option>
+            <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
+              {COVER_PRESETS.map((url) => (
+                <button
+                  key={url}
+                  onClick={() => set("coverUrl", url)}
+                  className={cn(
+                    "relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border transition active:scale-95",
+                    form.coverUrl === url
+                      ? "border-pink ring-2 ring-pink/50 glow-pink"
+                      : "border-violet/30 hover:border-pink/40",
+                  )}
+                >
+                  <img src={url} alt="" className="h-full w-full object-cover" />
+                  {form.coverUrl === url && (
+                    <span className="absolute inset-0 flex items-center justify-center bg-pink/30">
+                      <Check className="h-4 w-4 text-white" />
+                    </span>
+                  )}
+                </button>
               ))}
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="area">Area</Label>
-            <Input
-              id="area"
-              placeholder="Bandra West"
-              value={form.area}
-              onChange={(e) => set("area", e.target.value)}
-              className="h-12 rounded-xl"
-            />
-          </div>
-        </section>
+            </div>
+          </section>
 
-        {/* Date + Time */}
-        <section className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="flex items-center gap-1.5">
-              <CalendarDays className="h-3.5 w-3.5 text-pink" /> Date
+          {/* Title */}
+          <section className="space-y-1.5">
+            <Label htmlFor="title" className="text-cyan flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan glow-cyan" aria-hidden />
+              Party title
             </Label>
             <Input
-              type="date"
-              value={form.date}
-              onChange={(e) => set("date", e.target.value)}
-              className="h-12 rounded-xl"
+              id="title"
+              placeholder="e.g. Neon Rooftop: Techno Till Dawn"
+              value={form.title}
+              onChange={(e) => set("title", e.target.value)}
+              className="h-12 rounded-xl border-violet/40 bg-card/60 text-foreground placeholder:text-muted-foreground/70 focus:border-violet/60 focus:ring-2 focus:ring-violet/25"
+              maxLength={80}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-violet" /> Time
+          </section>
+
+          {/* City + Area */}
+          <section className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-cyan flex items-center gap-1.5">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan glow-cyan" aria-hidden />
+                City
+              </Label>
+              <select
+                value={form.city}
+                onChange={(e) => set("city", e.target.value)}
+                className="h-12 w-full rounded-xl border border-violet/40 bg-card/60 px-3 text-sm text-foreground outline-none focus:border-violet/60 focus:ring-2 focus:ring-violet/25"
+              >
+                {CITIES.map((c) => (
+                  <option key={c} value={c} className="bg-card">
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="area" className="text-cyan flex items-center gap-1.5">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan glow-cyan" aria-hidden />
+                Area
+              </Label>
+              <Input
+                id="area"
+                placeholder="Bandra West"
+                value={form.area}
+                onChange={(e) => set("area", e.target.value)}
+                className="h-12 rounded-xl border-violet/40 bg-card/60 text-foreground placeholder:text-muted-foreground/70 focus:border-violet/60 focus:ring-2 focus:ring-violet/25"
+              />
+            </div>
+          </section>
+
+          {/* Date + Time */}
+          <section className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5 text-cyan">
+                <CalendarDays className="h-3.5 w-3.5 text-pink" /> Date
+              </Label>
+              <Input
+                type="date"
+                value={form.date}
+                onChange={(e) => set("date", e.target.value)}
+                className="h-12 rounded-xl border-violet/40 bg-card/60 text-foreground focus:border-violet/60 focus:ring-2 focus:ring-violet/25"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5 text-cyan">
+                <Clock className="h-3.5 w-3.5 text-violet" /> Time
+              </Label>
+              <Input
+                type="time"
+                value={form.time}
+                onChange={(e) => set("time", e.target.value)}
+                className="h-12 rounded-xl border-violet/40 bg-card/60 text-foreground focus:border-violet/60 focus:ring-2 focus:ring-violet/25"
+              />
+            </div>
+          </section>
+
+          {/* Entry type quick */}
+          <section className="space-y-2">
+            <Label className="text-cyan flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan glow-cyan" aria-hidden />
+              Entry type
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {ENTRY_TYPES.map((t) => {
+                const active = form.fee === t.value;
+                return (
+                  <button
+                    key={t.label}
+                    onClick={() => set("fee", t.value)}
+                    className={cn(
+                      "rounded-xl border px-3 py-2 text-left transition active:scale-95",
+                      active
+                        ? "border-pink bg-pink/10 glow-pink"
+                        : "border-violet/30 bg-card/40 hover:border-pink/40",
+                    )}
+                  >
+                    <div className="text-xs font-semibold">{t.label}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {t.value === 0 ? "No charge" : `~₹${t.value}`}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="relative">
+              <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sunshine" />
+              <Input
+                type="number"
+                min={0}
+                value={form.fee}
+                onChange={(e) => set("fee", Number(e.target.value) || 0)}
+                className="h-11 rounded-xl border-violet/40 bg-card/60 pl-9 text-foreground focus:border-violet/60 focus:ring-2 focus:ring-violet/25"
+              />
+            </div>
+          </section>
+
+          {/* Max guests */}
+          <section className="space-y-2">
+            <Label className="flex items-center gap-1.5 text-cyan">
+              <Users className="h-3.5 w-3.5 text-cyan" /> Max guests
+            </Label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={5}
+                max={100}
+                step={1}
+                value={form.maxGuests}
+                onChange={(e) => set("maxGuests", Number(e.target.value))}
+                className="vibe-slider h-2 flex-1"
+                style={
+                  {
+                    background: `linear-gradient(to right, #ff2e97 0%, #9d4edd ${
+                      ((form.maxGuests - 5) / 95) * 100
+                    }%, rgba(157,78,221,0.18) ${
+                      ((form.maxGuests - 5) / 95) * 100
+                    }%)`,
+                  } as React.CSSProperties
+                }
+              />
+              <span className="w-12 rounded-lg border border-violet/30 bg-card/40 py-1.5 text-center text-sm font-semibold text-cyan">
+                {form.maxGuests}
+              </span>
+            </div>
+          </section>
+
+          {/* Vibe chips multi-select */}
+          <section className="space-y-2">
+            <Label className="text-cyan flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan glow-cyan" aria-hidden />
+              Vibes (pick what fits)
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {VIBE_TAGS.map((v) => {
+                const active = form.vibes.includes(v);
+                const color = VIBE_COLORS[v];
+                return (
+                  <button
+                    key={v}
+                    onClick={() => toggleVibe(v)}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition active:scale-95",
+                      active
+                        ? cn(
+                            "bg-gradient-to-br scale-110 glow-pink",
+                            color || "from-pink/30 to-violet/20 text-pink-200 border-pink-400/50",
+                          )
+                        : "glass border-violet/25 text-muted-foreground hover:text-foreground hover:border-cyan/40",
+                    )}
+                  >
+                    <span aria-hidden>{VIBE_EMOJI[v]}</span>
+                    {v}
+                    {active && <Check className="h-3 w-3 ml-0.5" />}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Description */}
+          <section className="space-y-1.5">
+            <Label htmlFor="desc" className="text-cyan flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan glow-cyan" aria-hidden />
+              Description
+            </Label>
+            <Textarea
+              id="desc"
+              rows={4}
+              placeholder="Set the scene: music, vibe, dress code, what to bring, house rules…"
+              value={form.description}
+              onChange={(e) => set("description", e.target.value)}
+              className="rounded-xl border-violet/40 bg-card/60 text-foreground placeholder:text-muted-foreground/70 focus:border-violet/60 focus:ring-2 focus:ring-violet/25"
+              maxLength={600}
+            />
+            <p className="text-right text-[11px] text-muted-foreground">
+              {form.description.length}/600
+            </p>
+          </section>
+
+          {/* Host name */}
+          <section className="space-y-1.5">
+            <Label htmlFor="host" className="text-cyan flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan glow-cyan" aria-hidden />
+              Host name
             </Label>
             <Input
-              type="time"
-              value={form.time}
-              onChange={(e) => set("time", e.target.value)}
-              className="h-12 rounded-xl"
+              id="host"
+              value={form.hostName}
+              onChange={(e) => set("hostName", e.target.value)}
+              className="h-12 rounded-xl border-violet/40 bg-card/60 text-foreground placeholder:text-muted-foreground/70 focus:border-violet/60 focus:ring-2 focus:ring-violet/25"
             />
-          </div>
-        </section>
+          </section>
 
-        {/* Entry type quick */}
-        <section className="space-y-2">
-          <Label>Entry type</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {ENTRY_TYPES.map((t) => {
-              const active = form.fee === t.value;
-              return (
-                <button
-                  key={t.label}
-                  onClick={() => set("fee", t.value)}
-                  className={cn(
-                    "rounded-xl border px-3 py-2 text-left transition",
-                    active
-                      ? "border-pink bg-pink/10"
-                      : "border-border/60 bg-card/40 hover:border-pink/40",
+          {/* Live preview — how the party card will look */}
+          <section className="space-y-2">
+            <Label className="text-cyan flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-acid" />
+              Live preview
+            </Label>
+            <div className="overflow-hidden rounded-2xl glass border border-violet/25 vibe-gradient-border">
+              <div className="relative aspect-[16/9] w-full">
+                {form.coverUrl ? (
+                  <img
+                    src={form.coverUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full vibe-gradient-bg opacity-60" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+                <span className="absolute right-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold text-sunshine backdrop-blur">
+                  {formatFee(form.fee)}
+                </span>
+              </div>
+              <div className="space-y-2 p-3">
+                <p className="font-display text-sm font-bold leading-tight">
+                  {form.title.trim() || (
+                    <span className="text-muted-foreground">Your party title</span>
                   )}
-                >
-                  <div className="text-xs font-semibold">{t.label}</div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {t.value === 0 ? "No charge" : `~₹${t.value}`}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {formatDateLabel(form.date)} · {formatTime(form.time)} ·{" "}
+                  {form.area || "Area"}, {form.city}
+                </p>
+                {form.vibes.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {form.vibes.map((v) => (
+                      <span
+                        key={v}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full border bg-gradient-to-br px-2 py-0.5 text-[10px] font-medium",
+                          VIBE_COLORS[v] ||
+                            "from-pink/20 to-violet/20 text-pink-200 border-pink-400/40",
+                        )}
+                      >
+                        {VIBE_EMOJI[v]} {v}
+                      </span>
+                    ))}
                   </div>
-                </button>
-              );
-            })}
-          </div>
-          <div className="relative">
-            <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="number"
-              min={0}
-              value={form.fee}
-              onChange={(e) => set("fee", Number(e.target.value) || 0)}
-              className="h-11 rounded-xl pl-9"
-            />
-          </div>
-        </section>
-
-        {/* Max guests */}
-        <section className="space-y-2">
-          <Label className="flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5 text-cyan" /> Max guests
-          </Label>
-          <div className="flex items-center gap-3">
-            <input
-              type="range"
-              min={5}
-              max={100}
-              step={1}
-              value={form.maxGuests}
-              onChange={(e) => set("maxGuests", Number(e.target.value))}
-              className="vibe-slider h-2 flex-1"
-              style={
-                {
-                  background: `linear-gradient(to right, #ec4899 0%, #a855f7 ${
-                    ((form.maxGuests - 5) / 95) * 100
-                  }%, rgba(168,85,247,0.18) ${
-                    ((form.maxGuests - 5) / 95) * 100
-                  }%)`,
-                } as React.CSSProperties
-              }
-            />
-            <span className="w-12 rounded-lg border border-border/60 bg-card/40 py-1.5 text-center text-sm font-semibold">
-              {form.maxGuests}
-            </span>
-          </div>
-        </section>
-
-        {/* Vibe chips multi-select */}
-        <section className="space-y-2">
-          <Label>Vibes (pick what fits)</Label>
-          <div className="flex flex-wrap gap-2">
-            {VIBE_TAGS.map((v) => {
-              const active = form.vibes.includes(v);
-              return (
-                <button
-                  key={v}
-                  onClick={() => toggleVibe(v)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-xs font-medium transition",
-                    active
-                      ? "border-transparent vibe-gradient-bg text-white"
-                      : "border-border/60 bg-card/40 text-muted-foreground hover:text-foreground hover:border-pink/40",
-                  )}
-                >
-                  {active ? "✓ " : ""}
-                  {v}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Description */}
-        <section className="space-y-1.5">
-          <Label htmlFor="desc">Description</Label>
-          <Textarea
-            id="desc"
-            rows={4}
-            placeholder="Set the scene: music, vibe, dress code, what to bring, house rules…"
-            value={form.description}
-            onChange={(e) => set("description", e.target.value)}
-            className="rounded-xl"
-            maxLength={600}
-          />
-          <p className="text-right text-[11px] text-muted-foreground">
-            {form.description.length}/600
-          </p>
-        </section>
-
-        {/* Host name */}
-        <section className="space-y-1.5">
-          <Label htmlFor="host">Host name</Label>
-          <Input
-            id="host"
-            value={form.hostName}
-            onChange={(e) => set("hostName", e.target.value)}
-            className="h-12 rounded-xl"
-          />
-        </section>
+                )}
+                <p className="text-[11px] text-foreground/70">
+                  Hosted by{" "}
+                  <span className="font-semibold text-cyan">
+                    {form.hostName || "You"}
+                  </span>{" "}
+                  · up to {form.maxGuests} guests
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       {/* Footer CTA */}
-      <footer className="sticky bottom-0 z-20 border-t border-border/60 glass px-4 py-3 safe-bottom">
+      <footer className="sticky bottom-0 z-20 border-t border-violet/30 glass px-4 py-3 safe-bottom">
         <Button
           onClick={submit}
           disabled={submitting}
-          className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-semibold shadow-[0_10px_30px_-8px_rgba(236,72,153,0.7)]"
+          className={cn(
+            "h-12 w-full rounded-xl vibe-gradient-bg text-base font-semibold glow-pink transition active:scale-95 disabled:opacity-60",
+            !submitting && "vibe-pulse",
+          )}
         >
           {submitting ? (
             "Launching…"
@@ -368,12 +468,12 @@ export function CreateScreen() {
         .vibe-slider::-webkit-slider-thumb {
           -webkit-appearance: none; appearance: none;
           width: 20px; height: 20px; border-radius: 50%;
-          background: #fff; border: 3px solid #ec4899;
-          box-shadow: 0 2px 8px rgba(236,72,153,0.5); cursor: pointer;
+          background: #fff; border: 3px solid #ff2e97;
+          box-shadow: 0 2px 8px rgba(255,46,151,0.6); cursor: pointer;
         }
         .vibe-slider::-moz-range-thumb {
           width: 20px; height: 20px; border-radius: 50%;
-          background: #fff; border: 3px solid #ec4899; cursor: pointer;
+          background: #fff; border: 3px solid #ff2e97; cursor: pointer;
         }
       `}</style>
     </div>

@@ -58,21 +58,23 @@ export function EditProfileScreen() {
   if (!currentUser) return null;
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="sticky top-0 z-20 flex items-center gap-2 glass border-b border-border/60 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+    <div className="flex h-full flex-col animate-screen-in">
+      <header className="sticky top-0 z-20 flex items-center gap-2 glass-strong border-b border-border/60 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <button
           onClick={goBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-cyan transition hover:bg-cyan/10 hover:text-cyan hover:glow-cyan"
           aria-label="Back"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h1 className="flex-1 font-display text-lg font-bold">Edit profile</h1>
+        <h1 className="flex-1 font-display text-lg font-bold">
+          <span className="vibe-gradient-text">Edit profile</span>
+        </h1>
         <Button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
           size="sm"
-          className="rounded-full vibe-gradient-bg"
+          className="rounded-full vibe-gradient-bg glow-pink"
         >
           <Check className="mr-1 h-4 w-4" /> Save
         </Button>
@@ -82,8 +84,11 @@ export function EditProfileScreen() {
         {/* Avatar */}
         <section className="flex flex-col items-center gap-3">
           <div className="relative">
-            <UserAvatar name={name || "You"} src={avatarUrl} size={96} ring />
-            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full vibe-gradient-bg ring-4 ring-background">
+            <span className="absolute -inset-1 rounded-full vibe-gradient-bg opacity-80 blur-[2px]" />
+            <span className="relative block rounded-full ring-2 ring-background">
+              <UserAvatar name={name || "You"} src={avatarUrl} size={96} />
+            </span>
+            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full vibe-gradient-bg ring-4 ring-background glow-pink">
               <Camera className="h-4 w-4 text-white" />
             </span>
           </div>
@@ -93,7 +98,9 @@ export function EditProfileScreen() {
                 key={u}
                 onClick={() => setAvatarUrl(u)}
                 className={`h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 transition ${
-                  avatarUrl === u ? "border-pink" : "border-transparent opacity-70"
+                  avatarUrl === u
+                    ? "border-pink glow-pink"
+                    : "border-transparent opacity-70 hover:opacity-100 hover:border-violet/50"
                 }`}
               >
                 <img src={u} alt="" className="h-full w-full object-cover" />
@@ -102,71 +109,80 @@ export function EditProfileScreen() {
           </div>
         </section>
 
-        <Field label="Name">
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-12 rounded-xl"
-          />
-        </Field>
-
-        <Field label="Username">
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-              @
-            </span>
+        <div className="space-y-5 rounded-3xl glass-strong vibe-gradient-border p-4">
+          <Field label="Name">
             <Input
-              value={username}
-              onChange={(e) =>
-                setUsername(e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase())
-              }
-              className="h-12 rounded-xl pl-7"
-              placeholder="viber123"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-12 rounded-xl border-border/60 bg-card/60 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
             />
-          </div>
-        </Field>
+          </Field>
 
-        <Field label="Bio">
-          <Textarea
-            rows={3}
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            maxLength={160}
-            className="rounded-xl"
-            placeholder="Tell people what kind of night-owl you are…"
-          />
-          <p className="text-right text-[11px] text-muted-foreground">
-            {bio.length}/160
-          </p>
-        </Field>
+          <Field label="Username">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-cyan/80">
+                @
+              </span>
+              <Input
+                value={username}
+                onChange={(e) =>
+                  setUsername(e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase())
+                }
+                className="h-12 rounded-xl border-border/60 bg-card/60 pl-7 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
+                placeholder="viber123"
+              />
+            </div>
+          </Field>
 
-        <Field label="City">
-          <select
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="h-12 w-full rounded-xl border border-border/60 bg-background/60 px-3 text-sm outline-none focus:border-pink/50"
-          >
-            {CITIES.map((c) => (
-              <option key={c} value={c} className="bg-card">
-                {c}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label="Instagram (optional)">
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-              @
-            </span>
-            <Input
-              value={instagram}
-              onChange={(e) => setInstagram(e.target.value)}
-              className="h-12 rounded-xl pl-7"
-              placeholder="your.handle"
+          <Field label="Bio">
+            <Textarea
+              rows={3}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={160}
+              className="rounded-xl border-border/60 bg-card/60 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
+              placeholder="Tell people what kind of night-owl you are…"
             />
-          </div>
-        </Field>
+            <p className="text-right text-[11px] text-muted-foreground">
+              {bio.length}/160
+            </p>
+          </Field>
+
+          <Field label="City">
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="h-12 w-full rounded-xl border border-border/60 bg-card/60 px-3 text-sm outline-none transition focus:border-violet/50 focus:ring-2 focus:ring-violet/40"
+            >
+              {CITIES.map((c) => (
+                <option key={c} value={c} className="bg-card">
+                  {c}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Instagram (optional)">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-cyan/80">
+                @
+              </span>
+              <Input
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                className="h-12 rounded-xl border-border/60 bg-card/60 pl-7 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
+                placeholder="your.handle"
+              />
+            </div>
+          </Field>
+        </div>
+
+        <button
+          onClick={goBack}
+          className="flex h-11 w-full items-center justify-center rounded-full glass px-4 text-sm font-medium text-foreground/90 ring-1 ring-border/40 transition hover:ring-rose-400/40 hover:text-rose-300"
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );
@@ -181,7 +197,8 @@ function Field({
 }) {
   return (
     <section className="space-y-1.5">
-      <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+      <Label className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] text-cyan/90">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-pink shadow-[0_0_6px_rgba(255,46,151,0.8)]" />
         {label}
       </Label>
       {children}

@@ -19,32 +19,47 @@ interface LiveBadgeProps {
 
 const STATUS_STYLES: Record<
   PartyLiveStatus,
-  { bg: string; text: string; icon: typeof Radio; label: (c: string) => string }
+  {
+    bg: string;
+    text: string;
+    icon: typeof Radio;
+    label: (c: string) => string;
+    extra?: string;
+  }
 > = {
+  // Hot magenta — LIVE NOW
   live: {
-    bg: "bg-gold/20 border-gold/50",
-    text: "text-gold-light",
+    bg: "bg-pink/25 border-pink/60",
+    text: "text-pink text-glow-pink",
     icon: Radio,
     label: () => "Live now",
+    extra: "vibe-live-ring",
   },
+  // Amber + coral — starting soon (warm urgency)
   "starting-soon": {
-    bg: "bg-gold-bright/20 border-gold-bright/45",
-    text: "text-gold-light",
+    bg: "bg-orange-500/25 border-orange-400/60",
+    text: "text-orange-200",
     icon: Hourglass,
     label: (c: string) => `Starts ${c}`,
+    extra: "shadow-[0_0_18px_-4px_rgba(255,107,53,0.7)]",
   },
+  // Electric cyan — today
   today: {
-    bg: "bg-gold/15 border-gold/35",
-    text: "text-gold-light",
+    bg: "bg-cyan-500/20 border-cyan-400/55",
+    text: "text-cyan-100",
     icon: CalendarClock,
     label: (c: string) => `Today · ${c}`,
+    extra: "shadow-[0_0_16px_-4px_rgba(0,240,255,0.6)]",
   },
+  // Electric violet — upcoming
   upcoming: {
-    bg: "bg-gold-deep/20 border-gold/30",
-    text: "text-gold-light/90",
+    bg: "bg-violet-500/20 border-violet-400/55",
+    text: "text-violet-200",
     icon: CalendarClock,
     label: (c: string) => `Starts ${c}`,
+    extra: "shadow-[0_0_16px_-4px_rgba(157,78,221,0.6)]",
   },
+  // Muted — ended
   past: {
     bg: "bg-secondary/40 border-border/40",
     text: "text-muted-foreground",
@@ -84,11 +99,16 @@ export function LiveCountdown({
         size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-3 py-1 text-xs",
         cfg.bg,
         cfg.text,
-        status === "live" && "vibe-live-ring animate-pulse",
+        cfg.extra,
         className,
       )}
     >
-      <Icon className={cn(size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5", status === "live" && "animate-pulse")} />
+      <Icon
+        className={cn(
+          size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5",
+          status === "live" && "animate-pulse",
+        )}
+      />
       {cfg.label(countdown)}
     </span>
   );

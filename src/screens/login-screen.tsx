@@ -62,51 +62,46 @@ export function LoginScreen() {
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col overflow-hidden">
-      {/* Animated gold background blobs — brighter so glassmorphism reads */}
+      {/* Gen Z aurora — tri-color drifting blobs (pink / cyan / violet) behind glass */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-24 -right-16 h-80 w-80 rounded-full bg-gold/30 blur-3xl vibe-float" />
-        <div className="absolute top-1/3 -left-20 h-80 w-80 rounded-full bg-gold-bright/25 blur-3xl vibe-float" style={{ animationDelay: "0.6s" }} />
-        <div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-gold-deep/35 blur-3xl vibe-float" style={{ animationDelay: "1.2s" }} />
+        <div className="absolute -top-24 -right-20 h-96 w-96 rounded-full bg-pink/40 blur-3xl aurora-drift" />
+        <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-cyan/35 blur-3xl aurora-drift" style={{ animationDelay: "-4s" }} />
+        <div className="absolute top-1/3 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-violet/40 blur-3xl aurora-drift" style={{ animationDelay: "-8s" }} />
+        {/* sparkly accents */}
+        <div className="absolute right-8 top-24 text-3xl vibe-float" aria-hidden>✨</div>
+        <div className="absolute left-10 top-1/2 text-2xl vibe-float" style={{ animationDelay: "1s" }} aria-hidden>💫</div>
         {/* faint diagonal sheen */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-gold-bright/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-pink/5 via-transparent to-cyan/5" />
       </div>
 
       {/* Header / brand */}
       <div className="flex flex-1 flex-col justify-center px-6 pt-16">
         <div className="mb-8 animate-slide-up text-center">
-          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl vibe-gradient-bg shadow-[0_15px_50px_-10px_rgba(212,175,55,0.6)] vibe-pulse">
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl vibe-gradient-bg glow-pink vibe-pulse">
             <Sparkles className="h-10 w-10 text-black" />
           </div>
-          <h1 className="font-display text-4xl font-extrabold tracking-tight">
-            <span className="vibe-gradient-text">VibeMatch</span>
+          <h1 className="font-display text-5xl font-extrabold tracking-tight">
+            <span className="vibe-gradient-text text-glow-pink">VibeMatch</span>
           </h1>
-          <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
+          <p className="mx-auto mt-2 max-w-xs text-sm text-foreground/80">
             Find local parties. Connect with hosts. Build your night out.
           </p>
         </div>
 
-        {/* Card — glassmorphism: translucent so the gold blobs behind read through */}
+        {/* Card — glass panel with holo edge + violet glow */}
         <div
-          className="animate-slide-up rounded-3xl border border-gold/25 p-6 backdrop-blur-2xl vibe-gradient-border"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(24,20,13,0.55) 0%, rgba(10,8,5,0.45) 100%)",
-            boxShadow:
-              "inset 0 1px 0 0 rgba(212,175,55,0.18), inset 0 0 0 1px rgba(212,175,55,0.06), 0 20px 60px -20px rgba(0,0,0,0.7)",
-            animationDelay: "0.08s",
-          }}
+          className="animate-slide-up glass vibe-gradient-border glow-violet rounded-3xl p-6"
+          style={{ animationDelay: "0.08s" }}
         >
           {step === "phone" ? (
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-xs font-medium uppercase tracking-wide text-cyan">
                   Phone number
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <span className="absolute left-9 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    +91
-                  </span>
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan/80" />
+                  <span className="absolute left-9 top-1/2 -translate-y-1/2 text-sm text-cyan">+91</span>
                   <Input
                     inputMode="numeric"
                     autoFocus
@@ -116,27 +111,27 @@ export function LoginScreen() {
                       setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
                     }
                     onKeyDown={(e) => e.key === "Enter" && sendOtp()}
-                    className="rounded-xl border-border/60 bg-background/60 pl-16 h-12 text-base"
+                    className="h-12 rounded-xl border-violet/40 bg-card/60 pl-16 text-base text-foreground outline-none placeholder:text-muted-foreground/70 focus:border-cyan/60 focus:ring-2 focus:ring-cyan/25"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-xs font-medium uppercase tracking-wide text-cyan">
                   Your name <span className="text-muted-foreground/60">(optional)</span>
                 </label>
                 <Input
                   placeholder="What should hosts call you?"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="rounded-xl border-border/60 bg-background/60 h-12"
+                  className="h-12 rounded-xl border-violet/40 bg-card/60 text-foreground outline-none placeholder:text-muted-foreground/70 focus:border-cyan/60 focus:ring-2 focus:ring-cyan/25"
                 />
               </div>
 
               <Button
                 onClick={sendOtp}
                 disabled={loading}
-                className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-bold text-black shadow-[0_10px_30px_-8px_rgba(212,175,55,0.6)] hover:opacity-95"
+                className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-bold text-black glow-pink transition active:scale-95 hover:opacity-95"
               >
                 {loading ? "Sending…" : "Send OTP"}
                 <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -154,10 +149,12 @@ export function LoginScreen() {
               </button>
 
               <div className="space-y-1.5 text-center">
-                <h2 className="font-display text-xl font-semibold">Verify it's you</h2>
+                <h2 className="font-display text-xl font-semibold">
+                  <span className="vibe-gradient-text text-glow-pink">Verify it's you</span>
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   We sent a 5-digit code to{" "}
-                  <span className="font-medium text-foreground">{fullPhone}</span>
+                  <span className="font-medium text-cyan">{fullPhone}</span>
                 </p>
               </div>
 
@@ -167,26 +164,26 @@ export function LoginScreen() {
                   value={otp}
                   onChange={(v) => setOtp(v)}
                 >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
+                  <InputOTPGroup className="gap-2">
+                    <InputOTPSlot index={0} className="h-12 w-12 rounded-xl border border-cyan/40 bg-cyan/10 font-mono text-lg font-bold text-cyan text-glow-cyan first:rounded-l-xl last:rounded-r-xl" />
+                    <InputOTPSlot index={1} className="h-12 w-12 rounded-xl border border-cyan/40 bg-cyan/10 font-mono text-lg font-bold text-cyan text-glow-cyan first:rounded-l-xl last:rounded-r-xl" />
+                    <InputOTPSlot index={2} className="h-12 w-12 rounded-xl border border-cyan/40 bg-cyan/10 font-mono text-lg font-bold text-cyan text-glow-cyan first:rounded-l-xl last:rounded-r-xl" />
+                    <InputOTPSlot index={3} className="h-12 w-12 rounded-xl border border-cyan/40 bg-cyan/10 font-mono text-lg font-bold text-cyan text-glow-cyan first:rounded-l-xl last:rounded-r-xl" />
+                    <InputOTPSlot index={4} className="h-12 w-12 rounded-xl border border-cyan/40 bg-cyan/10 font-mono text-lg font-bold text-cyan text-glow-cyan first:rounded-l-xl last:rounded-r-xl" />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
 
               {devOtp && (
                 <p className="text-center text-[11px] text-muted-foreground">
-                  Dev OTP: <span className="font-mono text-gold">{devOtp}</span> (auto-fill in dev)
+                  Dev OTP: <span className="font-mono text-acid text-glow-acid">{devOtp}</span> (auto-fill in dev)
                 </p>
               )}
 
               <Button
                 onClick={verifyOtp}
                 disabled={loading}
-                className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-bold text-black"
+                className="h-12 w-full rounded-xl vibe-gradient-bg text-base font-bold text-black glow-pink transition active:scale-95 hover:opacity-95"
               >
                 {loading ? "Verifying…" : "Verify & Continue"}
                 <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -203,7 +200,7 @@ export function LoginScreen() {
         </div>
 
         <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5 text-gold" />
+          <ShieldCheck className="h-3.5 w-3.5 text-acid" />
           By continuing you agree to be respectful & follow community guidelines.
         </p>
       </div>
@@ -215,16 +212,16 @@ function SocialLogin() {
   return (
     <div className="space-y-3 pt-2">
       <div className="relative flex items-center">
-        <div className="h-px flex-1 bg-border" />
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-violet/40" />
         <span className="px-3 text-[11px] text-muted-foreground">
           or continue with
         </span>
-        <div className="h-px flex-1 bg-border" />
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-violet/40" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Button
           variant="outline"
-          className="h-11 rounded-xl border-border/60 bg-background/40"
+          className="h-11 rounded-xl border-violet/40 bg-card/40 text-foreground transition hover:border-cyan/60 hover:bg-cyan/5"
           onClick={() => toast.info("Google login is UI-only for now")}
         >
           <GoogleIcon className="mr-2 h-4 w-4" />
@@ -232,7 +229,7 @@ function SocialLogin() {
         </Button>
         <Button
           variant="outline"
-          className="h-11 rounded-xl border-border/60 bg-background/40"
+          className="h-11 rounded-xl border-violet/40 bg-card/40 text-foreground transition hover:border-pink/60 hover:bg-pink/5"
           onClick={() => toast.info("Instagram login is UI-only for now")}
         >
           <InstagramIcon className="mr-2 h-4 w-4" />

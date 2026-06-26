@@ -107,14 +107,14 @@ export function ProfileScreen() {
   ];
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="sticky top-0 z-20 flex items-center justify-between glass border-b border-border/60 px-4 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+    <div className="flex h-full flex-col animate-screen-in">
+      <header className="sticky top-0 z-20 flex items-center justify-between glass-strong border-b border-border/60 px-4 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <h1 className="font-display text-xl font-bold">
           <span className="vibe-gradient-text">Profile</span>
         </h1>
         <button
           onClick={() => toast.info("Settings coming soon")}
-          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-violet/10 hover:text-violet"
           aria-label="Settings"
         >
           <Settings className="h-5 w-5" />
@@ -123,19 +123,25 @@ export function ProfileScreen() {
 
       <div className="fancy-scrollbar flex-1 overflow-y-auto px-4 pb-6">
         {/* Hero */}
-        <section className="relative mt-4 overflow-hidden rounded-3xl border border-border/60 bg-card/60 p-5">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-pink/20 blur-3xl" />
-          <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-violet/20 blur-3xl" />
+        <section className="relative mt-4 overflow-hidden rounded-3xl glass-strong vibe-gradient-border p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 vibe-gradient-bg opacity-30" />
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-pink/30 blur-3xl" />
+          <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-cyan/25 blur-3xl" />
           <div className="relative flex items-center gap-4">
-            <UserAvatar name={user.name} src={user.avatarUrl} size={72} ring />
+            <span className="relative block rounded-full">
+              <span className="absolute -inset-1 rounded-full vibe-gradient-bg opacity-80 blur-[2px]" />
+              <span className="relative block rounded-full ring-2 ring-background">
+                <UserAvatar name={user.name} src={user.avatarUrl} size={72} />
+              </span>
+            </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h2 className="font-display text-xl font-bold truncate">
                   {user.name}
                 </h2>
-                <Crown className="h-4 w-4 text-amber-400" />
+                <Crown className="h-4 w-4 text-sunshine text-glow-acid" />
               </div>
-              <p className="text-sm text-muted-foreground truncate">
+              <p className="truncate text-sm font-medium text-cyan/90">
                 @{user.username || "viber"} · {user.city || "India"}
               </p>
               <div className="mt-1.5">
@@ -144,11 +150,11 @@ export function ProfileScreen() {
             </div>
           </div>
           {user.bio && (
-            <p className="relative mt-4 text-sm text-foreground/90">{user.bio}</p>
+            <p className="relative mt-4 rounded-2xl glass px-3 py-2 text-sm text-foreground/90">{user.bio}</p>
           )}
           <button
             onClick={() => setScreen("edit-profile")}
-            className="relative mt-4 inline-flex h-10 items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-4 text-sm font-medium hover:border-pink/40"
+            className="relative mt-4 inline-flex h-10 items-center gap-1.5 rounded-full vibe-gradient-bg px-4 text-sm font-semibold text-white glow-pink transition active:scale-95"
           >
             <Pencil className="h-3.5 w-3.5" /> Edit profile
           </button>
@@ -156,16 +162,16 @@ export function ProfileScreen() {
 
         {/* Stats */}
         <section className="mt-4 grid grid-cols-3 gap-3">
-          <Stat icon={<Sparkles className="h-4 w-4 text-pink" />} label="Vibes" value={user.vibes} />
-          <Stat icon={<Flame className="h-4 w-4 text-amber-400" />} label="Hosted" value={user.hosted} />
-          <Stat icon={<Star className="h-4 w-4 text-violet" />} label="Rating" value={user.rating.toFixed(1)} />
+          <Stat icon={<Sparkles className="h-4 w-4 text-pink" />} label="Vibes" value={user.vibes} accent="pink" delay={0} />
+          <Stat icon={<Flame className="h-4 w-4 text-coral" />} label="Hosted" value={user.hosted} accent="violet" delay={60} />
+          <Stat icon={<Star className="h-4 w-4 text-cyan" />} label="Rating" value={user.rating.toFixed(1)} accent="cyan" delay={120} />
         </section>
 
         {/* Vibe score card with tier + progress */}
-        <section className="mt-4 overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-pink/10 via-violet/10 to-cyan/10 p-5">
+        <section className="mt-4 overflow-hidden rounded-3xl glass-strong vibe-gradient-border p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-cyan/80">
                 Vibe score
               </p>
               <p className="font-display text-3xl font-extrabold">
@@ -193,10 +199,10 @@ export function ProfileScreen() {
                   {nextTier.min - vibeScore} to {nextTier.name}
                 </span>
               ) : (
-                <span className="text-amber-300">Max tier reached 👑</span>
+                <span className="font-semibold text-sunshine text-glow-acid">Max tier reached 👑</span>
               )}
             </div>
-            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-secondary">
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-secondary/60 ring-1 ring-border/40">
               <div
                 className="h-full rounded-full vibe-gradient-bg transition-all duration-700"
                 style={{ width: `${tierProgress}%` }}
@@ -210,17 +216,17 @@ export function ProfileScreen() {
 
         {/* Achievements / badges */}
         <section className="mt-4">
-          <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] uppercase tracking-wider text-muted-foreground">
-            <Trophy className="h-3.5 w-3.5 text-amber-400" /> Achievements
+          <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] uppercase tracking-[0.2em] text-cyan/80">
+            <Trophy className="h-3.5 w-3.5 text-sunshine" /> Achievements
           </h3>
           <div className="grid grid-cols-3 gap-2">
             {achievements.map((a) => (
               <div
                 key={a.label}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-2xl border p-3 text-center transition",
+                  "flex flex-col items-center gap-1 rounded-2xl border p-3 text-center transition glass",
                   a.unlocked
-                    ? "border-border/60 bg-card/60"
+                    ? "border-border/60 vibe-gradient-border"
                     : "border-border/40 bg-card/20 opacity-50 grayscale",
                 )}
               >
@@ -241,12 +247,12 @@ export function ProfileScreen() {
 
         {/* Activity */}
         <section className="mt-6">
-          <h3 className="mb-2 px-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <h3 className="mb-2 px-1 text-[11px] uppercase tracking-[0.2em] text-cyan/80">
             Activity
           </h3>
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/40">
+          <div className="overflow-hidden rounded-2xl glass-strong vibe-gradient-border">
             <Row
-              icon={<Flame className="h-4 w-4 text-amber-400" />}
+              icon={<Flame className="h-4 w-4 text-coral" />}
               label="My parties"
               sub={`${user.hosted} hosted`}
               onClick={() => setScreen("my-parties")}
@@ -275,10 +281,10 @@ export function ProfileScreen() {
 
         {/* Settings */}
         <section className="mt-6">
-          <h3 className="mb-2 px-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <h3 className="mb-2 px-1 text-[11px] uppercase tracking-[0.2em] text-cyan/80">
             Settings
           </h3>
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/40">
+          <div className="overflow-hidden rounded-2xl glass-strong vibe-gradient-border">
             <Row
               icon={<Bell className="h-4 w-4 text-violet" />}
               label="Notifications"
@@ -316,7 +322,7 @@ export function ProfileScreen() {
             logout();
             toast.success("Signed out. See you on the dancefloor 💃");
           }}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/5 py-3 text-sm font-medium text-rose-400 transition hover:bg-rose-500/10"
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-500/40 bg-rose-500/10 py-3 text-sm font-medium text-rose-300 transition hover:bg-rose-500/20 hover:border-rose-500/60"
         >
           <LogOut className="h-4 w-4" /> Sign out
         </button>
@@ -333,13 +339,29 @@ function Stat({
   icon,
   label,
   value,
+  accent = "pink",
+  delay = 0,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | number;
+  accent?: "pink" | "violet" | "cyan";
+  delay?: number;
 }) {
+  const accentRing =
+    accent === "pink"
+      ? "ring-pink/40 hover:glow-pink"
+      : accent === "violet"
+        ? "ring-violet/40 hover:glow-violet"
+        : "ring-cyan/40 hover:glow-cyan";
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-3 text-center">
+    <div
+      className={cn(
+        "animate-pop-in rounded-2xl glass-strong p-3 text-center ring-1 transition",
+        accentRing,
+      )}
+      style={{ animationDelay: `${delay}ms` }}
+    >
       <div className="flex justify-center">{icon}</div>
       <p className="mt-1 font-display text-xl font-bold">{value}</p>
       <p className="text-[11px] text-muted-foreground">{label}</p>
@@ -368,7 +390,7 @@ function Row({
         !last && "border-b border-border/40",
       )}
     >
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 ring-1 ring-border/40">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
