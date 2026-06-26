@@ -25,10 +25,10 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="vibe-float flex h-20 w-20 items-center justify-center rounded-3xl glass border-yellow-400/40">
-        <Icon className="h-9 w-9 text-yellow-400" strokeWidth={2} />
+      <div className="vibe-float flex h-20 w-20 items-center justify-center rounded-3xl glass border-purple-500/40">
+        <Icon className="h-9 w-9 text-purple-400" strokeWidth={2} />
       </div>
-      <h3 className="font-display text-xl font-semibold text-yellow-400">
+      <h3 className="font-display text-xl font-semibold text-purple-300">
         {title}
       </h3>
       {description && (

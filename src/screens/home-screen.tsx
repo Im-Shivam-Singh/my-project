@@ -6,24 +6,45 @@ import {
   Search,
   X,
   MapPin,
-  CalendarClock,
-  Flame,
-  TrendingUp,
   Heart,
-  Sparkles,
-  Map as MapIcon,
-  Wand2,
-  Bell,
+  SlidersHorizontal,
+  Ticket as TicketIcon,
+  Compass,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
-import { CITIES, VIBE_TAGS, VIBE_EMOJI, parseVibes } from "@/lib/types";
-import { PartyCard } from "@/components/vibe/party-card";
+import {
+  CITIES,
+  VIBE_TAGS,
+  VIBE_EMOJI,
+  VIBE_COLORS,
+  parseVibes,
+  formatFee,
+  formatDateLabel,
+  formatTime,
+  slotsLeft,
+  partyLiveStatus,
+  currencyForCity,
+  type Party,
+} from "@/lib/types";
 import { EmptyState } from "@/components/vibe/empty-state";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
-type FeedTab = "for-you" | "all";
+type Tab = "house" | "social";
+
+// Hero background per first vibe — matches the spec's slide 3 hero colors
+const HERO_BG: Record<string, string> = {
+  "R&B": "#1a1035",
+  Bollywood: "#1a2410",
+  BYOB: "#1a1035",
+  Games: "#0d1f2d",
+  "Lo-fi": "#1a1035",
+  Chill: "#0d1f2d",
+  EDM: "#1a1035",
+  Retro: "#0d1f2d",
+};
 
 export function HomeScreen() {
   const cityFilter = useAppStore((s) => s.cityFilter);
@@ -34,14 +55,12 @@ export function HomeScreen() {
   const setSearchQuery = useAppStore((s) => s.setSearchQuery);
   const setSelectedPartyId = useAppStore((s) => s.setSelectedPartyId);
   const setScreen = useAppStore((s) => s.setScreen);
-  const openCreate = useAppStore((s) => s.openCreate);
   const savedCount = useAppStore((s) => s.savedPartyIds.length);
   const currentUser = useAppStore((s) => s.currentUser);
 
-  const [tab, setTab] = useState<FeedTab>("for-you");
+  const [tab, setTab] = useState<Tab>("house");
+  const [localSearch, setLocalSearch] = useState(searchQuery);
 
-  // Standard feed query — used by both tabs (For You is a re-rank of the same data,
-  // combined with the personalization endpoint for vibe matching)
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["parties", cityFilter, vibeFilter, searchQuery],
     queryFn: () =>
@@ -50,14 +69,6 @@ export function HomeScreen() {
         vibe: vibeFilter,
         q: searchQuery || undefined,
       }),
-  });
-
-  // Personalized feed — ranked by vibe overlap with the user's preferences
-  const { data: forYouData } = useQuery({
-    queryKey: ["for-you", currentUser?.id],
-    queryFn: () => api.forYou(currentUser!.id),
-    enabled: !!currentUser && tab === "for-you" && !searchQuery && !vibeFilter,
-    staleTime: 60_000,
   });
 
   const parties = data?.parties ?? [];
@@ -75,328 +86,278 @@ export function HomeScreen() {
     [parties],
   );
 
-  // For You parties — fall back to all parties if no personalization yet
-  const forYouParties = forYouData?.parties ?? parties;
-  const matchedVibes = forYouData?.matchedVibes ?? [];
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(localSearch);
+  };
+
+  const clearSearch = () => {
+    setLocalSearch("");
+    setSearchQuery("");
+  };
 
   const openParty = (id: string) => {
     setSelectedPartyId(id);
     setScreen("detail");
   };
 
-  // Decide which list to show based on tab + active filters
-  // (For You is only meaningful when no search/vibe filter is active — otherwise we
-  // fall back to "all" semantics so the user sees the filtered list)
-  const showForYou = tab === "for-you" && !searchQuery && !vibeFilter;
-  const displayParties = showForYou ? forYouParties : parties;
-
   return (
-    <div className="flex h-full flex-col animate-screen-in">
-      {/* Header */}
-      <header className="sticky top-0 z-20 space-y-3 px-4 pb-2 pt-[max(env(safe-area-inset-top),12px)]">
-        <div className="glass -mx-4 px-4 pb-3 pt-2 border-b border-white/10">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <div className="inline-flex items-center gap-1.5 rounded-full glass px-2.5 py-1 mb-1.5">
-                <MapPin className="h-3 w-3 text-yellow-400 vibe-pulse" />
-                <span className="text-[11px] font-semibold text-foreground/90">
-                  {cityFilter || "All cities"}
+    <div className="flex h-full flex-col">
+      {/* Sticky header */}
+      <header className="sticky top-0 z-20 glass-strong px-4 pt-3 pb-3">
+        <div className="flex items-center justify-between">
+          <div className="font-display text-lg font-extrabold tracking-tight">
+            Vibe<span className="text-purple-400">Match</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setScreen("filter")}
+              aria-label="Filter parties"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setScreen("saved")}
+              aria-label="Saved parties"
+              className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Heart className="h-4 w-4" />
+              {savedCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral-500 px-1 text-[9px] font-bold text-white">
+                  {savedCount}
                 </span>
-              </div>
-              <h1 className="font-display text-2xl font-extrabold leading-tight text-yellow-400">
-                Tonight in {cityFilter || "India"}
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setScreen("map")}
-                className="flex h-10 w-10 items-center justify-center rounded-full glass text-white transition hover:border-yellow-400/60 hover:bg-yellow-400/10 active:scale-95"
-                aria-label="Open vibe map"
-              >
-                <MapIcon className="h-4 w-4" />
-              </button>
-              <span
-                className="relative flex h-10 w-10 items-center justify-center rounded-full glass"
-                role="status"
-                aria-label="No new notifications"
-              >
-                <Bell className="h-4 w-4 text-white" />
-                <span
-                  className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-yellow-400 vibe-live-ring"
-                  aria-hidden
-                />
-              </span>
-              <button
-                onClick={() => setScreen("saved")}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full glass text-white transition hover:border-yellow-400/60 hover:bg-yellow-400/10 active:scale-95"
-                aria-label="Saved parties"
-              >
-                <Heart className="h-4 w-4" />
-                {savedCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-400 px-1 text-[9px] font-bold text-black">
-                    {savedCount}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={openCreate}
-                className="flex h-10 items-center gap-1.5 rounded-full bg-yellow-400 px-3 text-xs font-bold text-black transition active:scale-95"
-              >
-                <Flame className="h-4 w-4" />
-                Host
-              </button>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative mt-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search parties, areas, vibes…"
-              className="h-11 w-full rounded-xl glass border border-white/10 pl-9 pr-9 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-white/5"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+              )}
+            </button>
+            <button
+              onClick={() => setScreen("profile")}
+              aria-label="Profile"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-purple-foreground"
+            >
+              {currentUser?.name?.[0]?.toUpperCase() ?? "U"}
+            </button>
           </div>
         </div>
 
-        {/* Stories-style vibe carousel */}
-        <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 py-1">
-          <VibeStory
-            label="All"
-            active={!vibeFilter}
-            onClick={() => setVibeFilter(null)}
-            highlight
+        {/* Search */}
+        <form onSubmit={onSearchSubmit} className="relative mt-3">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            placeholder="Search areas, themes…"
+            className="w-full rounded-xl border border-border bg-secondary py-2.5 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
           />
-          {VIBE_TAGS.map((v) => (
-            <VibeStory
-              key={v}
-              label={v}
-              emoji={VIBE_EMOJI[v]}
-              active={vibeFilter === v}
-              onClick={() => setVibeFilter(vibeFilter === v ? null : v)}
-            />
-          ))}
+          {localSearch && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </form>
+
+        {/* Tabs */}
+        <div className="mt-3 flex gap-1 rounded-xl bg-secondary p-1">
+          <TabButton active={tab === "house"} onClick={() => setTab("house")}>
+            🏠 House parties
+          </TabButton>
+          <TabButton active={tab === "social"} onClick={() => setTab("social")}>
+            ☕ Social meetups
+          </TabButton>
+        </div>
+      </header>
+
+      {/* Scrollable feed */}
+      <div className="fancy-scrollbar flex-1 overflow-y-auto px-4 pb-32 pt-4">
+        {/* Sub-header */}
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="font-display text-base font-bold">Happening near you</h2>
+          <span className="text-xs text-purple-300">{parties.length} vibes</span>
         </div>
 
-        {/* City chips */}
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+        {/* City filter chips */}
+        <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
           <CityChip
-            label="All cities"
             active={!cityFilter}
             onClick={() => setCityFilter(null)}
+            label="All cities"
           />
           {CITIES.map((c) => (
             <CityChip
               key={c}
-              label={c}
               active={cityFilter === c}
               onClick={() => setCityFilter(cityFilter === c ? null : c)}
+              label={c}
             />
           ))}
         </div>
 
-        {/* For You / All tab toggle — only when no search/vibe filter is active */}
-        {!searchQuery && !vibeFilter && (
-          <div className="flex gap-1 rounded-full border border-white/10 bg-card/40 p-1 glass">
-            <button
-              onClick={() => setTab("for-you")}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition",
-                tab === "for-you"
-                  ? "bg-yellow-400 text-black active:scale-95"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Wand2 className="h-3.5 w-3.5" />
-              For You
-            </button>
-            <button
-              onClick={() => setTab("all")}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition",
-                tab === "all"
-                  ? "bg-yellow-400 text-black active:scale-95"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <TrendingUp className="h-3.5 w-3.5" />
-              All
-            </button>
+        {/* Vibe filter stories */}
+        <div className="no-scrollbar -mx-4 mb-5 flex gap-3 overflow-x-auto px-4">
+          <VibeStory
+            active={!vibeFilter}
+            onClick={() => setVibeFilter(null)}
+            emoji="✨"
+            label="All"
+          />
+          {VIBE_TAGS.map((v) => (
+            <VibeStory
+              key={v}
+              active={vibeFilter === v}
+              onClick={() => setVibeFilter(vibeFilter === v ? null : v)}
+              emoji={VIBE_EMOJI[v]}
+              label={v}
+            />
+          ))}
+        </div>
+
+        {/* Active filter bar */}
+        {(cityFilter || vibeFilter || searchQuery) && (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl bg-purple-500/10 p-2.5 border border-purple-500/20">
+            <span className="text-xs text-muted-foreground">Filters:</span>
+            {cityFilter && (
+              <FilterTag onClear={() => setCityFilter(null)}>
+                📍 {cityFilter}
+              </FilterTag>
+            )}
+            {vibeFilter && (
+              <FilterTag onClear={() => setVibeFilter(null)}>
+                {VIBE_EMOJI[vibeFilter]} {vibeFilter}
+              </FilterTag>
+            )}
+            {searchQuery && (
+              <FilterTag onClear={clearSearch}>"{searchQuery}"</FilterTag>
+            )}
           </div>
         )}
-      </header>
 
-      {/* Body */}
-      <div className="fancy-scrollbar flex-1 space-y-6 overflow-y-auto px-4 pb-4">
-        {isLoading && (
-          <div className="space-y-4">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="overflow-hidden rounded-3xl border border-border bg-card/60"
-              >
-                <Skeleton className="aspect-[16/10] w-full rounded-none" />
-                <div className="space-y-3 p-4">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                  <Skeleton className="h-3 w-2/3" />
-                </div>
-              </div>
+        {/* Loading */}
+        {isLoading && <FeedSkeleton />}
+
+        {/* Error */}
+        {isError && (
+          <div className="py-12">
+            <EmptyState
+              icon={Search}
+              title="Couldn't load parties"
+              description="Check your connection and try again."
+              action={
+                <button
+                  onClick={() => refetch()}
+                  className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                >
+                  Retry
+                </button>
+              }
+            />
+          </div>
+        )}
+
+        {/* Empty */}
+        {!isLoading && !isError && parties.length === 0 && (
+          <div className="py-12">
+            <EmptyState
+              icon={Compass}
+              title="No parties match"
+              description="Try clearing filters or exploring a different city."
+              action={
+                <button
+                  onClick={() => {
+                    setCityFilter(null);
+                    setVibeFilter(null);
+                    setSearchQuery("");
+                  }}
+                  className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                >
+                  Clear filters
+                </button>
+              }
+            />
+          </div>
+        )}
+
+        {/* Party cards */}
+        {!isLoading && !isError && parties.length > 0 && (
+          <div className="space-y-3">
+            {parties.map((p) => (
+              <PartyCardNew key={p.id} party={p} onOpen={openParty} />
             ))}
           </div>
         )}
 
-        {isError && (
-          <EmptyState
-            icon={MapPin}
-            title="Couldn't load parties"
-            description="Something went wrong fetching the feed. Try again."
-            action={
-              <button
-                onClick={() => refetch()}
-                className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black"
-              >
-                Retry
-              </button>
-            }
-          />
-        )}
-
-        {!isLoading && !isError && parties.length === 0 && (
-          <EmptyState
-            icon={CalendarClock}
-            title="No parties match your filters"
-            description="Try clearing filters or launch your own vibe to get the night started."
-            action={
-              <button
-                onClick={openCreate}
-                className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black"
-              >
-                Launch a vibe
-              </button>
-            }
-          />
-        )}
-
-        {!isLoading && !isError && displayParties.length > 0 && (
-          <>
-            {/* For You banner — shown when on the personalized tab with no filters */}
-            {showForYou && (
-              <div className="overflow-hidden rounded-2xl bg-yellow-400/10 border border-yellow-400/40 p-3">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400">
-                    <Wand2 className="h-4 w-4 text-black" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-yellow-400">
-                      Tuned for your vibe
-                    </p>
-                    <p className="text-[11px] text-foreground/70">
-                      {matchedVibes.length > 0
-                        ? `Ranked by your love for ${matchedVibes.slice(0, 3).join(", ")}`
-                        : "Update your vibe preferences to personalize this feed"}
-                    </p>
-                  </div>
-                </div>
-                {matchedVibes.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {matchedVibes.map((v) => (
-                      <span
-                        key={v}
-                        className="inline-flex items-center gap-1 rounded-full border border-yellow-400/50 bg-yellow-400/15 px-2 py-0.5 text-[10px] font-medium text-yellow-300"
-                      >
-                        {VIBE_EMOJI[v]} {v}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {vibeFilter && (
-              <div className="flex items-center justify-between rounded-2xl border border-yellow-400/30 bg-yellow-400/5 px-3 py-2 glass">
-                <span className="inline-flex items-center gap-1.5 text-xs text-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-yellow-400" />
-                  Filtered by{" "}
-                  <span className="font-semibold text-yellow-400">{vibeFilter}</span>
-                </span>
-                <button
-                  onClick={() => setVibeFilter(null)}
-                  className="text-xs font-medium text-yellow-400 hover:underline"
-                >
-                  Clear
-                </button>
-              </div>
-            )}
-
-            {/* Hot tonight — only on All tab (For You has its own ordering) */}
-            {!showForYou && hotTonight.length > 0 && (
-              <section>
-                <div className="mb-2 flex items-center gap-1.5">
-                  <TrendingUp className="h-4 w-4 text-yellow-400" />
-                  <h2 className="font-display text-sm font-semibold text-yellow-400">
-                    Hot tonight &amp; tomorrow
-                  </h2>
-                  <span className="block h-0.5 flex-1 rounded-full bg-yellow-400/40" />
-                </div>
-                <div className="space-y-3">
-                  {hotTonight.map((p) => (
-                    <PartyCard key={p.id} party={p} onOpen={openParty} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <section>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  <h2 className="font-display text-sm font-semibold text-foreground">
-                    {showForYou
-                      ? "Recommended for you"
-                      : cityFilter
-                        ? `All in ${cityFilter}`
-                        : "All upcoming"}
-                  </h2>
-                  <span className="block h-0.5 w-6 rounded-full bg-yellow-400" />
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {displayParties.length} parties
-                </span>
-              </div>
-              <div className="space-y-3">
-                {displayParties.map((p) => (
-                  <PartyCard key={p.id} party={p} onOpen={openParty} />
-                ))}
-              </div>
-            </section>
-          </>
+        {/* Footer hint */}
+        {parties.length > 0 && (
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            That's all for now — tap the + to host your own
+          </p>
         )}
       </div>
     </div>
   );
 }
 
-function VibeStory({
-  label,
-  emoji,
+function TabButton({
   active,
   onClick,
-  highlight,
+  children,
 }: {
-  label: string;
-  emoji?: string;
-  active?: boolean;
+  active: boolean;
   onClick: () => void;
-  highlight?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex-1 rounded-lg py-2 text-xs font-medium transition-colors",
+        active
+          ? "bg-purple-500/25 text-purple-200"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function CityChip({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+        active
+          ? "border-purple-500/50 bg-purple-500/25 text-purple-200"
+          : "border-border bg-secondary text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function VibeStory({
+  active,
+  onClick,
+  emoji,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  emoji: string;
+  label: string;
 }) {
   return (
     <button
@@ -405,31 +366,18 @@ function VibeStory({
     >
       <span
         className={cn(
-          "relative flex h-16 w-16 items-center justify-center rounded-full transition",
+          "flex h-14 w-14 items-center justify-center rounded-full border-2 text-2xl transition-all",
           active
-            ? "ring-2 ring-yellow-400"
-            : highlight
-              ? "hover:ring-2 hover:ring-yellow-400/50"
-              : "",
+            ? "border-purple-400 bg-purple-500/20 scale-105 glow-violet"
+            : "border-border bg-secondary",
         )}
       >
-        <span
-          className={cn(
-            "relative flex h-[58px] w-[58px] items-center justify-center rounded-full text-2xl transition",
-            active
-              ? "bg-card"
-              : highlight
-                ? "border-2 border-yellow-400/50 bg-yellow-400/10 hover:border-yellow-400"
-                : "border-2 border-white/10 bg-white/5 hover:border-yellow-400/40",
-          )}
-        >
-          {emoji || (highlight ? <Sparkles className="h-6 w-6 text-yellow-400" /> : "✨")}
-        </span>
+        {emoji}
       </span>
       <span
         className={cn(
           "text-[10px] font-medium",
-          active ? "text-yellow-400 font-bold" : "text-muted-foreground",
+          active ? "text-purple-300" : "text-muted-foreground",
         )}
       >
         {label}
@@ -438,29 +386,151 @@ function VibeStory({
   );
 }
 
-function CityChip({
-  label,
-  active,
-  onClick,
-  icon,
+function FilterTag({
+  children,
+  onClear,
 }: {
-  label: string;
-  active?: boolean;
-  onClick: () => void;
-  icon?: React.ReactNode;
+  children: React.ReactNode;
+  onClear: () => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95",
-        active
-          ? "border-transparent bg-yellow-400 text-black"
-          : "border-white/10 glass text-white/70 hover:text-foreground hover:border-yellow-400/40",
-      )}
+    <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/20 px-2.5 py-1 text-xs text-purple-200">
+      {children}
+      <button
+        onClick={onClear}
+        aria-label="Remove filter"
+        className="rounded-full hover:bg-purple-500/30"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
+// The spec's party card — m-card pattern at full mobile size
+function PartyCardNew({
+  party,
+  onOpen,
+}: {
+  party: Party;
+  onOpen: (id: string) => void;
+}) {
+  const vibes = parseVibes(party.vibes).slice(0, 3);
+  const firstVibe = vibes[0] ?? "Chill";
+  const left = slotsLeft(party.maxGuests, party.guestCount);
+  const isLow = left > 0 && left <= 2;
+  const isFull = left === 0;
+  const going = party.guestCount;
+  const sym = currencyForCity(party.city);
+  const saved = useAppStore((s) => s.savedPartyIds.includes(party.id));
+  const toggleSaved = useAppStore((s) => s.toggleSaved);
+
+  const onSave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleSaved(party.id);
+    toast.success(saved ? "Removed from saved" : "Saved to your list", {
+      duration: 1500,
+    });
+  };
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen(party.id)}
+      onKeyDown={(e) => e.key === "Enter" && onOpen(party.id)}
+      className="group overflow-hidden rounded-2xl border border-border bg-white/[0.04] transition-all hover:border-purple-500/40 hover:bg-white/[0.06] cursor-pointer"
     >
-      {icon}
-      {label}
-    </button>
+      {/* Cover */}
+      <div
+        className="relative flex h-28 items-center justify-center"
+        style={{ background: HERO_BG[firstVibe] ?? "#1a1035" }}
+      >
+        <span className="text-4xl">{VIBE_EMOJI[firstVibe] ?? "🎉"}</span>
+
+        {/* Theme pill (bottom-left) */}
+        <span className="absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+          {firstVibe} night
+        </span>
+
+        {/* Spots pill (bottom-right) */}
+        {isFull ? (
+          <span className="absolute bottom-2 right-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white/70">
+            Sold out
+          </span>
+        ) : isLow ? (
+          <span className="absolute bottom-2 right-2 rounded-md bg-coral-500/85 px-2 py-0.5 text-[10px] font-bold text-white">
+            {left} left!
+          </span>
+        ) : (
+          <span className="absolute bottom-2 right-2 rounded-md bg-purple-500/80 px-2 py-0.5 text-[10px] font-medium text-purple-foreground">
+            {going} going
+          </span>
+        )}
+
+        {/* Save heart (top-right) */}
+        <button
+          onClick={onSave}
+          aria-label={saved ? "Unsave party" : "Save party"}
+          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+        >
+          <Heart
+            className={cn("h-3.5 w-3.5", saved && "fill-coral-500 text-coral-500")}
+          />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="p-3">
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="text-sm font-medium text-foreground">{party.title}</h3>
+          <span className="rounded-md bg-purple-500/20 px-2 py-0.5 text-xs font-medium text-purple-300">
+            {formatFee(party.fee, party.city)}
+          </span>
+        </div>
+        <p className="mb-2 text-xs text-muted-foreground">
+          📅 {formatDateLabel(party.date)} · {formatTime(party.time)} · 📍 {party.area}
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {vibes.map((v) => (
+            <span
+              key={v}
+              className={cn(
+                "rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                VIBE_COLORS[v] ?? "bg-white/5 text-muted-foreground border-border",
+              )}
+            >
+              {v}
+            </span>
+          ))}
+          <span className="rounded-full border border-amber-500/25 bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+            👥 Max {party.maxGuests}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeedSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="overflow-hidden rounded-2xl border border-border bg-white/[0.04]"
+        >
+          <Skeleton className="h-28 w-full rounded-none bg-white/5" />
+          <div className="space-y-2 p-3">
+            <Skeleton className="h-4 w-2/3 bg-white/5" />
+            <Skeleton className="h-3 w-4/5 bg-white/5" />
+            <div className="flex gap-1.5">
+              <Skeleton className="h-5 w-12 rounded-full bg-white/5" />
+              <Skeleton className="h-5 w-10 rounded-full bg-white/5" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

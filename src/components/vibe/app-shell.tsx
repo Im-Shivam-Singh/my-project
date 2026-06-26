@@ -16,6 +16,13 @@ import { MyPartiesScreen } from "@/screens/my-parties-screen";
 import { RequestsScreen } from "@/screens/requests-screen";
 import { SavedScreen } from "@/screens/saved-screen";
 import { MapScreen } from "@/screens/map-screen";
+import { TicketsScreen } from "@/screens/tickets-screen";
+import { FilterScreen } from "@/screens/filter-screen";
+import { CountdownScreen } from "@/screens/countdown-screen";
+import { PaymentScreen } from "@/screens/payment-screen";
+import { ConfirmationScreen } from "@/screens/confirmation-screen";
+import { HostDashboardScreen } from "@/screens/host-dashboard-screen";
+import { AdminScreen } from "@/screens/admin-screen";
 
 export function AppShell() {
   const screen = useAppStore((s) => s.screen);
@@ -65,6 +72,13 @@ export function AppShell() {
           {current === "requests" && <RequestsScreen />}
           {current === "saved" && <SavedScreen />}
           {current === "map" && <MapScreen />}
+          {current === "tickets" && <TicketsScreen />}
+          {current === "filter" && <FilterScreen />}
+          {current === "countdown" && <CountdownScreen />}
+          {current === "payment" && <PaymentScreen />}
+          {current === "confirmation" && <ConfirmationScreen />}
+          {current === "host-dashboard" && <HostDashboardScreen />}
+          {current === "admin" && <AdminScreen />}
         </div>
       </main>
       <BottomNav />

@@ -798,3 +798,1006 @@ Stage Summary:
 - **Map is non-interactive** (dragging/zoom disabled) to keep overlay pins aligned with the tile grid. If users want pan/zoom, the "Open Maps" button opens real Google Maps in a new tab. If in-app interactivity is needed later, switch to react-leaflet with native L.circleMarker/L.divIcon pins (loses our rich React tier animations) OR sync overlay pins to map move events (complex).
 - **Tile loading flash**: On slow connections, the brief `bg-[#e8eaed]` placeholder shows before tiles render. Could add a skeleton shimmer pattern matching the map style.
 - **Carryover TODOs from prior rounds** (still open): RSVP persistence, public host profile, LLM smart quick replies, notifications screen, message reactions, saved-parties persistence.
+
+---
+Task ID: 5
+Agent: orchestrator
+Task: "Upload into the repo" — finalize git hygiene, persist latest seeded DB, and verify the realistic Google Maps-style map renders end-to-end.
+
+Work Log:
+- Reviewed git state: Bumble yellow+black theme (commit e360144) and the realistic Google Maps-style map screen (commit 15b9596 — Leaflet + CARTO Voyager tiles + "Open in Google Maps" deeplink) were already committed. Only db/custom.db (new seeded data + user activity) and scratch output files were uncommitted.
+- Updated .gitignore to exclude /tool-results/, /screenshots/, /download/ (agent scratch output, not source).
+- `git rm -r --cached` the previously-committed scratch files (kept on disk) so the repo only tracks real source.
+- Committed everything as `aaf2157 chore: clean repo hygiene + persist latest seeded DB` (43 files changed: +6 / -9953 deletions of scratch files, + db/custom.db binary, + .gitignore). Working tree now clean.
+- Verified dev server healthy on port 3000 (200 responses, no runtime errors in dev.log).
+- agent-browser verification (390×844 mobile):
+  • App already logged in → Home "Tonight in Delhi" renders with party cards + stories vibe carousel. ✓
+  • Tapped "Open vibe map" → Map screen renders with radius chips (1/2/5/10/25km), Live filter, "Use my location", "Open in Google Maps (full interactive view)" link, city selector (India/Delhi/Mumbai/Bangalore/Goa/Pune). ✓
+  • Selected Delhi + 25km radius → 2 party pins render ("Retro Cassette Lounge — 5.4km — Warming up", "BYOB Garage Sessions Vol. 7 — 7.0km — Warming up") + matching "Nearby parties" list. ✓
+  • Zero console errors, zero page errors. ✓
+- VLM (glm-4.6v) analysis of the map screenshot confirmed: (1) realistic street/road map in Google Maps style with roads + labels (Delhi, Ghaziabad, Noida) + water; (2) party pins/markers present; (3) "Open Maps" button visible; (4) no errors or blank areas.
+
+Stage Summary:
+- Repo is clean and fully committed (HEAD = aaf2157). All prior work — Bumble yellow+black theme + realistic Google Maps-style map — is in the repo and verified working end-to-end in the browser. Ready for the recurring webDevReview cron to continue iterating.
+
+Unresolved / Next-phase recommendations (carried forward):
+- Reactions + saved parties are still client-side only → persist server-side (SavedParty table, reactions table + socket relay).
+- LLM-powered context-aware chat quick replies.
+- "For You" personalized feed ranking using onboarding vibes.
+- Host analytics is read-only → add accept/decline actions inline.
+- Map pin collision handling for dense cities (5+ parties).
+
+---
+Task ID: ANALYZE-1
+Agent: general-purpose (analysis)
+Task: Analyze vibematch_app_flow.html design spec and extract required changes.
+
+Work Log:
+- Read /home/z/my-project/worklog.md (828 lines) — confirmed current project state: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + Prisma (SQLite), single `/` route with Zustand screen state. Current theme = Bumble pivot (Task ORCH-FINAL): solid yellow #FFCB05 on pure black #000000, white text, NO gradients/glass/neon, all legacy tokens (pink/violet/cyan/acid/coral/sunshine/gold*) re-aliased to yellow. Realistic Google-Maps-style map (Leaflet + CARTO Voyager) on Task MAP-REALISTIC. 13 screens exist: chat, create, detail, edit-profile, home, inbox, login, map, my-parties, onboarding, profile, requests, saved. 10 vibe components: app-shell, bottom-nav, empty-state, guest-avatars, host-analytics, live-countdown, party-card, rating-pill, reviews-section, user-avatar, vibe-badge. Cities = Delhi/Mumbai/Bangalore/Goa/Pune (India). VibeTags = Techno/Bollywood/BYOB/Boardgames/Lo-fi/Chill/EDM/Retro. Repo HEAD = aaf2157, clean.
+- Read entire /home/z/my-project/upload/vibematch_app_flow.html (956 lines) — 4 sequential Read calls (1-300, 300-649, 650-end). Confirmed: 11 slides total (s0 title, s1-s9 functional steps, s10 close). Phone mockup width 220px (mini UI). :root block at lines 10-19. All `.m-*` class definitions at lines 92-157. Info-panel patterns at 159-172. Verified exact CSS values, exact text copy, exact color hexes.
+
+Key Findings:
+- Spec palette is CONFIRMED multi-color (purple #534AB7 dominant + teal/amber/coral/green accents) on near-black #09080f — fundamentally incompatible with current Bumble monochrome yellow. Cannot be achieved by re-aliasing tokens; requires real multi-color palette restoration.
+- Spec locale is UK (£ + Edinburgh/Leith/Newington/Marchmont) — fundamentally different from current India cities (₹ implicit + Delhi/Mumbai/Bangalore/Goa/Pune).
+- Spec defines 9 functional steps, of which 7 require NET-NEW SCREENS (filter, payment+drinks, confirmation, countdown+location, QR check-in, host dashboard, admin controls). Only 2 map to existing screens (home→Discover, detail→Party detail).
+- Spec implies 4 backend capabilities that do NOT currently exist in the Prisma schema or API: (1) Stripe payments + auto-refund, (2) per-party Menu/Drink items with prices + qty pre-order, (3) QR code generation (per-join) + host scan, (4) scheduled push notifications (24hr/2hr before party) + scheduled location-drop at 6PM day-of.
+- Spec's bottom nav replaces the current "Map" tab with a "Tickets 🎫" tab (because QR check-in lives in Tickets). Inbox gets a small coral dot badge (#D85A30) instead of a count.
+- The spec's mini "m-*" components are scaled-down PHONE MOCKUP renderings (7-9px fonts, 220px wide phones) — these are NOT the real app typography. The real app typography is the info-panel scale: Syne headings (clamp 24-68px), Inter body (14-17px), eyebrow 10px uppercase with line decoration.
+
+Stage Summary:
+
+═══════════════════════════════════════════════════════════════
+VIBEMATCH APP FLOW — FULL ANALYSIS REPORT (ANALYZE-1)
+Source: /home/z/my-project/upload/vibematch_app_flow.html (956 lines, 11 slides)
+═══════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────
+1) COLOR PALETTE / THEME  (HTML lines 10-19, exact from :root)
+────────────────────────────────────────────────────────────
+
+Brand / accent tokens (the 5-color semantic system):
+  --purple   : #534AB7   ← PRIMARY brand (CTAs, active states, logo "Match", pills, FAB)
+  --purple-l : #EEEDFE   ← pale lavender (text on purple surfaces, "me" bubble text)
+  --purple-d : #26215C   ← deep purple (unused directly in markup, available for hover)
+  --teal     : #1D9E75   ← SUCCESS / verified / approve / "going" / earnings
+  --teal-l   : #E1F5EE
+  --amber    : #EF9F27   ← UPSELL / menu tags / pending / warning
+  --amber-l  : #FAEEDA
+  --coral    : #D85A30   ← URGENCY / location drop / "2 left!" / inbox badge
+  --coral-l  : #FAECE7
+  --green    : #639922   ← alt success (defined but lightly used)
+  --green-l  : #EAF3DE
+
+Background + text tokens (near-black, purple-tinted):
+  --bg       : #09080f   ← page background (NOT pure black — slight purple tint)
+  --bg2      : #110f1f   ← secondary bg / cards / big-step / stat-pill / feature-row
+  --bg3      : #18152e   ← tertiary bg (deepest layer, available)
+  --border   : rgba(83,74,183,0.2)   ← purple-tinted border token
+  --text     : #f0eeff   ← near-white with subtle purple tint
+  --muted    : rgba(240,238,255,0.55)
+  --dim      : rgba(240,238,255,0.25)
+
+Additional colors used INLINE in markup (NOT in :root but consistent throughout):
+  #7F77DD    ← lighter purple (active nav item, active toggle, inline price text, avatar bg)
+  #AFA9EC    ← pale lavender-purple (active tab text, step-badge text, location-card title, hero accent text)
+  #5DCAA5    ← bright teal (verified check, approve badge, "You're in" success text, prep-list profit)
+  #FAC775    ← warm amber (menu tag text, pending stat, amber-tinted avatars, pre-order pill chips)
+  #F0997B    ← light coral (location-drop alert title, "2 left!" spots pill)
+  #F09595    ← light red (decline/remove badge text, auto-refund notice)
+  #0e0c1c    ← phone frame bg (between bg2 and bg3, has purple tint)
+  #08070f    ← phone topbar/nav/search bg (darker than page bg, near-black)
+  Hero backgrounds per vibe (used as inline `background` on .m-card-img / .m-hero):
+    #1a1035  ← R&B night (deep purple)
+    #0d1f2d  ← Games night (deep teal)
+    #1a2410  ← Bollywood night (deep green)
+  Card surfaces: rgba(255,255,255,0.04) with border rgba(83,74,183,0.2-0.35)
+  Purple-tinted card surface: rgba(83,74,183,0.1) (chat preview card, location card)
+  Coral-tinted alert: rgba(216,90,48,0.1) + border rgba(216,90,48,0.3)
+  Amber-tinted alert: rgba(239,159,39,0.1) + border rgba(239,159,39,0.25)
+  Teal-tinted alert: rgba(29,158,117,0.1) + border rgba(29,158,117,0.2-0.3)
+  Red-tinted alert: rgba(163,45,45,0.12) + border rgba(163,45,45,0.3) (remove-guest card)
+
+✅ CONFIRMED: Spec uses a purple-dominant multi-color palette on near-black #09080f. NOT the current yellow+black Bumble theme. Restoration of multi-color theming (un-aliasing --pink/--violet/--cyan/etc.) is REQUIRED.
+
+────────────────────────────────────────────────────────────
+2) TYPOGRAPHY
+────────────────────────────────────────────────────────────
+
+Fonts (Google Fonts, line 7):
+  Syne   : weights 400;500;600;700;800  ← display/headings/logo/numbers
+  Inter  : weights 300;400;500          ← body text
+
+Real-app type scale (info-panel side of each slide):
+  .eyebrow : 10px, letter-spacing 0.15em, UPPERCASE, color --purple, weight 500
+             decorated with ::before pseudo (20px wide 1px line in --purple)
+  h1       : Syne, clamp(36px, 6vw, 68px), weight 800, line-height 1.0
+             supports <span class="acc"> for --purple accent words
+  h2       : Syne, clamp(24px, 4vw, 42px), weight 700, line-height 1.1  ← slide titles
+  h3       : Syne, 18px, weight 600
+  .lead    : 17px, color --muted, line-height 1.7
+  .body    : 14px, color --muted, line-height 1.7
+  .logo    : Syne, 17px, weight 800; "Match" half in --purple
+
+Phone-mockup mini typography (these are scaled-down renderings inside 220px phones — DO NOT use as real app type):
+  .m-logo: Syne 12px/800  | .m-card-row: 9px/500  | .m-section: 8px/500
+  .m-search/tab: 7-8px     | .m-card-meta: 7px     | .m-meta-item: 7px
+  .m-tag: 6px              | .m-pill: 7px          | .m-cta: 8px/500
+  .m-stat-val: Syne 13px/700 | .m-stat-label: 6px
+  Phone status bar: 9px, color rgba(255,255,255,0.3)
+
+────────────────────────────────────────────────────────────
+3) THE 11 SLIDES  (each slide has a phone mockup + info-panel)
+────────────────────────────────────────────────────────────
+
+──────────── SLIDE 0 · 01/11 · TITLE (id="s0") ────────────
+Type: Presentation title slide (NOT an app screen). Layout: slide-inner.centered + title-bg + grid-bg.
+Copy:
+  Eyebrow: "Step-by-step app experience"
+  H1: "Every screen.<br>Every <span class='acc'>interaction.</span>"
+  Lead: "From the moment a guest opens the app to the moment they walk through the door — and everything the host sees along the way."
+  3 stat-pills: "11 screens walkthrough" | "2 perspectives · guest + host" | "1 seamless journey"
+  Tag cloud (9 tags, mixed variants): Discover / Filter / Party detail / Pay + drinks / Group chat / Location drop / QR check-in / Host dashboard / Admin controls
+Decor: radial purple glow at 80%/50%, 50x50px purple grid at 0.03 opacity.
+
+──────────── SLIDE 1 · 02/11 · DISCOVER FEED (id="s1") ────────────
+Step 1 of 9 · Guest  |  Maps to current `home-screen.tsx` (needs redesign)
+Phone UI:
+  - m-topbar: logo "VibeMatch" + 22px round avatar "A" (purple bg, #AFA9EC text)
+  - m-search: "🔍  Search areas, themes…"
+  - m-tabs: "🏠 House parties" (active, purple-tinted bg) | "☕ Social meetups"
+  - Sub-header: "Happening near you" | "6 vibes" (purple)
+  - 3 m-card party cards:
+    Card A: bg #1a1035, emoji 🎵
+            m-pill.theme "R&B night" (bottom-left, black/white)
+            m-pill.spots "8 going" (bottom-right, purple bg)
+            m-card-row: "Aaditya's flat party" | "£7" (purple #7F77DD)
+            m-card-meta: "📅 Sat 14 Jun · 9PM  ·  📍 Leith, Edinburgh"
+            m-tags: ["Students", "Max 15", m-tag.menu "Menu"]
+    Card B: bg #0d1f2d, emoji 🎮
+            m-pill.theme "Games night" | m-pill.spots "5 going"
+            "Priya's games night" | "£5"
+            "📅 Fri 13 Jun · 8PM  ·  📍 Newington"
+            ["Mixed", "Max 12", "Menu"]
+    Card C: bg #1a2410, emoji 🌿
+            m-pill.theme "Bollywood" | m-pill.spots "2 left!" (override color #F09595 coral)
+            "Raj's Bollywood night" | "£6"
+            "📅 Sat 14 Jun · 10PM  ·  📍 Marchmont"
+            ["Students", "Max 13", "Menu"]
+  - m-nav bottom: Explore (active, #7F77DD) | Inbox (red dot #D85A30) | m-fab "+" (purple) | Tickets 🎫 | Profile 👤
+Info panel right:
+  Step-badge: "Step 1 of 9 · Guest"
+  H2: "Discover the <span class='acc'>party feed</span>"
+  Body: "The guest opens the app and sees a scrollable feed of party cards. Each card shows just enough to be interesting — no exact address, no full guest list. Just the vibe."
+  Feature rows: 🎴 Card-based discovery / 🔴 Urgency without pressure / ☕ Two tabs · same app
+  Tags: Scroll feed / Theme shown / No address yet / Menu badge (teal)
+
+──────────── SLIDE 2 · 03/11 · FILTER (id="s2") ────────────
+Step 2 of 9 · Guest  |  NEW SCREEN (current filter is inline)
+Phone UI:
+  - m-topbar: logo + 2 square buttons (⚙ settings, 📍 location) — 22px squares, purple-tinted bg, 6px radius
+  - Title row: "Filter parties" (9px white)
+  - "Who are you?" pills (7px, 3px 8px padding, 20px radius):
+      [Student] selected — bg rgba(83,74,183,0.3), border 0.5px rgba(83,74,183,0.5), color #AFA9EC
+      [Software eng.] [Designer] [Healthcare] [Finance] — unselected, white/5 bg
+  - "Price range" card:
+      Range labels: "Free" ... "£15+"
+      Slider track (3px tall, white/8 bg), filled portion = purple #534AB7 from left to 40% from right
+      Slider thumb: 9px round purple with 1.5px white border
+      Label: "Up to £9" (purple #AFA9EC)
+  - "City" pills: [Edinburgh] (selected) | [London] | [Manchester]
+  - "Date" pills: [Tonight] | [This weekend] (selected) | [Next week]
+  - m-cta: "Show 4 matching parties"
+Info panel:
+  Step 2 of 9 · Guest
+  H2: "Filter to <span class='acc'>your crowd</span>"
+  Body: "...Students want other students. Software engineers want people who get their world. The filter makes that possible without profiles."
+  Features: 🎯 Profession filter / 💷 Price range slider / 📍 City + date
+  Tags: Profession tags (purple) / Price slider (amber) / City picker / Date filter (teal)
+  Note: info panel explicitly says "Works across UK and India from day one" — multi-region by design.
+
+──────────── SLIDE 3 · 04/11 · PARTY DETAIL (id="s3") ────────────
+Step 3 of 9 · Guest  |  Maps to current `detail-screen.tsx` (needs MAJOR redesign)
+Phone UI:
+  - m-hero (68px tall, bg #1a1035, emoji 🎵 size 28px):
+      m-pill.theme "R&B night" (bottom-left)
+      m-pill.spots "8 going · 7 left" (bottom-right, purple bg)
+      Back arrow ← (top-left, 18px round, black/40 bg)
+      Share ↑ (top-right, 18px round, black/40 bg)
+  - Title row: "Aaditya's flat party" (11px) | "£7 entry" pill (purple-tinted bg, #AFA9EC text, 8px radius)
+  - Sub: "Pay once · drinks add-on available after" (7px, white/30)
+  - m-meta-grid 2x2:
+      [📅 Sat 14 Jun · 9PM]  [🕑 Ends ~2AM]
+      [📍 Leith, Edinburgh]  [👥 Max 15 guests]
+  - m-tag row: [Students] [R&B · Hip-hop] [21+]
+  - m-section "Host"
+      Avatar row: 22px round "A" (purple) + "Aaditya" (8px white) + "✓ Verified" badge (teal-tinted bg, #5DCAA5) + "★★★★★ 4.9 · 6 parties" (7px white/35)
+  - m-section "Who's going"
+      4 overlapping 16px round avatars: P (purple) / R (teal) / J (amber) / +5 (gray)
+      + "8 going" text (7px white/30)
+  - m-lock: "🔒 Full names visible after payment"
+  - m-section "Menu preview"
+      m-menu-item rows (right-aligned price in purple #7F77DD):
+        🥃 Jack Daniels shot — £2
+        🍺 Small Norfolk can — £1
+        🍟 Nachos plate — £4
+  - m-cta: "Join for £7 · get your spot"
+Info panel:
+  Step 3 of 9 · Guest
+  H2: "The <span class='acc'>party detail</span> screen"
+  Body: "...Everything a guest needs to decide — without giving away the exact location or full guest list. The mystery is the mechanic."
+  Features: 🔒 Delayed reveal / ⭐ Verified host badge / 🍹 Menu preview
+  Tags: Host rating (purple) / Guest initials only / Menu teaser (teal) / Location hidden (coral)
+
+──────────── SLIDE 4 · 05/11 · PAYMENT + DRINKS (id="s4") ────────────
+Step 4 of 9 · Guest  |  ENTIRELY NEW SCREEN (no current equivalent)
+Phone UI:
+  - Topbar: "Confirm your spot" + "Aaditya's flat party · Sat 14 Jun"
+  - Your entry card: "1 × entry ticket — £7.00"
+  - Add drinks & snacks card:
+      Header: "Add drinks & snacks" + "Optional" badge (teal)
+      Subtitle: "Like ordering at a cinema — pick up at the door"
+      3 m-qty-row items (emoji + name + price + qty stepper):
+        🥃 Jack Daniels shot — £2 — qty 2
+        🍟 Nachos plate — £4 — qty 1
+        🥤 Soft drink — £1.50 — qty 0
+  - Payment method card (radio list):
+      ● Visa card ending 4242 (selected — solid purple dot)
+      ○ Apple Pay (hollow white/20 dot)
+      ○ Google Pay (hollow white/20 dot)
+  - Total row (top-border separator): "Total — £15.00"
+  - m-cta: "Pay £15.00 · confirm spot 🔒"
+  - Footer micro: "Secured by Stripe · refundable if host cancels" (6px, white/25)
+  - Skip link: "Skip drinks for now · entry only" (7px, purple/60)
+Info panel:
+  Step 4 of 9 · Guest
+  H2: "Pay + <span class='acc'>pre-order drinks</span>"
+  Body: "The checkout screen works like a cinema. Entry ticket at the top, drinks add-on below. Guest picks quantities, chooses payment method, and pays in one tap. Total updates live."
+  Features: 🎬 Cinema mechanic / 💳 Apple Pay + Google Pay / ↩️ Skip drinks · keep moving
+  Tags: Live total update (amber) / Stripe secure (purple) / Auto refund on cancel (teal) / Drinks waiver option
+
+──────────── SLIDE 5 · 06/11 · CONFIRMATION + CHAT (id="s5") ────────────
+Step 5 of 9 · Guest  |  ENTIRELY NEW SCREEN (combines receipt + QR + chat)
+Phone UI:
+  - m-success banner (teal-tinted bg rgba(29,158,117,0.12), bottom border teal/20):
+      m-check circle "✓" (26px round, teal-tinted bg)
+      "You're in. Spot secured." (10px, #5DCAA5)
+      "Aaditya's flat party · Sat 14 Jun · 9PM" (7px teal/60)
+      "Group chat is now unlocked" (7px teal/80, weight 500)
+  - Receipt card:
+      "Receipt" label
+      m-receipt-row: Entry ticket × 1 — £7.00
+      m-receipt-row: Jack Daniels shot × 2 — £4.00
+      m-receipt-row: Nachos plate × 1 — £4.00
+      m-receipt-total: Total paid — £15.00
+  - m-qr-area:
+      m-qr box (38px, white/8 bg, 5px radius, "▦" emoji size 18)
+      "Your entry QR" (8px white) + "Show at the door · host scans to check in and flag your pre-order" (7px white/35)
+  - Group chat preview card (purple-tinted bg):
+      "Group chat · 9 people" (8px, #AFA9EC)
+      3 m-chat-row entries:
+        A avatar (purple) + m-bubble: "Hey everyone! Saturday's going to be massive"
+        P avatar (teal) + m-bubble: "Already pre-ordered nachos lol"
+        Y avatar (purple, row-reverse) + m-bubble.me: "Just joined — see you all Saturday!"
+      m-input: "Message the group…"
+  - 2 CTAs (grid 1fr 1fr, gap 5px):
+      m-cta: "Open chat" (filled purple)
+      m-cta.outline: "View QR" (outline purple)
+Info panel:
+  Step 5 of 9 · Guest
+  H2: "Confirmed + <span class='acc'>chat unlocked</span>"
+  Body: "The moment payment goes through, three things happen simultaneously: receipt is generated, QR code appears, and the guest is dropped into the group chat."
+  Features: ✅ Instant emotional relief / ▦ QR at the ready / 💬 Chat already alive
+  Tags: Instant chat access (teal) / QR on screen (purple) / Full receipt shown / No waiting (amber)
+
+──────────── SLIDE 6 · 07/11 · COUNTDOWN + LOCATION DROP (id="s6") ────
+Step 6 of 9 · Guest  |  ENTIRELY NEW SCREEN
+Phone UI:
+  - Topbar: "Aaditya's flat party" + "3 days away" pill (teal-tinted)
+  - m-steps vertical timeline (5 steps, with 1px connector lines between):
+      ✓ (teal-done) "Spot confirmed" / "Receipt sent to email"
+      ✓ (teal-done) "Group chat unlocked" / "Meet everyone before arriving"
+      3 (purple-active) "Reminders coming" / "24hr + 2hr push notifications" (purple text)
+      4 (gray-pending) "Location drops day-of" / "Map pin at 6PM Sat"
+      5 (gray-pending) "Arrive · scan QR · collect order"
+  - Location-drop alert (coral-tinted bg, coral border):
+      "📍 Location drops in 3 hours" (8px, #F0997B)
+      "Map pin will appear in your group chat at 6PM. Only visible to you and other confirmed guests." (7px, coral/70)
+  - m-location-card (purple-tinted bg, purple border):
+      🗺️ emoji (20px) + "Leith, Edinburgh" (8px #AFA9EC) + "Exact address arriving soon" (7px white/30)
+  - Party chat preview card (purple-tinted):
+      "Party chat · 9 people 🔥"
+      R (amber) + bubble: "Anyone else getting hyped?? 🎵"
+      Y (purple, me) + bubble.me: "So ready for this 🙌"
+Info panel:
+  Step 6 of 9 · Guest
+  H2: "Countdown + <span class='acc'>location drop</span>"
+  Body: "...Push notifications at 24hr and 2hr. Then day-of, the exact location drops automatically into the group chat — only visible to paid guests."
+  Features: ⏰ Automated reminders / 📍 Mystery location reveal / 🔥 Chat gets louder
+  Tags: Automatic location drop (coral) / Push reminders (amber) / Paid guests only (teal) / Step tracker
+
+──────────── SLIDE 7 · 08/11 · QR CHECK-IN (id="s7") ────────────
+Step 7 of 9 · Guest + Host  |  ENTIRELY NEW SCREEN
+Phone UI:
+  - Topbar: "My tickets" + "Show QR at the door"
+  - Big QR card (white/4 bg, 10px radius, centered text):
+      "Aaditya's flat party" (9px white)
+      "Sat 14 Jun · 9PM · Leith" (7px white/35)
+      QR code: 70x70 white bg (rgba(255,255,255,0.92)), 8px radius, "▦" emoji size 36, color #08070f
+      "Scan this QR code at the door" (7px white/30)
+      2 pre-order pill chips (amber-tinted bg, #FAC775 text, 6px radius):
+        "JD shot × 2"  |  "Nachos × 1"
+      Sub: "Pre-orders flagged when scanned · host has them ready" (6px white/25)
+  - Guest-list confirmation card (teal-tinted bg):
+      "✓ You're on the guest list" (8px #5DCAA5)
+      "Approved by host · spot confirmed" (7px teal/60)
+  - "Your order at the door" section:
+      Card with 2 rows:
+        🥃 Jack Daniels shot × 2 — £4.00 (purple)
+        🍟 Nachos plate × 1 — £4.00 (purple)
+  - m-scan-cta: "Ready · show QR to host" (gradient: purple→teal, white text)
+Info panel:
+  Step 7 of 9 · Guest + Host
+  H2: "Arrive + <span class='acc'>QR check-in</span>"
+  Body: "Guest shows QR code on their phone. Host scans it with the app — spot confirmed, pre-orders flagged, drinks handed over. The whole check-in takes about three seconds."
+  Features: ▦ One scan does everything / 🍹 Pre-orders flagged instantly / 🛡️ No gatecrasher risk
+  Tags: 3-second check-in (purple) / Pre-orders auto-flagged (teal) / No gatecrashers (coral) / Works offline
+
+──────────── SLIDE 8 · 09/11 · HOST DASHBOARD (id="s8") ────────────
+Step 8 of 9 · Host  |  PARTIALLY EXISTS (`host-analytics.tsx` is a component, not a full screen)
+Phone UI:
+  - Topbar: "Host dashboard" (eyebrow uppercase 7px white/30) + "Aaditya's flat party" (11px) + "Sat 14 Jun · 9PM · Leith" (7px)
+  - m-stat-grid 2x2 (4 stat tiles, Syne font 13px weight 700 numbers):
+      9/15 (purple #7F77DD)  — Confirmed
+      £55 (teal #5DCAA5)     — Est. net profit
+      2 (amber #FAC775)      — Pending
+      14 (purple #7F77DD)    — Pre-orders
+  - "Guest list" section:
+      m-guest-row: P (teal) — "Priya S." — m-badge.m-approve "JD×2 · Nachos"
+      m-guest-row: J (amber) — "Jamie T." — m-badge.m-approve "Waiver · Beer×3"
+      m-guest-row: M (purple) — "Maya K." — m-badge neutral "Entry only"
+  - "Prep list — buy exactly this" section:
+      Card with 3 rows (right-aligned teal profit):
+        🥃 JD shots × 8 ordered — +£16
+        🍺 Norfolk cans × 6 ordered — +£6
+        🍟 Nachos × 4 ordered — +£12
+  - Earnings card:
+      "Ticket revenue — £45.00"
+      "Menu profit — £34.00"
+      "Est. net profit — £55.60" (teal, weight 500, top-border separator)
+  - m-cta: "Scan guests in ▦"
+Info panel:
+  Step 8 of 9 · Host
+  H2: "Host <span class='acc'>command centre</span>"
+  Body: "...Guest count, pending approvals, pre-orders, prep list, and projected earnings. The prep list tells the host exactly what to buy — no guessing."
+  Features: 📋 Zero-waste prep list / 💰 Live earnings tracker / 👁️ Full guest overview
+  Tags: Prep list auto-generated (teal) / Live earnings (purple) / Export guest list / Shopping list view (amber)
+
+──────────── SLIDE 9 · 10/11 · ADMIN CONTROLS (id="s9") ────────────
+Step 9 of 9 · Host  |  ENTIRELY NEW SCREEN
+Phone UI:
+  - Topbar: "Admin controls" (eyebrow uppercase) + "Guest management"
+  - Warning banner (amber-tinted): "⚠ 2 guests waiting for approval"
+  - "Pending requests" section:
+      Card: avatar S (teal) + "Sam W." + "Student · wants JD × 2" + 2 buttons:
+        m-badge.m-approve "Approve" | m-badge.m-remove "Decline"
+  - "Confirmed guests" section:
+      m-guest-row: P (purple) — "Priya S. ✓" (teal check badge) — m-badge.m-remove "Remove"
+      m-guest-row: R (amber) — "Raj M. ✓" (teal check badge) — m-badge.m-remove "Remove"
+  - "Party controls" section (card with 3 toggle rows + 1 cap row):
+      Toggle: "Approval required" — ON (purple toggle)
+      Toggle: "Accept new joiners" — ON
+      Toggle: "Menu ordering open" — ON
+      Row: "Guest cap" — 15 with m-qty-btn − / +
+  - Remove-guest card (red-tinted bg rgba(163,45,45,0.12), red border):
+      "Remove guest · pick a reason" (8px #F09595)
+      "Full refund sent automatically · removed from chat" (7px red/55)
+Info panel:
+  Step 9 of 9 · Host
+  H2: "Full <span class='acc'>admin control</span>"
+  Body: "The host is in charge at all times. Approve or reject anyone before they join. Remove someone on the night with automatic full refund."
+  Features: ✅ Approval gate / 🚫 Remove + auto-refund / 🎛️ Live party controls
+  Tags: Remove + refund (coral) / Approval gate (purple) / Guest cap control / Audit trail logged (amber)
+
+──────────── SLIDE 10 · 11/11 · CLOSE (id="s10") ────────────
+Type: Closing slide (NOT an app screen). Layout: centered + title-bg + grid-bg.
+Copy:
+  Eyebrow: "The complete journey"
+  H1: "9 steps.<br><span class='acc'>One seamless night.</span>"
+  Big-step-grid (4 columns, 9 cards — last spans 4 cols):
+    1 🎴 Discover — Scroll cards, find your vibe
+    2 🎯 Filter — Find your kind of crowd
+    3 👁️ Detail — Vibe check before paying
+    4 💳 Pay + drinks — Cinema-style add-ons
+    5 ✅ Confirmed — QR + chat unlocked instantly
+    6 📍 Location drop — Mystery reveal day-of
+    7 ▦ QR check-in — 3-second door entry
+    8 📋 Host dashboard — Prep list + live earnings
+    9 🎛️ Admin controls — Approve, remove, refund — host is always in control
+  Closing card (purple-tinted bg rgba(83,74,183,0.08)):
+    "VibeMatch" (Syne 24px/800, "Match" in purple)
+    "No profiles. No pressure. No big clubs. Just small rooms, real people, and a host who cares about the vibe."
+
+────────────────────────────────────────────────────────────
+4) REUSABLE UI PATTERNS  (HTML lines 92-157)
+────────────────────────────────────────────────────────────
+
+m-pill (2 variants, absolute-positioned on hero/card images):
+  base: position absolute, font-size 7px, padding 2px 6px, border-radius 8px
+  .m-pill.theme:  bottom 4px left 5px,  bg rgba(0,0,0,0.55),  color #fff
+  .m-pill.spots:  bottom 4px right 5px, bg rgba(83,74,183,0.75), color #EEEDFE
+  Spot pill can be overridden with coral color for urgency ("2 left!" → color #F09595)
+
+m-meta-grid / m-meta-item (2x2 grid for party-detail metadata):
+  .m-meta-grid:   display grid, grid-template-columns 1fr 1fr, gap 3px, margin-bottom 6px
+  .m-meta-item:   bg rgba(255,255,255,0.04), border-radius 4px, padding 3px 5px,
+                  font-size 7px, color rgba(255,255,255,0.4)
+  Used for: date / end-time / location / capacity
+
+m-tag (2 variants, very small pills inside cards):
+  base:       font-size 6px, padding 1px 5px, border-radius 8px,
+              bg rgba(255,255,255,0.06), color rgba(255,255,255,0.45)
+  .m-tag.menu: bg rgba(239,159,39,0.15) amber-tint, color #FAC775
+  Used for: crowd type / capacity / menu flag / music genre / age
+
+m-hero (party detail cover):
+  .m-hero: height 68px, flex center, font-size 28px (emoji), position relative
+  Always contains m-pill.theme + m-pill.spots + back/share buttons
+
+m-card structure (party feed card):
+  .m-card:        bg rgba(255,255,255,0.04), border 0.5px solid rgba(83,74,183,0.25),
+                  border-radius 9px, margin-bottom 7px, overflow hidden
+  .m-card-img:    height 52px, flex center, font-size 22px (emoji), position relative
+  .m-card-body:   padding 6px 8px
+  .m-card-row:    flex justify-between, font-size 9px, weight 500, color #f0eeff, mb 2px
+  .m-card-meta:   font-size 7px, color rgba(255,255,255,0.35), mb 4px
+  .m-tags:        flex gap 3px
+
+m-nav (bottom navigation):
+  .m-nav:        flex, bg #08070f, border-top 0.5px solid rgba(83,74,183,0.15),
+                 padding 6px 0 8px
+  .m-nav-item:   flex 1, flex-column, center, gap 2px, font-size 6px, color rgba(255,255,255,0.3)
+  .m-nav-item.on: color #7F77DD (purple)
+  .m-fab:        24x24 round, bg #534AB7 (purple), font-size 15px, color white, mx auto
+  5 items: Explore | Inbox (with optional coral dot #D85A30 badge) | FAB+ | Tickets 🎫 | Profile 👤
+
+m-cta button variants:
+  .m-cta:        bg #534AB7 (purple), border-radius 7px, padding 6px, text-align center,
+                 font-size 8px, weight 500, color #EEEDFE, margin-top 7px
+  .m-cta.outline: bg transparent, border 0.5px solid rgba(83,74,183,0.4), color #AFA9EC
+  .m-scan-cta:   linear-gradient(135deg, rgba(83,74,183,0.8), rgba(29,158,117,0.6))
+                 (purple→teal gradient), border-radius 7px, padding 7px, color white
+  Skip-drinks link: color rgba(83,74,183,0.6) (faded purple)
+
+Other recurring mini components:
+  m-search     — search input bar (rgba white/6 bg, 7px radius, 0.5px purple/20 border)
+  m-tabs/m-tab — tab switcher with .on variant (purple-tinted bg, #AFA9EC text)
+  m-section    — section heading text (8px, weight 500, white/55)
+  m-menu-item  — emoji + name + .m-menu-price (right-aligned purple #7F77DD)
+  m-lock       — lock message (white/4 bg, 4px radius, with 🔒 emoji)
+  m-receipt-row / m-receipt-total — receipt line items
+  m-success / m-check — teal-tinted success banner with circular check
+  m-bubble / m-bubble.me — chat bubbles (theirs: rgba white/7, /me: rgba purple/40 with #EEEDFE text)
+  m-chat-row / m-av — chat row with 15px round avatar
+  m-input — chat input field (rgba white/5 bg, purple/20 border, 10px radius)
+  m-stat-grid / m-stat / m-stat-val (Syne 13px/700) / m-stat-label (6px) — stat tiles 2x2
+  m-guest-row / m-guest-av (17px round) — guest list rows
+  m-badge / m-badge.m-approve (teal-tinted, #5DCAA5) / m-badge.m-remove (red-tinted, #F09595)
+  m-qty-row / m-qty-btn (13px round +/−)
+  m-toggle-row / m-toggle (22x12 pill, bg #534AB7) / m-toggle-thumb (8px round white, right-aligned)
+  m-qr-area / m-qr (38px white/8 box, 5px radius, "▦" emoji)
+  m-steps / m-step-row / m-step-dot (14px round) / m-step-done (teal) / m-step-active (purple) / m-step-pending (gray) / m-step-text
+  m-location-card (purple-tinted bg, purple border, 6px radius)
+
+Progress / step indicators (3 levels):
+  1. Top-fixed progress bar: 2px tall, purple fill on purple/15 track, scrolls with page
+  2. Nav dots (top-right): 7px circles, active = #534AB7 purple, transform scale 1.4
+  3. Step counter "01 / 11" (Syne 12px, --dim color)
+  4. Step-badge (in info-panel): pill with dot + "Step N of 9 · Guest/Host"
+  5. m-steps vertical timeline (slide 6): 5 steps with 1px connector lines
+
+────────────────────────────────────────────────────────────
+5) SPECIFIC DESIGN TOKENS
+────────────────────────────────────────────────────────────
+
+Gradients:
+  - Title-slide radial glow: radial-gradient(ellipse 50% 60% at 80% 50%,
+        rgba(83,74,183,0.1) 0%, transparent 70%)  ← subtle purple aura
+  - Grid background texture: 50x50px purple grid via two linear-gradients at 0.03 opacity
+  - Scan CTA gradient: linear-gradient(135deg,
+        rgba(83,74,183,0.8) 0%, rgba(29,158,117,0.6) 100%)  ← purple → teal
+  - No other gradients — design is predominantly SOLID color blocks with opacity layering.
+
+Border-radius values (consistent scale):
+  Phone frame: 32px
+  Big-step cards (closing): 12px
+  m-card (party feed): 9px
+  m-cta / m-input: 7px (CTA) / 10px (input — slightly larger for chat)
+  m-pill / m-tag / m-badge: 8px (some 5-6px for tighter badges)
+  m-meta-item / m-stat / m-menu card: 4-6px
+  m-qr-area: 6px
+  m-toggle: 6px (pill shape, 22x12)
+  Pills in info-panel (step-badge, stat-pill, tag): 100px (full round)
+  Avatars / FAB / quantity buttons / step dots: 50% (round)
+
+Shadows:
+  - NONE explicitly defined in CSS. Design relies on:
+    (a) Border-only separation (0.5px-1.5px purple-tinted borders)
+    (b) Background opacity layering (rgba white/4-12 + rgba purple/10-30 + rgba teal/12 etc.)
+    (c) Subtle color contrast
+  - The existing app's glow-* utilities would need to be re-tuned to subtle purple/teal shadows.
+
+Glass effects:
+  - Top slideshow nav IS glass: background rgba(9,8,15,0.9) + backdrop-filter blur(16px)
+  - Phone mockup topbar is NOT glass: solid #08070f
+  - Phone cards are NOT glass: solid rgba(255,255,255,0.04) (no blur)
+  - Recommendation: app's glass utility should be subtle (low-opacity bg + slight blur + purple-tinted border)
+
+Spacing:
+  - Slide outer padding: 80px 32px 40px
+  - slide-inner: max-width 1000px, gap 60px (phone ↔ info-panel)
+  - Phone content padding: 10px
+  - Card body padding: 6px 8px
+  - Section margin-bottom: 6-7px (tight)
+  - Tag/pill gap: 3-4px
+  - Grid gap: 3-5px
+  - Feature-row padding: 12px (info-panel)
+  - Tag-row gap: 7px (info-panel)
+
+Phone frame specs:
+  Width: 220px (180px on mobile breakpoint at 700px)
+  Border: 1.5px solid rgba(83,74,183,0.35)
+  Background: #0e0c1c (purple-tinted near-black)
+  Border-radius: 32px
+  Animation: float 4s ease-in-out infinite (translateY -10px at 50%, with delay variants d1/d2/d3)
+  Status bar: bg #08070f, padding 9px 14px 7px, 9px font, color rgba(255,255,255,0.3)
+              Content: "9:41" + "▲ ■"
+
+Animations:
+  float:      4s ease-in-out infinite, translateY 0 → -10px → 0
+  fade-up:    0.65s ease, opacity 0 + translateY 32px → 1 + 0
+              with delay-1/2/3/4 (0.1s / 0.2s / 0.3s / 0.4s)
+  ndot scale: 0.3s transition
+  progress:   0.2s width transition
+
+────────────────────────────────────────────────────────────
+6) KEY DIFFERENCES FROM CURRENT IMPLEMENTATION
+────────────────────────────────────────────────────────────
+
+(A) THEME COLOR SWAP — CRITICAL
+  CURRENT (Bumble pivot, Task ORCH-FINAL):
+    - Single brand yellow #FFCB05 on pure black #000000
+    - White text #ffffff, card #141414, muted #8a8a8a
+    - ALL legacy tokens (--pink/--violet/--cyan/--acid/--coral/--sunshine/--gold*)
+      re-aliased to point to #FFCB05 → effectively monochrome
+    - NO gradients, NO glass blur, NO neon glows (utilities redefined to solid yellow)
+    - VIBE_COLORS all 8 vibes use the same yellow chip
+    - FUN_TIER_META all 4 tiers use yellow, varied by opacity only
+  SPEC:
+    - Purple #534AB7 dominant + teal #1D9E75 + amber #EF9F27 + coral #D85A30 + green #639922
+    - Near-black #09080f bg (purple-tinted, NOT pure black)
+    - --text #f0eeff (purple-tinted white), card bg #110f1f
+    - Purple-tinted borders rgba(83,74,183,0.2-0.35)
+    - SEMANTIC multi-color: teal=success, amber=upsell, coral=urgency, purple=brand
+    - Gradients present (scan CTA purple→teal, title-slide radial purple glow)
+    - Glass on top nav (blur 16px)
+  ACTION: Restore multi-color theming — un-alias --pink/--violet/--cyan/etc. OR redefine them
+  to the spec's palette. Rewrite VIBE_COLORS with per-vibe distinct colors. Rewrite FUN_TIER_META
+  with multi-color tiers (or accept monochrome pins on map). Re-enable subtle gradients/glass.
+
+(B) CURRENCY + LOCALE SWAP — CRITICAL
+  CURRENT:
+    - CITIES = ["Delhi", "Mumbai", "Bangalore", "Goa", "Pune"]  (India only)
+    - Currency: ₹ implicit (or none shown)
+    - Areas: India city names
+    - VibeTags = Techno/Bollywood/BYOB/Boardgames/Lo-fi/Chill/EDM/Retro
+    - Party titles like "Retro Cassette Lounge", "BYOB Garage Sessions Vol. 7"
+    - Host names: Indian-context
+  SPEC:
+    - Cities: Edinburgh (primary) + London + Manchester (UK)
+    - Areas: Leith, Newington, Marchmont (Edinburgh neighborhoods)
+    - Currency: £ throughout (£7 entry, £2 shot, £15 total, £55 net profit)
+    - Vibe themes: "R&B night", "Games night", "Bollywood" (more music-genre focused)
+    - Host names: Aaditya, Priya, Raj, Sam W., Jamie T., Maya K. (UK student context, Indian-origin)
+    - Drinks: "Jack Daniels shot", "Small Norfolk can", "Nachos plate", "Soft drink"
+  ACTION: Update CITIES, seed data, all hardcoded copy. Add `currency` config (default "£").
+  Note: Spec info-panel slide 2 says "Works across UK and India from day one" — multi-region
+  by design. Could keep both India + UK city lists.
+
+(C) NEW SCREENS REQUIRED — MAJOR
+  Spec defines 9 functional steps. Current app has 13 screens. Mapping:
+
+  SPEC STEP                          → CURRENT EQUIVALENT        → ACTION
+  ─────────────────────────────────  ─────────────────────────  ────────────────────
+  1. Discover feed                   → home-screen.tsx          → REDESIGN (new card style, 2 tabs, m-pill theme+spots, search bar, "Happening near you · N vibes" header)
+  2. Filter                          → (inline in home)         → NEW SCREEN (profession pills, price slider, city picker, date filter, "Show N matching parties" CTA)
+  3. Party detail                    → detail-screen.tsx        → MAJOR REDESIGN (hero with pills + back/share, meta grid 2x2, host verified badge, guest initials locked, menu preview, "Join for £N" CTA)
+  4. Payment + drinks checkout       → (none)                   → ENTIRELY NEW SCREEN (cinema layout, qty steppers, payment radios, live total, Stripe CTA, skip-drinks link)
+  5. Confirmation + chat unlocked    → (toast only)             → ENTIRELY NEW SCREEN (success banner + receipt + QR + chat preview combined)
+  6. Countdown + location drop       → (none)                   → ENTIRELY NEW SCREEN (vertical step tracker, location-drop countdown, mini map card, chat preview)
+  7. QR check-in                     → (none)                   → ENTIRELY NEW SCREEN (big QR, pre-order chips, guest-list confirmation, scan CTA)
+  8. Host dashboard                  → host-analytics.tsx       → NEW FULL SCREEN (currently just a component; needs stat grid 2x2, guest list with pre-order badges, prep list, earnings, scan CTA)
+  9. Admin controls                  → requests-screen.tsx      → ENTIRELY NEW SCREEN (pending approve/decline, confirmed remove, party control toggles, guest cap stepper, auto-refund remove card)
+
+  7 NET-NEW SCREENS required + 2 major redesigns.
+
+(D) REMOVED / CHANGED SCREENS
+  Spec does NOT show these current screens:
+    - login-screen.tsx      (spec assumes logged-in user; though OTP login can stay)
+    - onboarding-screen.tsx (spec has no onboarding flow shown)
+    - profile-screen.tsx    (Profile is in bottom nav but no slide shows it)
+    - edit-profile-screen.tsx
+    - my-parties-screen.tsx (consolidated into Host Dashboard?)
+    - saved-screen.tsx
+    - map-screen.tsx        (spec has only a small embedded "Leith, Edinburgh · Exact address arriving soon" card on slide 6 — NO full map view)
+    - create-screen.tsx     (only FAB in bottom nav, no slide)
+  The current Leaflet + CARTO realistic map (Task MAP-REALISTIC) would be DEMOTED
+  to an embedded mini-map card on the Countdown screen, NOT a standalone screen.
+  This is a notable reduction in map prominence.
+
+(E) NEW FLOW STEPS / CAPABILITIES (BACKEND)
+  The spec implies 4 backend capabilities that DO NOT currently exist:
+    1. Stripe payments + auto-refund:
+       - "Secured by Stripe · refundable if host cancels"
+       - "Full refund sent automatically" (on guest removal)
+       - Payment methods: Visa / Apple Pay / Google Pay
+       - REQUIRES: PaymentIntent model, Stripe SDK integration, refund endpoint
+    2. Per-party Menu / Drink items with prices + qty pre-order:
+       - "Menu preview" on detail screen
+       - Pre-order flow on payment screen with qty steppers
+       - Prep list auto-aggregation on host dashboard
+       - REQUIRES: MenuItem model (partyId, name, price, emoji), OrderItem model
+    3. QR code generation + host scan:
+       - QR appears on confirmation screen
+       - QR shown on tickets screen
+       - Host scans via "Scan guests in ▦" CTA
+       - REQUIRES: Ticket model (with unique QR hash), QR generation lib, scanner UI
+    4. Scheduled push notifications + scheduled location-drop:
+       - "24hr + 2hr push notifications"
+       - "Map pin will appear in your group chat at 6PM" (auto-drop)
+       - REQUIRES: Notification scheduling (cron or queue), location-reveal cron,
+         PushNotification model, web-push or FCM integration
+
+(F) BOTTOM NAV CHANGE
+  CURRENT: Explore | Map | Create (FAB) | Inbox | Profile
+  SPEC:    Explore | Inbox (coral dot badge) | FAB+ | Tickets 🎫 | Profile
+  - "Map" tab REMOVED → replaced by "Tickets 🎫" tab (QR check-in lives there)
+  - Inbox moves to position 2 (currently position 4)
+  - Inbox badge: small coral dot #D85A30 (not a count number)
+
+(G) DATA MODEL IMPLICATIONS (Prisma)
+  Current schema: Party, JoinRequest, User, ChatThread, Message
+  Spec would need additions:
+    - MenuItem (partyId, name, price, emoji, category)
+    - Order / OrderItem (userId, partyId, items[], totalAmount, stripePaymentId, status)
+    - Ticket (orderId, userId, partyId, qrCodeHash, scannedAt, scannedById)
+    - Notification (userId, partyId, type, scheduledFor, sentAt)
+    - Party.approvalRequired (boolean), Party.menuOpen (boolean), Party.acceptJoiners (boolean)
+    - Party.locationRevealAt (datetime, default = party date - 3 hours)
+    - User.profession (enum: student / software_eng / designer / healthcare / finance / other)
+    - Party.themes (rename of vibes? or new field for "R&B night" / "Games night" / "Bollywood")
+
+────────────────────────────────────────────────────────────
+7) IMPLEMENTATION PRIORITY (ranked by impact)
+────────────────────────────────────────────────────────────
+
+═══ P0 — MUST change to match spec (blocking) ═══
+  P0.1  Theme color swap in globals.css : un-alias --pink/--violet/--cyan/--acid/--coral/--sunshine
+        to spec palette. --purple #534AB7 primary. Bg #000000 → #09080f. Card #141414 → #110f1f.
+        Restore --border to rgba(83,74,183,0.2). Restore subtle gradients + glass blur.
+  P0.2  Rewrite VIBE_COLORS in src/lib/types.ts with per-vibe distinct colors from spec palette
+        (e.g. R&B → purple, Games → teal, Bollywood → amber/coral, etc.)
+  P0.3  Rewrite FUN_TIER_META in src/lib/types.ts (either multi-color or accept monochrome purple pins)
+  P0.4  Currency + locale swap: update CITIES to include Edinburgh/London/Manchester. Add `currency`
+        config defaulting to "£". Update seed data with UK areas (Leith, Newington, Marchmont)
+        and £-denominated fees. Update party titles to match spec ("Aaditya's flat party" etc.).
+  P0.5  Update bottom nav: remove Map tab, add Tickets 🎫 tab, move Inbox to position 2 with
+        coral dot badge variant.
+
+═══ P1 — Major new screens (high impact) ═══
+  P1.1  Payment + drinks checkout screen (`payment-screen.tsx`): cinema layout with qty steppers,
+        payment method radios, live total, Stripe CTA, skip-drinks link.
+  P1.2  Confirmation screen (`confirmation-screen.tsx`): teal success banner + receipt + QR + chat
+        preview combined. "Open chat" + "View QR" side-by-side CTAs.
+  P1.3  QR check-in / Tickets screen (`tickets-screen.tsx`): large QR, pre-order amber pill chips,
+        guest-list confirmation, gradient scan CTA.
+  P1.4  Host dashboard screen (`host-dashboard-screen.tsx`): stat grid 2x2 (Confirmed/Profit/Pending/
+        Pre-orders), guest list with pre-order badges, prep list with profit-per-item, earnings card,
+        "Scan guests in ▦" CTA.
+  P1.5  Admin controls screen (`admin-screen.tsx`): pending requests approve/decline, confirmed guests
+        remove, 3 party-control toggles (Approval required / Accept new joiners / Menu ordering open),
+        guest cap stepper, red auto-refund remove card.
+  P1.6  Countdown + location drop screen (`countdown-screen.tsx`): vertical step tracker (5 steps
+        with done/active/pending states), coral location-drop alert, mini location card, chat preview.
+  P1.7  Filter screen (`filter-screen.tsx`): profession pills, price slider with thumb, city picker,
+        date filter pills, "Show N matching parties" CTA.
+
+═══ P2 — Significant updates to existing screens ═══
+  P2.1  Redesign home-screen.tsx: card with m-pill.theme (bottom-left) + m-pill.spots (bottom-right),
+        2-tab switcher (House parties / Social meetups), search bar, "Happening near you · N vibes"
+        sub-header, m-tag.menu amber variant for parties with menus.
+  P2.2  Redesign detail-screen.tsx: m-hero with theme+spots pills + back/share round buttons,
+        meta grid 2x2, host card with verified badge, guest initials row (locked names), m-lock
+        "Full names visible after payment", menu preview section, "Join for £N · get your spot" CTA.
+  P2.3  Update chat-screen.tsx: align bubble styles (theirs = rgba white/7 with 4px 8px 8px 8px radius,
+        mine = rgba purple/40 with 8px 4px 8px 8px radius, #EEEDFE text).
+  P2.4  Update requests-screen.tsx to feed into the new Admin Controls screen (or merge).
+
+═══ P3 — Polish / nice-to-have ═══
+  P3.1  Glass effect on app-shell top bar (backdrop-filter blur 16px, rgba bg).
+  P3.2  Phone-style rounded frame for the app container (32px radius, subtle purple border).
+  P3.3  Float animation on hero/featured cards (translateY -10px over 4s).
+  P3.4  Vertical step-tracker pattern for any multi-step flow (countdown, onboarding, checkout).
+  P3.5  Pre-order amber pill chips pattern (for any "items reserved" UI).
+  P3.6  Toggle switches with purple thumb (22x12 pill, 8px round white thumb right-aligned).
+  P3.7  Quantity steppers (13px round +/− buttons, used for cart and guest-cap).
+  P3.8  Stat tiles with Syne-font numbers (13px/700) + 6px label.
+  P3.9  Eyebrow component (10px uppercase purple + 20px line decoration) for section labels.
+  P3.10 Marketing-style closing card "No profiles. No pressure. No big clubs…" (could be a
+        post-logout or first-launch splash).
+
+═══ Open Questions for the implementation agent ═══
+  Q1. Does the spec require removing the existing login/onboarding/profile/edit-profile/saved/
+      my-parties/map screens entirely, or just not featuring them in this 11-slide deck?
+      (Recommendation: KEEP login/onboarding/profile/edit-profile/saved — they're infrastructure.
+       REPURPOSE my-parties → Host Dashboard. REMOVE map-screen as standalone OR keep it but
+       demote to a hidden route since spec uses an embedded mini-map card instead.)
+  Q2. Does the Stripe integration need to actually charge real money, or is a mock payment
+      sufficient for this iteration? (Spec copy says "Secured by Stripe" but in dev/demo
+      mode a mock pay button that drops user into confirmation screen is acceptable.)
+  Q3. For QR codes: use a real QR-code library (e.g. qrcode.react) or use a placeholder "▦"
+      emoji as the spec mockup does? (Recommendation: real QR for production-feel.)
+  Q4. Should the existing `requests-screen.tsx` (host-side join requests) be merged into the
+      new `admin-screen.tsx`, or kept separate? (Spec's Admin Controls has pending requests
+      section, so they overlap — recommend MERGING.)
+  Q5. Map screen — keep the existing Leaflet+CARTO implementation, or remove it entirely
+      in favor of the spec's mini location card? (Recommendation: keep map-screen.tsx as a
+      secondary route accessible from the Countdown mini-card "Open full map" link, but remove
+      it from the bottom nav per the spec.)
+
+────────────────────────────────────────────────────────────
+END OF ANALYZE-1 REPORT
+────────────────────────────────────────────────────────────
+
+---
+Task ID: 7-d
+Agent: subagent (confirmation-screen)
+Task: Build confirmation-screen.tsx (Confirmation + Chat Unlocked per spec slide 5)
+
+Work Log:
+- Read worklog ANALYZE-1 spec, globals.css (teal-foil / purple-foil / glass / glow-cyan / glow-violet / eyebrow / animate-pop-in / animate-screen-in utilities), types.ts (Order/OrderItem/Party, currencyForCity, formatDateLabel, formatTime), api.ts (api.listOrders), store.ts (selectedOrderId, currentUser, setScreen, goBack), detail-screen.tsx (sticky header + ChevronLeft + Skeleton conventions).
+- Confirmed package.json has NO qrcode dependency → used the "▦" emoji placeholder per spec.
+- Built `/home/z/my-project/src/screens/confirmation-screen.tsx`:
+  - "use client"; useQuery(["orders", currentUser.id], api.listOrders({userId})) then find by selectedOrderId.
+  - Loading: sticky glass-strong header skeleton + body skeleton stack matching the layout (banner / receipt / QR / chat / 2-CTA row).
+  - Not-found / error: glass-strong sticky header with back button, centered card with coral-foil icon, "Order not found" heading, copy + Back-to-home CTA (setScreen("home")).
+  - Body: sticky header (back ChevronLeft + "Confirmed" eyebrow + "You're in" font-display heading) → scrollable p-4 pb-32 space-y-4:
+    * Success banner: teal-foil rounded-3xl p-5 with animate-pop-in; 32px circular bg-teal-500 white Check (glow-cyan, strokeWidth 3); "You're in. Spot secured." text-teal-300; "{party.title} · {formatDateLabel} · {formatTime}" + "Group chat is now unlocked" muted.
+    * Receipt card: glass rounded-2xl, "Receipt" eyebrow + order.status badge; line items "{emoji} {name} × {qty} — {sym}{unitPrice*qty.toFixed(2)}"; total row (top border, "Total paid" + "{sym}{order.totalAmount.toFixed(2)}" in text-primary).
+    * QR card: glass rounded-2xl centered; 80x80 bg-white/8 border border-border rounded-xl with "▦" at 32px; "Your entry QR" label + muted "Show at the door…" copy.
+    * Chat preview: purple-foil rounded-2xl; header "Group chat · {guestCount+1} people" with MessageCircle icon + "Unlocked" badge; 3 mock bubbles (host left with avatar initial + 4px 12px 12px 12px radius bg-white/8; guest left same shape; "you" right with 12px 4px 12px 12px radius bg-purple-500/40 text-purple-foreground); disabled input row "Message the group…" visual only.
+    * CTAs: grid grid-cols-2 gap-3; "Open chat" bg-primary text-primary-foreground glow-violet (→ setScreen("inbox")); "View QR" border border-purple-500/40 text-purple-300 bg-transparent (→ setScreen("tickets")).
+  - Currency resolved via currencyForCity(order.party.city).
+- Verification: `bun run lint` → 0 errors. `npx tsc --noEmit | grep confirmation-screen` → empty (no TS errors in this file; remaining pre-existing errors are in scripts/seed-uk.ts, examples/websocket, skills/, and orders route — outside this task's scope).
+
+Stage Summary:
+- New screen `src/screens/confirmation-screen.tsx` (~230 lines) implementing spec slide 5 (Confirmation + Chat Unlocked) in the new purple/teal/amber/coral multi-color palette on near-black #09080f. Loads order via api.listOrders + selectedOrderId; handles loading / not-found states; renders success banner, receipt, QR placeholder, mock group-chat preview, and dual CTAs. Lint + tsc clean for the new file. Ready to be wired into the app shell by the orchestrator (screen routes through `setScreen("confirmation")` already exists in the Screen union type).
+
+---
+Task ID: 7-e
+Agent: subagent (tickets-screen)
+Task: Build tickets-screen.tsx (QR Check-in per spec slide 7)
+
+Work Log:
+- Read context: worklog ANALYZE-1 section (P1.3 — QR check-in / Tickets screen: large QR, pre-order amber pill chips, guest-list confirmation, gradient scan CTA), globals.css utilities (glass, glass-strong, teal-foil, purple-foil, coral-foil, vibe-gradient-bg, eyebrow, glow-violet, vibe-float, press-feedback, fancy-scrollbar, vibe-skeleton), lib/types.ts (Ticket/Order/OrderItem/Party, currencyForCity, formatDateLabel, formatTime), lib/api.ts (api.listTickets returns { tickets } with party + order.items joined), lib/store.ts (currentUser, setScreen), home-screen.tsx (screen conventions: sticky header pattern, useQuery, animate-screen-in wrapper from app-shell).
+- Confirmed qrcode npm package is NOT in package.json (per task instructions: don't install new packages). Will render a stylized CSS-grid QR placeholder.
+- Confirmed existing bottom-nav.tsx already routes "tickets" tab to setScreen("tickets") and app-shell.tsx was missing the tickets case (would render blank). Wired TicketsScreen into app-shell.tsx (import + render branch).
+- Built /home/z/my-project/src/screens/tickets-screen.tsx:
+  • "use client".
+  • useQuery(["tickets", currentUser.id], () => api.listTickets(currentUser.id)) with enabled: !!currentUser?.id guard.
+  • Sticky header (sticky top-0 z-10 glass-strong px-4 py-3 pt-[max(env(safe-area-inset-top),12px)]) — eyebrow "My tickets" + h1 "Show QR at the door". No back button (tab destination).
+  • Scrollable body: fancy-scrollbar flex-1 overflow-y-auto p-4 pb-32 space-y-4.
+  • Loading → 2× TicketSkeleton (h-72 QR card + h-16 confirmation, vibe-skeleton shimmer).
+  • Error → centered card with RefreshCw in coral-foil, "Couldn't load tickets" headline, retry button.
+  • Empty → centered card with TicketIcon lucide icon in purple-foil + glow-violet + vibe-float animation, "No tickets yet" headline, "Join a party to get your entry QR" subtext, "Explore parties" CTA (bg-primary text-primary-foreground) → setScreen("home").
+  • Tickets list → one TicketCard per ticket (key=t.id).
+  • TicketCard composition:
+      1. Big QR card (glass rounded-2xl p-5 centered): party title (font-display text-2xl font-bold text-white); "{dateLabel} · {timeLabel} · {party.area}" muted text-xs; QRPlaceholder (120×120, white bg, rounded-xl, grid of 7×7 cells with 2px gap); "Scan this QR code at the door" muted text-xs; amber pill chips for pre-order items (bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-full px-3 py-1 text-xs, "{emoji} {name} × {qty}") or "Entry only" muted chip if no add-ons; "Pre-orders flagged when scanned · host has them ready" tiny muted footnote.
+      2. Guest-list confirmation (teal-foil rounded-2xl p-4, mt-3-equivalent via space-y-3): teal check circle + "You're on the guest list" (text-teal-300 font-semibold) + "Approved by host · spot confirmed" (muted).
+      3. "Your order at the door" section (only when addOns.length > 0): glass rounded-2xl p-4 with QrCode lucide icon + eyebrow header; <ul> of "{emoji} {name} × {qty}" on the left and "{sym}{(unitPrice * qty).toFixed(2)}" on the right in text-primary (purple) font-semibold. Uses currencyForCity(ticket.party.city).
+      4. CTA button (vibe-gradient-bg purple→teal, text-white, rounded-2xl w-full, px-4 py-3.5, glow shadow + press-feedback + hover:brightness-110): TicketIcon + "Ready · show QR to host". onClick → toast.success("Show this to your host 🎟️") via sonner.
+  • QR placeholder implementation (no qrcode package): 
+      - QR_N = 7 constant.
+      - hashSeed(hash): FNV-1a 32-bit hash for deterministic seed.
+      - finderZone(r, c): returns "tl"/"tr"/"bl"/null for the 3 classic QR corner positions (each 3×3).
+      - finderValue(r, c): classic QR finder look — 3×3 outer dark ring + 1×1 dark center, light mid-edges (computes local coords per finder).
+      - qrGrid(hash): returns boolean[7][7]; finder cells use finderValue, data cells use seed-derived bit ((seed >>> ((r*7+c) % 31)) & 1).
+      - QRPlaceholder component: useMemo to compute grid from qrHash; renders 7×7 CSS grid (grid-cols-7 grid-rows-7 gap-[2px]) inside a 120×120 white box with p-2 rounded-xl; each cell is bg-[#09080f] (dark, matches app bg) or bg-white (light).
+  • preOrderItems(t) helper: filters t.order.items where menuItemId !== null/undefined (entry ticket item has menuItemId=null per /api/orders POST handler).
+  • All colors per task spec: purple (primary, eyebrow, glow-violet, purple-foil), teal (teal-foil, text-teal-300, bg-teal-500/15), amber (bg-amber-500/15 text-amber-300 border-amber-500/30), coral (coral-foil for error). vibe-gradient-bg for CTA. No legacy yellow-400 monochrome carried over.
+- Verification:
+  • `bun run lint` → 0 errors (eslint . passes clean).
+  • `npx tsc --noEmit | grep tickets-screen` → no errors in tickets-screen.tsx or app-shell.tsx. (Pre-existing errors in unrelated files: examples/websocket/server.ts, scripts/seed-uk.ts, skills/*, src/app/api/orders/route.ts — none touched by this task.)
+
+Stage Summary:
+- New screen /home/z/my-project/src/screens/tickets-screen.tsx (~270 lines) implements the spec slide 7 "My Tickets / QR Check-in" view: sticky header, empty state with purple Ticket icon + Explore parties CTA, ticket cards each containing a stylized 7×7 QR placeholder (with 3 classic finder patterns) + party/date/time/area header, amber pre-order pill chips (or "Entry only"), teal guest-list confirmation, optional "Your order at the door" itemized list with purple prices, and a vibe-gradient-bg "Ready · show QR to host" CTA firing a sonner success toast.
+- Wired the screen into app-shell.tsx (import + render branch for current === "tickets"), so the existing bottom-nav "Tickets" tab now actually renders content instead of a blank page.
+- Lint clean, TypeScript clean for the touched files. No new npm packages installed (qrcode not present, used CSS-grid placeholder per spec).
+
+---
+Task ID: 7-c
+Agent: subagent (payment-screen)
+Task: Build payment-screen.tsx (Payment + Drinks Checkout per spec slide 4)
+
+Work Log:
+- Read worklog.md ANALYZE-1 section (lines 830-1559) for the full multi-color design spec; confirmed slide 4 = "Payment + Drinks" (Step 4 of 9, "Confirm your spot", cinema-style checkout).
+- Read globals.css to inventory utility classes (glass, glass-strong, purple-foil, teal-foil, amber-foil, coral-foil, eyebrow, glow-violet, vibe-skeleton, animate-stagger, animate-screen-in, fancy-scrollbar) and CSS variables (purple #534ab7, teal #1d9e75, amber #ef9f27, coral #d85a30, bg #09080f, primary = purple).
+- Read types.ts for MenuItem/Order/OrderItem shapes + currencyForCity/formatDateLabel/formatTime helpers; api.ts for api.getParty / api.listMenu / api.createOrder signatures; store.ts for selectedPartyId/setSelectedOrderId/setScreen/goBack/currentUser.
+- Read detail-screen.tsx + create-screen.tsx for screen conventions (sticky glass header with ChevronLeft back button, pt-[max(env(safe-area-inset-top),12px)], fancy-scrollbar flex-1 overflow-y-auto body, animate-screen-in wrapper, useQuery + useMutation patterns, sonner toast).
+- Verified /api/orders POST route accepts { userId, partyId, items[{ menuItemId?, name, emoji, unitPrice, quantity }] } and returns { order, ticket } — matches the createOrder client helper exactly.
+- Built /home/z/my-project/src/screens/payment-screen.tsx (374 lines):
+  • "use client" component PaymentScreen.
+  • useQuery(["party", partyId]) + useQuery(["menu", partyId]) with enabled: !!partyId.
+  • Local state: quantities (Record<string, number>, default 0), paymentMethod ("visa"|"applepay"|"googlepay", default "visa"), submitting (bool).
+  • Computed: menuTotal + entryFee → total (live, useMemo).
+  • formatPrice(n) = `${currencyForCity(party.city)}${n.toFixed(2)}` → "£7.00".
+  • useMutation(api.createOrder) → onSuccess: setSelectedOrderId(order.id) + toast.success("Spot secured!") + setScreen("confirmation"); onError: toast.error("Payment failed — try again").
+  • submit(skipDrinks) builds items[] = [Entry ticket 🎟️ qty 1] + (unless skip) each menu item with qty>0; calls mutate with onSettled → setSubmitting(false).
+  • Sticky glass header: ChevronLeft back button + eyebrow "Step 4 of 9 · Checkout" + h1 "Confirm your spot" + subtitle "{party.title} · {formatDateLabel(party.date)}".
+  • Entry ticket card (glass, purple-foil icon tile) — "1 × entry ticket", fee in purple-300, "Fixed" tag.
+  • Drinks & snacks card (glass) — header + teal-foil "Optional" badge + subtitle "Like ordering at a cinema — pick up at the door" + menu rows (emoji + name + purple price + 32px round −/qty/+ stepper, − disabled at 0).
+  • Payment method card (glass) — 3 custom radio rows (Visa 4242 default-selected with solid purple dot, Apple Pay, Google Pay); selected row gets purple-foil background.
+  • Total row: border-t border-border, "Total" + add-on count label, large font-display text-primary purple total.
+  • CTA Button: bg-primary text-primary-foreground glow-violet rounded-2xl h-12 — "Pay £X.XX · confirm spot 🔒" with Lock icon; spinner + "Processing…" while submitting.
+  • Skip link: text-purple-300/70 hover:text-purple-300 — "Skip drinks for now · entry only" → submit(true).
+  • Footer micro: ShieldCheck + "Secured by Stripe · refundable if host cancels" (10px muted, centered).
+  • Guards: no partyId/currentUser → minimal empty state with "Browse parties" button; party loading → Skeleton layout mirroring the real structure.
+  • Staggered entrance: each card uses animate-stagger with incremental animationDelay (40/100/160ms).
+- Verification:
+  • `bun run lint` → 0 errors (eslint . passes clean).
+  • `npx tsc --noEmit` → 0 errors in payment-screen.tsx (14 pre-existing errors in other files: websocket example, seed-uk script, skills, orders GET route, and the not-yet-created tickets-screen import — all outside this task's scope).
+
+Stage Summary:
+- payment-screen.tsx is complete and matches the spec slide 4 design: cinema-style checkout with entry ticket (fixed), drinks/snacks qty steppers (teal "Optional" badge), 3-option payment radio list (Visa/Apple Pay/Google Pay), live total, purple glowing Pay CTA, skip-drinks link, and Stripe footer micro-copy. All on the multi-color purple/teal palette on near-black #09080f.
+- API contract verified end-to-end against /api/orders POST route — the items[] shape, currency derivation, and { order, ticket } response are all aligned.
+- Screen is ready to be wired into app-shell.tsx by the orchestrator (needs `{current === "payment" && <PaymentScreen />}` added alongside the existing tickets/confirmation/countdown cases that sibling agents are building).
+- No concerns blocking merge; the only follow-up is the app-shell wiring + ensuring a downstream "confirmation" screen exists to receive the setSelectedOrderId + setScreen("confirmation") handoff (sibling task 7-d/7-e).
+
+---
+Task ID: 7-f
+Agent: subagent (host-dashboard-screen)
+Task: Build host-dashboard-screen.tsx (Host Dashboard per spec slide 8)
+
+Work Log:
+- Read worklog ANALYZE-1 section (slides 8 detail at lines 1145-1173), globals.css utilities (eyebrow, glass, glass-strong, vibe-gradient-bg, purple-foil, teal-foil, amber-foil, coral-foil, glow-violet, vibe-skeleton, press-feedback), types.ts (Party/Order/OrderItem/MenuItem/HostAnalytics/JoinRequest + currencyForCity/formatDateLabel/formatTime), api.ts (getParty/listOrders/listMenu/getHostAnalytics), store.ts (currentUser/selectedPartyId/setScreen/goBack), existing host-analytics.tsx (for StatCard/FunnelPill patterns), my-parties-screen.tsx (header/body conventions), confirmation-screen.tsx (for the new multi-color palette + sticky-header back-button pattern), and bottom-nav.tsx (which already wires "host-dashboard" as an active profile-tab screen).
+- Wrote /home/z/my-project/src/screens/host-dashboard-screen.tsx — full screen component (~430 lines) implementing spec slide 8.
+- All React hooks (4× useQuery + 4× useMemo) hoisted above any early returns to comply with rules-of-hooks; the !party / loading / no-selectedPartyId branches all come after the derivation memos.
+- Derived data: confirmedGuests = party.guestCount; capacity = party.maxGuests; pending = (requests.filter pending).length, falling back to analytics.pendingRequests when the party endpoint omits requests; preOrderCount = sum of OrderItem.quantity across orders (excluding "Entry ticket"); prepList = aggregated by item name with menu fallback for emoji/unitPrice; ticketRevenue = confirmedGuests × party.fee; menuProfit = Σ(totalQty × unitPrice); netProfit = ticketRevenue + menuProfit.
+- Guest list rows built by mapping accepted requests → matching order by requesterId===order.userId → addOns = order.items minus Entry ticket. Badge = teal-foil "{emoji}×{qty}" join with " · " when add-ons exist, else muted "Entry only".
+- Sticky header: ChevronLeft + eyebrow "Host dashboard" + party title (truncate) + "{formatDateLabel} · {formatTime} · {party.area}" subline.
+- Stat grid 2×2 (grid grid-cols-2 gap-3): Confirmed (purple Users, "{n}/{cap}"), Est. net profit (teal TrendingUp, "£X"), Pending (amber Clock), Pre-orders (purple ShoppingBag). Each card = glass rounded-2xl p-4 with tinted icon tile (bg-*-500/15) + font-display text-2xl font-bold colored value + text-xs muted label.
+- Prep list section: eyebrow "Prep list — buy exactly this" + glass card with divide-y rows "{emoji} {name} — {qty} ordered ... +{sym}{profit.toFixed(2)}" (profit in text-teal-300). Empty state when prepList.length===0.
+- Earnings card: glass rounded-2xl p-4 with eyebrow + "Projected" eyebrow tag, two EarningRows (Ticket revenue, Menu profit), border-t separator, "Est. net profit" row in text-teal-300 font-display text-lg font-bold.
+- CTA: vibe-gradient-bg glow-violet press-feedback rounded-2xl full-width button "Scan guests in ▦" with ScanLine icon; onClick fires toast.success("QR scanner opening…", { description }).
+- Skeleton mirrors layout (header + 4-stat grid + 3-guest rows + 3-prep rows + earnings card + CTA bar) using vibe-skeleton class.
+- Empty state (no selectedPartyId): purple-foil icon tile + "No party selected" + "Go to My Parties" button → setScreen("my-parties").
+- Error state (party undefined after loading): coral-foil ⚠ tile + retry button → partyQuery.refetch().
+- Verification:
+  • `bun run lint` → 0 errors (eslint . passes clean).
+  • `npx tsc --noEmit 2>&1 | grep host-dashboard` → 0 errors in this file (15 pre-existing errors in unrelated files: websocket example, seed-uk script, skills/, orders GET route — none in src/screens/host-dashboard-screen.tsx).
+
+Stage Summary:
+- host-dashboard-screen.tsx is complete and matches spec slide 8 design: sticky header with eyebrow+title+date·time·area; 2×2 stat grid (purple Confirmed / teal Est. net profit / amber Pending / purple Pre-orders); guest list with rotating purple/teal/amber/coral avatar initials and teal-foil pre-order badges vs muted "Entry only"; prep list with teal profit-per-item; earnings card (Ticket revenue + Menu profit + teal net-profit total with top-border separator); full-width vibe-gradient-bg "Scan guests in ▦" CTA firing a toast.success on tap. Loading skeleton, empty state, and error state all match the layout. All on the multi-color purple/teal/amber/coral palette on near-black #09080f.
+- Screen is ready to be wired into app-shell.tsx by the orchestrator (needs `{current === "host-dashboard" && <HostDashboardScreen />}` added alongside the other profile-tab screens). The bottom-nav already marks "host-dashboard" as part of the Profile tab's active set, so navigation will light up correctly.
+- No concerns blocking merge; downstream wiring is the orchestrator's responsibility.
+
+---
+Task ID: 7-g
+Agent: subagent (admin-screen)
+Task: Build admin-screen.tsx (Admin Controls per spec slide 9)
+
+Work Log:
+- Read worklog ANALYZE-1 section (slide 9 detail at lines 1175-1199), globals.css utilities (eyebrow, glass, glass-strong, purple-foil, teal-foil, amber-foil, coral-foil, red-foil, glow-violet, vibe-skeleton, press-feedback, fancy-scrollbar, animate-screen-in), types.ts (Party with approvalRequired/acceptJoiners/menuOpen/maxGuests + JoinRequest status enum), api.ts (getParty returns { party, host, vibes, requests } + updateRequest(id, "accepted"|"rejected")), store.ts (selectedPartyId + goBack), requests-screen.tsx (conventions for useMutation + invalidateQueries patterns + AVATAR_COLORS rotation), and host-dashboard-screen.tsx (sibling screen — sticky-header + Skeleton + empty/error state patterns + 4-color avatar palette to keep visual parity).
+- Wrote /home/z/my-project/src/screens/admin-screen.tsx — full screen component (~530 lines) implementing spec slide 9 design end-to-end.
+- All React hooks (useQuery + useMutation + useMemo × 2 + useState × 4) hoisted above any early returns to comply with rules-of-hooks; the !selectedPartyId / loading / error branches all come after the derivation.
+- Pending vs confirmed split via useMemo on requests.filter — pending.status === "pending", confirmed.status === "accepted".
+- Approve/Decline: useMutation(api.updateRequest) — on success toast.success("Guest approved ✅" / "Request declined") with description, then invalidate ["party", partyId] + ["parties"] + ["requests"] queries so guest counts and lists refresh. Buttons disabled while their specific request is in-flight (actMutation.isPending && actMutation.variables?.id === req.id).
+- Toggle component: custom 44×24 (h-6 w-11) rounded-full switch, bg-purple-500 when ON else bg-secondary, white 18px (h-4 w-4) thumb translated +6 (translate-x-6) when ON, role="switch" aria-checked, focus-visible ring. Inline at top of file.
+- Party controls card (glass rounded-2xl p-4): eyebrow + 3 ToggleRow (Approval required / Accept new joiners / Menu ordering open) with hint subtitles, divided by divide-y divide-white/5; bottom border-t Guest cap row with 36px (h-9 w-9) round − / + buttons (Minus/Plus icons) and font-display value, Minus disabled at cap=1.
+- Local control state pattern: useState<boolean | undefined>(undefined) for each toggle + guestCap, derived display values (approval/joiners/menu/cap) fall back to party defaults via `??` — this avoids the lint-disallowed setState-in-effect cascade while still letting user overrides win after first interaction.
+- Confirmed guests: avatar + name + teal Check icon (strokeWidth=3) + red-foil "Remove" button → toast.success("Guest removed", { description: "Full refund sent automatically · removed from chat." }) + invalidate party query (visual only — no PATCH endpoint yet).
+- Danger zone: red-foil rounded-2xl p-4 card with ShieldAlert icon + "Remove guest · pick a reason" heading in text-red-300 + "Full refund sent automatically · removed from chat" subtext in text-red-300/70 + audit-trail note. Visual warning per spec — actual remove buttons are inline on the confirmed guests list above.
+- Warning banner: amber-foil rounded-2xl p-3 with ⚠ glyph + "{N} {guest|guests} waiting for approval" in text-amber-300 — only renders when pendingCount > 0.
+- Sticky header: ChevronLeft back button + eyebrow "Admin controls" + h1 "Guest management" + party.title subline (truncated). Loading → AdminSkeleton mirrors the layout (banner + 2 pending rows + 2 confirmed rows + 4-row party controls + danger zone). Empty state (no selectedPartyId): purple-foil Users icon + "Select a party" + helper text. Error state: coral-foil ⚠ + Retry button → partyQuery.refetch().
+- Body wrapper: fancy-scrollbar flex-1 space-y-5 overflow-y-auto p-4 pb-32 (matches sibling screens).
+- Verification:
+  • `bun run lint` → 0 errors (eslint . passes clean).
+  • `npx tsc --noEmit 2>&1 | grep admin-screen` → 0 errors in this file (pre-existing errors only in unrelated files: websocket example, seed-uk script, skills/, orders GET route).
+
+Stage Summary:
+- admin-screen.tsx is complete and matches spec slide 9 design: sticky header with eyebrow + "Guest management" subtitle; conditional amber warning banner for pending count; Pending requests list with avatar + name + intro-subtext + teal Approve / red Decline buttons (useMutation wired to api.updateRequest with toast + query invalidation); Confirmed guests list with avatar + name + teal ✓ checkmark + red Remove button (toast on click); glass Party controls card with 3 purple toggle rows (Approval required / Accept new joiners / Menu ordering open) + Guest cap stepper (− {N} + with 36px round buttons); red-foil danger-zone card with "Remove guest · pick a reason" heading and "Full refund sent automatically · removed from chat" subtext. Toggle switch is a real 44×24 pill (purple ON, secondary OFF, sliding white thumb, role="switch" + aria-checked). All on the multi-color purple/teal/amber/coral palette on near-black #09080f.
+- All React hooks hoisted above conditional returns. Local control state uses an undefined-until-touched pattern to avoid setState-in-effect (lint-clean) while still hydrating from party defaults on first paint.
+- Screen is ready to be wired into app-shell.tsx by the orchestrator (needs `{current === "admin" && <AdminScreen />}` added alongside the other host-flow screens). The "admin" Screen type already exists in types.ts.
+- No concerns blocking merge; downstream wiring (app-shell + entry point from host-dashboard or my-parties) is the orchestrator's responsibility.
+
+---
+Task ID: 7-i
+Agent: subagent (filter-screen)
+Task: Build filter-screen.tsx (Filter per spec slide 2)
+
+Work Log:
+- Read worklog ANALYZE-1 section (spec slide 2 — Filter: profession pills, price-range slider card, city pills, date pills, sticky bottom CTA with matching-party count), globals.css (utilities: glass, glass-strong, eyebrow, purple-foil, glow-violet, press-feedback, fancy-scrollbar, animate-screen-in), lib/types.ts (CITIES, PROFESSIONS), lib/store.ts (cityFilter/setCityFilter, setScreen, goBack), lib/api.ts (api.listParties), home-screen.tsx conventions (useQuery + queryKey pattern), confirmation-screen.tsx (sticky header pattern: `sticky top-0 z-20 glass-strong pt-[max(env(safe-area-inset-top),12px)]`), detail-screen.tsx (sticky bottom CTA at `absolute inset-x-0 bottom-[84px] z-30 mx-auto max-w-[480px]`), payment-screen.tsx (radio/pill button styling, Button + glow-violet), shadcn Slider component (data-slot attributes — track/range/thumb customizable via arbitrary variant `[&_[data-slot=slider-thumb]]:...`).
+- Built `/home/z/my-project/src/screens/filter-screen.tsx` (215 lines): `"use client"`; sticky header with back button + "Filter parties" font-display title + visual-only Settings2 (gear) icon button in `purple-foil`; scrollable body (`p-4 pb-40 space-y-6`) with 4 sections — (1) "Who are you?" profession pills from `PROFESSIONS`, single-select via local `profession` state, tapping selected deselects; (2) "Price range" `glass rounded-2xl p-4` card with shadcn `Slider` (min=0, max=15, step=1, default=9 for "Up to £9"), styled via `[&_[data-slot=slider-track]]:h-[3px]`, `[&_[data-slot=slider-track]]:bg-secondary`, `[&_[data-slot=slider-range]]:bg-purple-500`, `[&_[data-slot=slider-thumb]]:size-5 border-2 border-white bg-purple-500` to match spec (3px track, purple fill, 20px white-bordered purple thumb), plus 5 evenly-spaced labels (Free / £4 / £8 / £12 / £15+) and live "Up to £{value}" label in `text-purple-300`; (3) "City" pills bound directly to `cityFilter`/`setCityFilter` from store so it syncs with home (single-select, tapping selected deselects); (4) "Date" pills (Tonight / This weekend / Next week) on local `dateFilter` state (default "weekend"). All pills use the spec colors: selected = `bg-purple-500/30 text-purple-200 border border-purple-500/50`, unselected = `bg-secondary text-muted-foreground border border-border`.
+- Sticky bottom CTA bar at `absolute inset-x-0 bottom-[84px] z-30 mx-auto max-w-[480px] px-3` (sits above the 80px-tall bottom nav) wrapping a `glass-strong` container with a full-width `bg-primary text-primary-foreground rounded-2xl h-12 glow-violet` button labeled "Show {N} matching parties" (or "Counting…" with a spinner while loading). N comes from `useQuery(["parties","filter",cityFilter,profession,priceValue,dateFilter], () => api.listParties({ city: cityFilter }))` — approximate count since API only supports city/vibe/q.
+- Registered `FilterScreen` in `src/components/vibe/app-shell.tsx` (import + `{current === "filter" && <FilterScreen />}` route). Preserved the parallel `CountdownScreen` import/route another agent added.
+- Verified: `bun run lint` → 0 errors; `npx tsc --noEmit | grep filter-screen` → 0 errors in my file (remaining TS errors are all in unrelated files: scripts/seed-uk.ts, examples/websocket/server.ts, skills/*, src/app/api/orders/route.ts).
+
+Stage Summary:
+- New screen `src/screens/filter-screen.tsx` (215 LOC) implements spec slide 2: dedicated Filter UI with profession/price-slider/city/date sections, sticky header with gear icon, sticky bottom CTA showing live matching-party count, full multi-color palette (purple-dominant on near-black #09080f). City filter is live-synced with the Zustand store so the apply-CTA simply calls `setScreen("home")` (city already persisted). Profession/price/date are UI-only for now (no API/store support — noted as approximate in the count query). Slider styled purple via `[&_[data-slot=...]]` arbitrary variants on the shadcn Slider. App-shell routes `screen === "filter"` to FilterScreen. Lint + tsc clean for the new file.
+
+---
+Task ID: 7-h
+Agent: subagent (countdown-screen)
+Task: Build countdown-screen.tsx (Countdown + Location Drop per spec slide 6)
+
+Work Log:
+- Read worklog ANALYZE-1 spec (slide 6 lines 1092-1116 — "Step 6 of 9 · Guest · ENTIRELY NEW SCREEN": teal countdown pill, vertical m-steps tracker with 5 steps, coral location-drop alert, purple location card, purple party-chat preview), globals.css utilities (teal-foil / purple-foil / coral-foil / amber-foil / glass / glass-strong / eyebrow / glow-violet / glow-cyan / animate-pop-in / animate-screen-in / fancy-scrollbar / vibe-skeleton), types.ts (Party with locationRevealAt + countdownTo + formatDateLabel + formatTime), api.ts (api.getParty + api.listTickets), store.ts (currentUser, selectedPartyId, setScreen, goBack), detail-screen.tsx + confirmation-screen.tsx for sticky-header + chat-bubble + Skeleton conventions.
+- Verified Tailwind v4 setup: only `--color-coral` (single shade) is defined in @theme, so `text-coral-300` does NOT exist — used `text-orange-300` per task instructions (default Tailwind orange-300 ≈ coral-bright #f0997b). `text-teal-300` / `text-purple-300` / `text-amber-300` are default Tailwind colors and work fine.
+- Built /home/z/my-project/src/screens/countdown-screen.tsx (~330 lines):
+  - "use client"; two useQuery hooks (party by selectedPartyId, tickets by currentUser.id) hoisted above any conditional returns to comply with rules-of-hooks.
+  - Sticky header: ChevronLeft back button + truncated party title + teal-foil pill showing `countdownTo(party.date, party.time)` (e.g. "in 3d 4h", "Live now").
+  - Step tracker (glass card) — 5 steps with 28px circular dots and 1px vertical connectors between rows:
+    1 ✓ done — "Spot confirmed" / "Receipt sent to email"
+    2 ✓ done — "Group chat unlocked" / "Meet everyone before arriving"
+    3 ● active/pending — "Reminders coming" / "24hr + 2hr push notifications"
+    4 ○ active/pending — "Location drops day-of" / "Map pin at {revealTime} on {revealDay}" (template filled from locationRevealAt datetime)
+    5 ○ active/pending — "Arrive · scan QR · collect order"
+    States derived from `activeStep` computed per spec: if now > revealAt → step 5; else if now > partyStart − 24h → step 4; else step 3. Step dots: teal check (done, glow-cyan), purple number (active, glow-violet), gray number on secondary bg (pending). Connector line color: teal/45 if previous state was done, else white/10.
+  - Location-drop alert (coral-foil, animate-pop-in): 📍 + `text-orange-300` "Location drops in {N} hours" (rounded-up hours, pluralised) + `text-orange-300/70` body "Map pin will appear in your group chat at {revealTime} on {revealDay}. Only visible to you and other confirmed guests." Hidden once revealDropped (now > revealAt).
+  - Location card (purple-foil): MapPin icon in purple-tinted square + `{area}, {city}` in `text-purple-300` + subtext that flips between "Exact address arriving soon" (default) and "Exact address is in your group chat" (when revealDropped) + "Open full map" button → `setScreen("map")`.
+  - Party chat preview (purple-foil, full-width button → setScreen("inbox")): "Party chat · {N} people 🔥" header, two mock bubbles (R on amber avatar / left / `bg-white/8`, you on right / `bg-purple-500/40 text-purple-foreground`), and a date/time hint row at the bottom with ArrowRight affordance.
+  - Soft no-ticket banner (amber-foil) shown when currentUser is set but `ticketsData.tickets` has no ticket for this partyId — explains this is a preview + "View party & get a spot" CTA → `setScreen("detail")`.
+  - Loading → CountdownSkeleton (sticky header skeleton + body skeletons matching final layout). Empty (no selectedPartyId / party load error) → EmptyState with CalendarClock icon and "Browse parties" CTA → setScreen("home").
+- Wired CountdownScreen into app-shell.tsx: added import + `{current === "countdown" && <CountdownScreen />}` render branch alongside the other screen entries. ("countdown" Screen type already existed in types.ts.)
+- Verification: `bun run lint` → 0 errors (eslint . exits clean). `npx tsc --noEmit` → no errors in countdown-screen.tsx or app-shell.tsx (pre-existing errors in unrelated files: examples/websocket, scripts/seed-uk, src/app/api/orders/route, skills/* — none touched by this task).
+
+Stage Summary:
+- countdown-screen.tsx is complete and matches spec slide 6 design end-to-end: teal countdown pill in header, 5-step vertical tracker with teal/purple/gray state dots and 1px connector lines, coral-foil location-drop alert with hours-until-reveal countdown, purple-foil location card with area + reveal-time copy + map CTA, purple-foil party-chat preview with two mock bubbles + open-chat affordance, plus an optional amber-foil "no spot yet" banner that soft-redirects to the detail screen.
+- All five step states derive correctly from `activeStep` which is computed from the party's `locationRevealAt` (falling back to partyStart − 3h when not set) and current time, per the spec's pseudocode.
+- Hooks comply with rules-of-hooks (both useQuery calls run unconditionally; conditional returns come after).
+- Multi-color palette respected: teal for done/countdown pill, purple for active/location card/chat bubbles, coral for the location-drop urgency alert, amber for the no-spot-yet banner and chat avatar accent.
+- Screen is reachable from anywhere via `setScreen("countdown")` once `selectedPartyId` is set. Detail screen / confirmation screen can add a "Countdown" CTA in a downstream wiring task; not in scope here.
+- No concerns blocking merge.
+
+---
+Task ID: 7-b
+Agent: subagent (detail-screen redesign)
+Task: Redesign detail-screen.tsx per spec slide 3
+
+Work Log:
+- Read context: worklog.md ANALYZE-1 section (slide 3 = Party Detail, step 3 of 9 — hero with theme/spots pills, 2×2 meta grid, host card with teal Verified badge, who's going with locked initials, menu preview, Join CTA → payment), globals.css utilities (glass, glass-strong, eyebrow, vibe-float, glow-violet, coral-foil, purple-foil), types.ts (Party, MenuItem, VIBE_EMOJI, VIBE_COLORS, currencyForCity, formatFee, formatDateLabel, formatTime, parseVibes, slotsLeft), api.ts (api.getParty, api.listMenu, api.recordView), store.ts (selectedPartyId, currentUser, setScreen, goBack, toggleSaved, savedPartyIds), existing detail-screen.tsx (recordView effect, ReviewsSection integration, messageHost flow), reviews-section.tsx (KEEP as-is), confirmation-screen.tsx (new multi-color palette conventions: bg-purple-500/30, text-purple-200, bg-teal-500/25, text-teal-200, coral-foil, eyebrow utility, press-feedback, glow-violet), tailwind.config.ts + globals.css @theme block (confirmed purple-500/teal-500/amber-500/cyan-500/rose-500/green-600 are Tailwind v4 defaults that DO render; coral is custom via --color-coral so used `bg-coral`/`text-coral`/`fill-coral` instead of non-existent `bg-coral-500`).
+- Rewrote /home/z/my-project/src/screens/detail-screen.tsx end-to-end:
+  • Removed old yellow cover image, Drawer-based "Request to Connect" CTA, Fact component, host bio/rules sections, LiveCountdown, VibeBadge/GuestAvatars/RatingPill components (all yellow-themed).
+  • New m-hero (h-44 / 176px): vibe-colored bg (VIBE_HERO_BG map: R&B/Lo-fi/EDM/BYOB → #1a1035, Games/Chill/Retro → #0d1f2d, Bollywood → #1a2410), 48px floating emoji centerpiece, top-left back button (32px round bg-black/40), top-right Share button (32px round), bottom-left theme pill (bg-black/55), bottom-right spots pill (coral when ≤2 left, purple when comfortable, "Sold out" when full).
+  • Title row: party title (font-display text-xl font-bold) + fee pill (bg-purple-500/20 text-purple-300 → "{fee} entry") + subtitle "Pay once · drinks add-on available after".
+  • Meta grid 2×2 (grid grid-cols-2 gap-2): 📅 date+time, 🕑 ends ~start+4h, 📍 area+city, 👥 max guests. Each cell bg-white/4 rounded-lg p-2.5 border-border/40 text-xs.
+  • Tag row: VIBE_COLORS[vibe] multi-color chips + visual "21+" (coral) + "Students" (amber) tags.
+  • Host card (glass rounded-2xl p-3 flex items-center gap-3): 40px purple initial avatar, name + teal "✓ Verified" badge (bg-teal-500/15 text-teal-300), amber "★★★★★" + rating + hosted count, Message button (purple outline).
+  • Who's going (glass rounded-2xl p-3): eyebrow label, 4 overlapping 28px initial-circles (P/R/J/S) with rotating purple/teal/amber colors + "+N" overflow + "{going} going" text + "🔒 Full names visible after payment" muted line.
+  • About section: eyebrow + party.description in text-sm text-muted-foreground leading-relaxed.
+  • Menu preview (glass rounded-2xl p-3): eyebrow + up to 4 menu items with "{emoji} {name}" left + "{currency}{price}" right in text-purple-300, "+N more" overflow, "No pre-order menu" fallback.
+  • ReviewsSection preserved at bottom (no changes — pre-existing yellow stars are out of scope for this task).
+  • Sticky bottom CTA (fixed bottom-[84px] inset-x-0 mx-auto max-w-[480px] px-4): 48×48 save/heart button (coral when saved) + primary CTA "Join for £N · get your spot" (bg-primary text-primary-foreground glow-violet). Full → "Sold out — join waitlist" disabled style. isOwn → "Manage your party" → host-dashboard. handleJoin calls setScreen("payment") (selectedPartyId is already set in store).
+  • Loading skeleton + error state preserved.
+  • recordView effect preserved (still fires once per mount).
+  • useQuery(["party", id]) preserved; added useQuery(["menu", id]) → api.listMenu.
+  • messageHost flow kept as a secondary button on the host card.
+- Verified imports: cleaned out Drawer/DrawerContent/Textarea/VibeBadge/UserAvatar/RatingPill/GuestAvatars/LiveCountdown/useMutation/useState/Sparkles/Info/Send/Check/IndianRupee/Calendar/Clock/Users/MapPin/pickGuestAvatars (all unused after redesign). Kept ChevronLeft, Share2, Heart, MessageCircle, ShieldCheck, Lock, toast, useQuery, useEffect, api, useAppStore, formatFee/formatTime/formatDateLabel/parseVibes/slotsLeft/currencyForCity, VIBE_EMOJI/VIBE_COLORS, ReviewsSection, Button, Skeleton, cn.
+- Ran `bun run lint` — clean (0 errors, 0 warnings).
+- Ran `npx tsc --noEmit` — no errors in detail-screen.tsx (errors in unrelated files: examples/websocket, scripts/seed-uk, skills/*, src/app/api/orders/route.ts — all pre-existing).
+
+Stage Summary:
+- Detail screen fully redesigned to spec slide 3: m-hero with theme/spots pills + back/share round buttons, 2×2 meta grid, host card with teal Verified badge, who's going with locked initials + payment-gate note, menu preview with prices, sticky "Join for £N · get your spot" CTA routing to payment screen.
+- Old "Request to Connect" drawer removed; replaced by Join → payment flow (per spec). Message host preserved as a secondary action.
+- Multi-color palette applied: purple primary, teal Verified, amber stars/menu tags, coral for urgency (low-spots pill + 21+ tag + saved heart). Pre-existing coral-500 utility gap noted (VIBE_COLORS EDM entry uses `bg-coral-500` which is not a Tailwind default — left as-is per task instruction to use VIBE_COLORS directly; this is a separate cleanup task).
+- ReviewsSection + recordView effect preserved. Skeleton + error states preserved.
+- Lint clean, tsc clean for detail-screen.tsx.

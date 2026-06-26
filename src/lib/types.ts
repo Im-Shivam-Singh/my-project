@@ -1,6 +1,10 @@
 // Shared VibeMatch types and constants
 
+// Multi-region: UK + India (spec says "Works across UK and India from day one")
 export const CITIES = [
+  "Edinburgh",
+  "London",
+  "Manchester",
   "Delhi",
   "Mumbai",
   "Bangalore",
@@ -10,11 +14,26 @@ export const CITIES = [
 
 export type City = (typeof CITIES)[number];
 
+export const REGIONS: Record<string, "UK" | "India"> = {
+  Edinburgh: "UK",
+  London: "UK",
+  Manchester: "UK",
+  Delhi: "India",
+  Mumbai: "India",
+  Bangalore: "India",
+  Goa: "India",
+  Pune: "India",
+};
+
+export function currencyForCity(city: string): "£" | "₹" {
+  return REGIONS[city] === "UK" ? "£" : "₹";
+}
+
 export const VIBE_TAGS = [
-  "Techno",
+  "R&B",
   "Bollywood",
   "BYOB",
-  "Boardgames",
+  "Games",
   "Lo-fi",
   "Chill",
   "EDM",
@@ -24,28 +43,39 @@ export const VIBE_TAGS = [
 export type VibeTag = (typeof VIBE_TAGS)[number];
 
 export const VIBE_EMOJI: Record<string, string> = {
-  Techno: "🎧",
-  Bollywood: "🎬",
+  "R&B": "🎵",
+  Bollywood: "🌿",
   BYOB: "🍾",
-  Boardgames: "🎲",
+  Games: "🎮",
   "Lo-fi": "🌙",
   Chill: "🧊",
   EDM: "⚡",
   Retro: "📼",
 };
 
-// Vibe tag colors — Bumble monochrome: all vibes use the same yellow brand
-// accent, varied only by subtle opacity/border weight. Clean and consistent.
+// Vibe tag colors — multi-color palette (per spec): each vibe gets its own
+// tinted chip so the feed reads as varied, not monochrome.
 export const VIBE_COLORS: Record<string, string> = {
-  Techno: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
-  Bollywood: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
-  BYOB: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
-  Boardgames: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
-  "Lo-fi": "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
-  Chill: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
-  EDM: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
-  Retro: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
+  "R&B": "bg-purple-500/15 text-purple-300 border-purple-500/45",
+  Bollywood: "bg-green-600/15 text-green-400 border-green-600/45",
+  BYOB: "bg-purple-500/15 text-purple-300 border-purple-500/45",
+  Games: "bg-teal-500/15 text-teal-300 border-teal-500/45",
+  "Lo-fi": "bg-purple-500/15 text-purple-300 border-purple-500/45",
+  Chill: "bg-cyan-500/15 text-cyan-300 border-cyan-500/45",
+  EDM: "bg-coral-500/15 text-coral-300 border-coral-500/45",
+  Retro: "bg-rose-500/15 text-rose-300 border-rose-500/45",
 };
+
+// Profession enum (for the filter screen "Who are you?")
+export const PROFESSIONS = [
+  "Student",
+  "Software eng.",
+  "Designer",
+  "Healthcare",
+  "Finance",
+  "Other",
+] as const;
+export type Profession = (typeof PROFESSIONS)[number];
 
 export interface Party {
   id: string;
@@ -64,6 +94,11 @@ export interface Party {
   lat?: number | null;
   lng?: number | null;
   guestCount: number;
+  // Host controls (spec slide 9)
+  approvalRequired?: boolean;
+  acceptJoiners?: boolean;
+  menuOpen?: boolean;
+  locationRevealAt?: string | null; // ISO datetime when exact address drops
   createdAt: string;
 }
 
@@ -108,6 +143,7 @@ export interface VibeUser {
   city?: string | null;
   instagram?: string | null;
   vibePrefs?: string; // comma-separated vibe tag prefs (from onboarding)
+  profession?: string | null;
   vibes: number;
   hosted: number;
   rating: number;
@@ -177,6 +213,67 @@ export interface HostAnalytics {
   }[];
 }
 
+// ===== Menu / Drinks / Orders / Tickets (new in app-flow spec) =====
+
+export interface MenuItem {
+  id: string;
+  partyId: string;
+  name: string;
+  price: number;
+  emoji: string;
+  category: "drink" | "snack" | "soft";
+  createdAt: string;
+}
+
+export interface MenuItemInput {
+  partyId: string;
+  name: string;
+  price: number;
+  emoji: string;
+  category: "drink" | "snack" | "soft";
+}
+
+// Order = a guest's confirmed purchase for a party (entry + optional add-ons)
+export interface Order {
+  id: string;
+  userId: string;
+  partyId: string;
+  items: OrderItem[];
+  totalAmount: number;
+  currency: "£" | "₹";
+  status: "pending" | "paid" | "refunded";
+  stripePaymentId?: string | null;
+  createdAt: string;
+  // joined
+  party?: Party;
+  ticket?: Ticket;
+}
+
+export interface OrderItem {
+  id: string;
+  orderId: string;
+  menuItemId: string | null; // null for the entry ticket itself
+  name: string;
+  emoji: string;
+  unitPrice: number;
+  quantity: number;
+}
+
+// Ticket = QR-validated door entry tied to a paid order
+export interface Ticket {
+  id: string;
+  orderId: string;
+  userId: string;
+  partyId: string;
+  qrHash: string;
+  scannedAt?: string | null;
+  scannedById?: string | null;
+  createdAt: string;
+  // joined
+  party?: Party;
+  order?: Order;
+}
+
 // Map cluster summary — for the map view
 export interface PartyCluster {
   city: string;
@@ -188,13 +285,20 @@ export type Screen =
   | "login"
   | "onboarding"
   | "home"
+  | "filter"
   | "create"
   | "detail"
+  | "payment"
+  | "confirmation"
+  | "countdown"
+  | "tickets"
   | "inbox"
   | "chat"
   | "profile"
   | "edit-profile"
   | "my-parties"
+  | "host-dashboard"
+  | "admin"
   | "requests"
   | "saved"
   | "map";
@@ -207,9 +311,10 @@ export function parseVibes(vibes: string): string[] {
     .filter(Boolean);
 }
 
-export function formatFee(fee: number): string {
+export function formatFee(fee: number, city?: string): string {
   if (fee === 0) return "Free";
-  return `₹${fee}`;
+  const sym = city ? currencyForCity(city) : "£";
+  return `${sym}${fee}`;
 }
 
 export function formatDateLabel(date: string): string {
@@ -222,10 +327,10 @@ export function formatDateLabel(date: string): string {
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   if (diff === -1) return "Yesterday";
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString("en-GB", {
     weekday: "short",
-    month: "short",
     day: "numeric",
+    month: "short",
   });
 }
 
@@ -249,7 +354,7 @@ export function relativeTime(iso: string): string {
   if (h < 24) return `${h}h ago`;
   const days = Math.floor(h / 24);
   if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-GB", { month: "short", day: "numeric" });
 }
 
 export function slotsLeft(maxGuests: number, guestCount: number): number {
@@ -304,11 +409,14 @@ export function countdownTo(date: string, time: string, durationHours = 4): stri
 
 // Map a city name to approximate lat/lng for the stylized map view.
 export const CITY_COORDS: Record<string, { x: number; y: number }> = {
-  Delhi: { x: 0.42, y: 0.28 },
-  Mumbai: { x: 0.22, y: 0.62 },
-  Bangalore: { x: 0.36, y: 0.85 },
-  Goa: { x: 0.18, y: 0.78 },
-  Pune: { x: 0.26, y: 0.68 },
+  Edinburgh: { x: 0.30, y: 0.30 },
+  London: { x: 0.35, y: 0.45 },
+  Manchester: { x: 0.28, y: 0.38 },
+  Delhi: { x: 0.62, y: 0.28 },
+  Mumbai: { x: 0.55, y: 0.62 },
+  Bangalore: { x: 0.58, y: 0.85 },
+  Goa: { x: 0.50, y: 0.78 },
+  Pune: { x: 0.56, y: 0.68 },
 };
 
 // Deterministic small jitter per party id so pins don't perfectly overlap
@@ -322,7 +430,6 @@ export function partyPinOffset(seed: string, city: string): { x: number; y: numb
 }
 
 // Demo guest avatars used for the "who's going" social-proof stack.
-// In production this would come from RSVP records.
 export const GUEST_AVATARS = [
   "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&q=80&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=80&q=80&auto=format&fit=crop",
@@ -333,7 +440,6 @@ export const GUEST_AVATARS = [
 ];
 
 export function pickGuestAvatars(seed: string, count: number): string[] {
-  // deterministic pick based on seed string
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
   const out: string[] = [];
@@ -346,9 +452,11 @@ export function pickGuestAvatars(seed: string, count: number): string[] {
 
 // ===== Geographic helpers for the local map view =====
 
-// Real lat/lng centers for each city — used to default the user's location
-// when geolocation is unavailable, and to seed parties with coords.
+// Real lat/lng centers for each city — UK + India
 export const CITY_CENTERS: Record<string, { lat: number; lng: number }> = {
+  Edinburgh: { lat: 55.9533, lng: -3.1883 },
+  London: { lat: 51.5074, lng: -0.1278 },
+  Manchester: { lat: 53.4808, lng: -2.2426 },
   Delhi: { lat: 28.6139, lng: 77.209 },
   Mumbai: { lat: 19.076, lng: 72.8777 },
   Bangalore: { lat: 12.9716, lng: 77.5946 },
@@ -375,8 +483,6 @@ export function haversineKm(
 
 // Project a lat/lng to viewport pixels relative to a center point using
 // an equirectangular approximation (good enough for a few-km view).
-// Returns {x, y} in pixels where (0,0) is the center; y is inverted so
-// north = up.
 export function projectLatLng(
   point: { lat: number; lng: number },
   center: { lat: number; lng: number },
@@ -408,9 +514,9 @@ export function funScore(p: {
 }): number {
   const fillRatio =
     p.maxGuests > 0 ? Math.min(1, p.guestCount / p.maxGuests) : 0;
-  const crowd = fillRatio * 50; // 0..50 — a packed house is half the score
+  const crowd = fillRatio * 50;
   const vibeCount = parseVibes(p.vibes).length;
-  const vibeScore = Math.min(20, vibeCount * 5); // 0..20 — variety matters
+  const vibeScore = Math.min(20, vibeCount * 5);
   const status = partyLiveStatus(p.date, p.time);
   const liveBonus =
     status === "live"
@@ -431,12 +537,11 @@ export function funTier(score: number): FunTier {
   return "low";
 }
 
-// Tier metadata for the map pin animation — Bumble monochrome: all tiers use
-// the same yellow accent, varied by OPACITY + INTENSITY (not color).
-//   low    → faint yellow, gentle breathing
-//   warm   → soft yellow, pulsing
-//   lively → solid yellow, bouncy
-//   lit    → bright yellow, energetic bounce + sparkle ring
+// Tier metadata — multi-color (per spec):
+//   low    → faint purple, gentle breathing
+//   warm   → amber, soft pulsing
+//   lively → teal, bouncy
+//   lit    → purple-bright, energetic + sparkle ring
 export const FUN_TIER_META: Record<
   FunTier,
   {
@@ -452,57 +557,55 @@ export const FUN_TIER_META: Record<
 > = {
   low: {
     label: "Low-key",
-    ringClass: "border-yellow-400/50",
+    ringClass: "border-purple-500/50",
     animClass: "fun-breathe",
-    glowClass: "shadow-[0_0_12px_-3px_rgba(255,203,5,0.45)]",
-    dotClass: "bg-yellow-400/70",
-    textClass: "text-yellow-300",
-    chipClass: "bg-yellow-400/10 text-yellow-300 border-yellow-400/40",
-    sparkClass: "bg-yellow-300",
+    glowClass: "shadow-[0_0_12px_-3px_rgba(83,74,183,0.45)]",
+    dotClass: "bg-purple-500/70",
+    textClass: "text-purple-300",
+    chipClass: "bg-purple-500/10 text-purple-300 border-purple-500/40",
+    sparkClass: "bg-purple-400",
   },
   warm: {
     label: "Warming up",
-    ringClass: "border-yellow-400/65",
+    ringClass: "border-amber-500/65",
     animClass: "fun-pulse",
-    glowClass: "shadow-[0_0_16px_-3px_rgba(255,203,5,0.6)]",
-    dotClass: "bg-yellow-400",
-    textClass: "text-yellow-300",
-    chipClass: "bg-yellow-400/15 text-yellow-300 border-yellow-400/50",
-    sparkClass: "bg-yellow-300",
+    glowClass: "shadow-[0_0_16px_-3px_rgba(239,159,39,0.6)]",
+    dotClass: "bg-amber-500",
+    textClass: "text-amber-300",
+    chipClass: "bg-amber-500/15 text-amber-300 border-amber-500/50",
+    sparkClass: "bg-amber-400",
   },
   lively: {
     label: "Lively",
-    ringClass: "border-yellow-400/80",
+    ringClass: "border-teal-500/80",
     animClass: "fun-bounce",
-    glowClass: "shadow-[0_0_20px_-3px_rgba(255,203,5,0.8)]",
-    dotClass: "bg-yellow-400",
-    textClass: "text-yellow-300",
-    chipClass: "bg-yellow-400/20 text-yellow-200 border-yellow-400/60",
-    sparkClass: "bg-yellow-300",
+    glowClass: "shadow-[0_0_20px_-3px_rgba(29,158,117,0.8)]",
+    dotClass: "bg-teal-500",
+    textClass: "text-teal-300",
+    chipClass: "bg-teal-500/20 text-teal-200 border-teal-500/60",
+    sparkClass: "bg-teal-400",
   },
   lit: {
     label: "Lit 🔥",
-    ringClass: "border-yellow-300",
+    ringClass: "border-purple-400",
     animClass: "fun-lit",
-    glowClass: "shadow-[0_0_24px_-2px_rgba(255,203,5,0.95)]",
-    dotClass: "bg-yellow-300",
-    textClass: "text-yellow-200",
-    chipClass: "bg-yellow-400/25 text-yellow-100 border-yellow-300",
-    sparkClass: "bg-yellow-300",
+    glowClass: "shadow-[0_0_24px_-2px_rgba(127,119,221,0.95)]",
+    dotClass: "bg-purple-400",
+    textClass: "text-purple-200",
+    chipClass: "bg-purple-500/25 text-purple-100 border-purple-400",
+    sparkClass: "bg-purple-300",
   },
 };
 
 // Pick a deterministic small offset within a city for parties without
-// explicit lat/lng. Uses the area name + id as the seed so the same party
-// always lands at the same spot.
+// explicit lat/lng.
 export function partyGeoFallback(
   seed: string,
   city: string,
 ): { lat: number; lng: number } {
-  const center = CITY_CENTERS[city] ?? { lat: 28.6139, lng: 77.209 };
+  const center = CITY_CENTERS[city] ?? { lat: 55.9533, lng: -3.1883 };
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  // ±0.04 degrees ≈ ±4.4 km — keeps fallback pins inside the city
   const dLat = ((h % 800) - 400) / 10000; // -0.04..+0.04
   const dLng = (((h >> 8) % 800) - 400) / 10000;
   return { lat: center.lat + dLat, lng: center.lng + dLng };

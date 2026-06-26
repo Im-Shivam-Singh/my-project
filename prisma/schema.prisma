@@ -12,35 +12,38 @@ datasource db {
 
 // VibeMatch user (guests + hosts)
 model User {
-  id        String   @id @default(cuid())
-  phone     String   @unique
-  name      String
-  username  String?  @unique
-  bio       String?
-  avatarUrl String?
-  city      String?
+  id          String   @id @default(cuid())
+  phone       String   @unique
+  name        String
+  username    String?  @unique
+  bio         String?
+  avatarUrl   String?
+  city        String?
+  profession  String?  // Student | Software eng. | Designer | Healthcare | Finance | Other
   // social handles (UI-only for now, but stored)
-  instagram String?
+  instagram   String?
   // vibe preferences saved from onboarding (comma-separated tags) — powers "For You" feed
-  vibePrefs String   @default("")
+  vibePrefs   String   @default("")
   // stats
-  vibes     Int      @default(0)
-  hosted    Int      @default(0)
-  rating    Float    @default(5.0)
-  ratingCount Int    @default(0)
+  vibes       Int      @default(0)
+  hosted      Int      @default(0)
+  rating      Float    @default(5.0)
+  ratingCount Int      @default(0)
   // moderation
-  blocked   String   @default("") // comma-separated user ids
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  blocked     String   @default("") // comma-separated user ids
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  parties       Party[]      @relation("HostedParties")
-  joinRequests  JoinRequest[]
-  sentMessages  Message[]    @relation("SentMessages")
-  recvMessages  Message[]    @relation("RecvMessages")
-  threadsA      ChatThread[] @relation("ThreadUserA")
-  threadsB      ChatThread[] @relation("ThreadUserB")
-  savedParties  SavedParty[]
-  reviews       Review[]
+  parties      Party[]      @relation("HostedParties")
+  joinRequests JoinRequest[]
+  sentMessages Message[]    @relation("SentMessages")
+  recvMessages Message[]    @relation("RecvMessages")
+  threadsA     ChatThread[] @relation("ThreadUserA")
+  threadsB     ChatThread[] @relation("ThreadUserB")
+  savedParties SavedParty[]
+  reviews      Review[]
+  orders       Order[]
+  tickets      Ticket[]
 }
 
 model Party {
@@ -50,7 +53,7 @@ model Party {
   area        String
   date        String   // ISO date yyyy-mm-dd
   time        String   // HH:mm
-  fee         Int      @default(0) // in INR
+  fee         Int      @default(0) // in major currency units (£ or ₹)
   maxGuests   Int      @default(10)
   vibes       String   @default("") // comma-separated vibe tags
   description String   @default("")
@@ -62,14 +65,23 @@ model Party {
   lng         Float?
   // denormalized stats for fast reads
   guestCount  Int      @default(0)
+  // Host controls (spec slide 9 — Admin controls)
+  approvalRequired Boolean  @default(true)
+  acceptJoiners    Boolean  @default(true)
+  menuOpen         Boolean  @default(true)
+  // When the exact address is revealed to confirmed guests (spec slide 6 — location drop)
+  locationRevealAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   host    User?         @relation("HostedParties", fields: [hostId], references: [id])
   requests JoinRequest[]
-  savedBy   SavedParty[]
-  views     PartyView[]
-  reviews   Review[]
+  savedBy  SavedParty[]
+  views    PartyView[]
+  reviews  Review[]
+  menuItems MenuItem[]
+  orders    Order[]
+  tickets   Ticket[]
 }
 
 model JoinRequest {
@@ -150,4 +162,72 @@ model Review {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([partyId, userId]) // one review per user per party
+}
+
+// ===== Menu items (drinks + snacks) — per spec slides 3, 4, 7, 8 =====
+model MenuItem {
+  id        String   @id @default(cuid())
+  partyId   String
+  name      String
+  price     Int      @default(0) // in major currency units (£ or ₹)
+  emoji     String   @default("🍹")
+  category  String   @default("drink") // drink | snack | soft
+  createdAt DateTime @default(now())
+
+  party    Party       @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@index([partyId])
+}
+
+// ===== Orders (entry ticket + optional add-ons) — spec slide 4 =====
+model Order {
+  id              String   @id @default(cuid())
+  userId          String
+  partyId         String
+  totalAmount     Int      @default(0) // in major currency units
+  currency        String   @default("£") // £ or ₹
+  status          String   @default("pending") // pending | paid | refunded
+  stripePaymentId String?
+  createdAt       DateTime @default(now())
+
+  user  User       @relation(fields: [userId], references: [id])
+  party Party      @relation(fields: [partyId], references: [id])
+  items OrderItem[]
+  ticket Ticket?
+
+  @@index([userId])
+  @@index([partyId])
+}
+
+model OrderItem {
+  id         String @id @default(cuid())
+  orderId    String
+  menuItemId String? // null for the entry ticket itself
+  name       String
+  emoji      String @default("🎟️")
+  unitPrice  Int    @default(0)
+  quantity   Int    @default(1)
+
+  order Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem? @relation(fields: [menuItemId], references: [id])
+}
+
+// ===== Tickets (QR-validated door entry) — spec slides 5, 7 =====
+model Ticket {
+  id          String    @id @default(cuid())
+  orderId     String    @unique
+  userId      String
+  partyId     String
+  qrHash      String    @unique // unique scannable hash
+  scannedAt   DateTime?
+  scannedById String?
+  createdAt   DateTime  @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  party Party @relation(fields: [partyId], references: [id])
+
+  @@index([userId])
+  @@index([partyId])
 }

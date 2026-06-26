@@ -1,53 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
-  MapPin,
-  Calendar,
-  Clock,
-  Users,
-  IndianRupee,
   Share2,
   Heart,
   MessageCircle,
   ShieldCheck,
-  Send,
-  Check,
-  Sparkles,
-  Info,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 import {
+  currencyForCity,
   formatDateLabel,
   formatFee,
   formatTime,
   parseVibes,
-  pickGuestAvatars,
   slotsLeft,
+  VIBE_COLORS,
+  VIBE_EMOJI,
 } from "@/lib/types";
-import { VibeBadge } from "@/components/vibe/vibe-badge";
-import { UserAvatar } from "@/components/vibe/user-avatar";
-import { RatingPill } from "@/components/vibe/rating-pill";
-import { GuestAvatars } from "@/components/vibe/guest-avatars";
-import { LiveCountdown } from "@/components/vibe/live-countdown";
 import { ReviewsSection } from "@/components/vibe/reviews-section";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+
+// Hero background per first vibe — deep tinted colors from the spec
+// (R&B/purple → #1a1035, Games/teal → #0d1f2d, Bollywood/green → #1a2410).
+const VIBE_HERO_BG: Record<string, string> = {
+  "R&B": "#1a1035",
+  Bollywood: "#1a2410",
+  BYOB: "#1a1035",
+  Games: "#0d1f2d",
+  "Lo-fi": "#1a1035",
+  Chill: "#0d1f2d",
+  EDM: "#1a1035",
+  Retro: "#0d1f2d",
+};
+
+// Demo guest initials shown in the "Who's going" stack — full names are
+// hidden until payment per the spec ("mystery is the mechanic").
+const GUEST_INITIALS = ["P", "R", "J", "S"];
+const GUEST_AVATAR_COLORS = [
+  "bg-purple-500/30 text-purple-200",
+  "bg-teal-500/25 text-teal-200",
+  "bg-amber-500/25 text-amber-200",
+  "bg-purple-500/20 text-purple-200",
+];
 
 export function DetailScreen() {
   const id = useAppStore((s) => s.selectedPartyId);
@@ -55,9 +57,6 @@ export function DetailScreen() {
   const currentUser = useAppStore((s) => s.currentUser);
   const setSelectedThreadId = useAppStore((s) => s.setSelectedThreadId);
   const setScreen = useAppStore((s) => s.setScreen);
-
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [intro, setIntro] = useState("");
   const saved = useAppStore((s) =>
     id ? s.savedPartyIds.includes(id) : false,
   );
@@ -69,6 +68,13 @@ export function DetailScreen() {
     enabled: !!id,
   });
 
+  // Menu preview — drinks/snacks available for pre-order on the payment screen.
+  const { data: menuData } = useQuery({
+    queryKey: ["menu", id],
+    queryFn: () => api.listMenu(id!),
+    enabled: !!id,
+  });
+
   // Record a view once per party detail mount (for host analytics)
   useEffect(() => {
     if (!id) return;
@@ -76,24 +82,6 @@ export function DetailScreen() {
       /* non-blocking */
     });
   }, [id, currentUser?.id]);
-
-  const requestMutation = useMutation({
-    mutationFn: () =>
-      api.sendRequest({
-        partyId: id!,
-        requesterName: currentUser?.name || "Guest",
-        introMessage: intro,
-      }),
-    onSuccess: () => {
-      toast.success("Request sent! 🚀", {
-        description: "The host will get back to you shortly.",
-      });
-      setDrawerOpen(false);
-      setIntro("");
-    },
-    onError: (e) =>
-      toast.error(e instanceof Error ? e.message : "Failed to send"),
-  });
 
   const messageHost = async () => {
     if (!currentUser || !data?.host) {
@@ -108,7 +96,7 @@ export function DetailScreen() {
       );
       setSelectedThreadId(res.threadId);
       setScreen("chat");
-    } catch (e) {
+    } catch {
       toast.error("Couldn't open chat");
     }
   };
@@ -127,17 +115,27 @@ export function DetailScreen() {
     }
   };
 
+  // ── Loading skeleton ──────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4 animate-screen-in">
-        <Skeleton className="aspect-[16/10] w-full rounded-3xl" />
+      <div className="animate-screen-in space-y-4 p-4">
+        <Skeleton className="h-44 w-full rounded-2xl" />
         <Skeleton className="h-6 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
+        <div className="grid grid-cols-2 gap-2">
+          <Skeleton className="h-12 rounded-lg" />
+          <Skeleton className="h-12 rounded-lg" />
+          <Skeleton className="h-12 rounded-lg" />
+          <Skeleton className="h-12 rounded-lg" />
+        </div>
+        <Skeleton className="h-16 w-full rounded-2xl" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
         <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
 
+  // ── Error state ───────────────────────────────────────────────────
   if (isError || !data) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
@@ -152,364 +150,332 @@ export function DetailScreen() {
   }
 
   const { party, host, vibes } = data;
+  const firstVibe = vibes[0] || parseVibes(party.vibes)[0] || "Chill";
+  const heroBg = VIBE_HERO_BG[firstVibe] || "#1a1035";
+  const heroEmoji = VIBE_EMOJI[firstVibe] || "✨";
+  const currency = currencyForCity(party.city);
   const left = slotsLeft(party.maxGuests, party.guestCount);
+  const going = party.guestCount;
   const isFull = left === 0;
-  const isLow = left > 0 && left <= 5;
-  const isOwn = currentUser && host && currentUser.id === host.id;
+  const isLow = left > 0 && left <= 2;
+  const isOwn = !!currentUser && !!host && currentUser.id === host.id;
+
+  // End time = start + 4h (matches the spec's ~4h default party duration)
+  const [hStr, mStr] = party.time.split(":");
+  const startH = parseInt(hStr, 10) || 0;
+  const startM = parseInt(mStr, 10) || 0;
+  const endTotalMin = startH * 60 + startM + 4 * 60;
+  const endH = Math.floor(endTotalMin / 60) % 24;
+  const endM = endTotalMin % 60;
+  const endTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+
+  const feeLabel = formatFee(party.fee, party.city);
+  const menuItems = (menuData?.items ?? []).slice(0, 4);
+  const menuOverflow = (menuData?.items ?? []).length - menuItems.length;
+
+  const handleJoin = () => {
+    if (isFull) {
+      toast.info("Sold out — join the waitlist", {
+        description: "We'll notify you if a spot opens up.",
+      });
+      return;
+    }
+    // selectedPartyId is already set — go straight to the payment screen.
+    setScreen("payment");
+  };
+
+  const handleSaveToggle = () => {
+    toggleSaved(id!);
+    toast.success(saved ? "Removed from saved" : "Saved!", {
+      duration: 1500,
+    });
+  };
 
   return (
     <div className="flex h-full flex-col animate-screen-in">
       {/* Scrollable content */}
-      <div className="fancy-scrollbar flex-1 overflow-y-auto pb-44">
-        {/* Cover */}
-        <div className="relative aspect-[16/11] w-full">
-          {party.coverUrl ? (
-            <img
-              src={party.coverUrl}
-              alt={party.title}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="h-full w-full bg-yellow-400 opacity-80" />
-          )}
-          {/* Black→transparent overlay for legibility (no violet, no sheen) */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+      <div className="fancy-scrollbar flex-1 overflow-y-auto pb-40">
+        {/* ── HERO ─────────────────────────────────────────────────── */}
+        <div
+          className="relative h-44 w-full overflow-hidden"
+          style={{ background: heroBg }}
+        >
+          {/* Subtle sheen for depth */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25" />
 
-          {/* Top bar */}
-          <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 pt-[max(env(safe-area-inset-top),12px)]">
-            <button
-              onClick={goBack}
-              className="flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 active:scale-95 transition hover:border-yellow-400/50"
-              aria-label="Back"
+          {/* Large emoji centerpiece */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="vibe-float text-5xl opacity-90"
+              aria-hidden
             >
-              <ChevronLeft className="h-5 w-5 text-white" />
-            </button>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  toggleSaved(id!);
-                  toast.success(saved ? "Removed from saved" : "Saved!", {
-                    duration: 1500,
-                  });
-                }}
-                className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 transition active:scale-95",
-                  saved ? "border-yellow-400/60" : "",
-                )}
-                aria-label="Save"
-              >
-                <Heart
-                  className={cn(
-                    "h-4 w-4 transition",
-                    saved ? "fill-yellow-400 text-yellow-400" : "text-white",
-                  )}
-                />
-              </button>
-              <button
-                onClick={share}
-                className="flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 text-white transition hover:border-yellow-400/60 hover:bg-yellow-400/10 active:scale-95"
-                aria-label="Share"
-              >
-                <Share2 className="h-4 w-4" />
-              </button>
-            </div>
+              {heroEmoji}
+            </span>
           </div>
+
+          {/* Back button (top-left, 32px round) */}
+          <button
+            onClick={goBack}
+            className="absolute left-3 top-[max(env(safe-area-inset-top),12px)] flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition active:scale-95"
+            aria-label="Back"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {/* Share button (top-right, 32px round) */}
+          <button
+            onClick={share}
+            className="absolute right-3 top-[max(env(safe-area-inset-top),12px)] flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition active:scale-95"
+            aria-label="Share"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+
+          {/* Theme pill (bottom-left) */}
+          <span className="absolute bottom-3 left-3 rounded-lg bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+            {firstVibe}
+          </span>
+
+          {/* Spots pill (bottom-right) */}
+          {isFull ? (
+            <span className="absolute bottom-3 right-3 rounded-lg bg-coral px-2.5 py-1 text-xs font-semibold text-white">
+              Sold out
+            </span>
+          ) : isLow ? (
+            <span className="absolute bottom-3 right-3 rounded-lg bg-coral/80 px-2.5 py-1 text-xs font-semibold text-white">
+              {left} left!
+            </span>
+          ) : (
+            <span className="absolute bottom-3 right-3 rounded-lg bg-purple-500/80 px-2.5 py-1 text-xs font-semibold text-white">
+              {going} going · {left} left
+            </span>
+          )}
         </div>
 
-        {/* Body */}
-        <div className="space-y-6 p-4">
-          {/* Title + vibes */}
-          <section className="space-y-3">
+        {/* ── BODY ─────────────────────────────────────────────────── */}
+        <div className="space-y-4 p-4">
+          {/* Title row */}
+          <section className="space-y-1.5">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <h1 className="flex-1 font-display text-3xl font-extrabold leading-tight text-white">
+              <h1 className="flex-1 font-display text-xl font-bold leading-tight text-foreground">
                 {party.title}
               </h1>
-              <LiveCountdown
-                date={party.date}
-                time={party.time}
-                size="md"
-              />
+              <span className="shrink-0 rounded-lg bg-purple-500/20 px-2.5 py-1 text-sm font-medium text-purple-300">
+                {feeLabel} entry
+              </span>
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {vibes.map((v) => (
-                <VibeBadge key={v} vibe={v} size="md" />
-              ))}
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Pay once · drinks add-on available after
+            </p>
           </section>
 
-          {/* Who's going — social proof */}
-          <section className="flex items-center justify-between gap-3 rounded-2xl glass border border-white/10 p-3">
-            <div className="flex min-w-0 items-center gap-3">
-              {party.guestCount > 0 ? (
-                <GuestAvatars
-                  avatars={pickGuestAvatars(party.id, Math.min(5, party.guestCount))}
-                  total={party.guestCount}
-                  size={32}
-                  max={4}
-                />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">
-                  {party.guestCount} going
-                  {!isFull && (
-                    <span className="ml-1 text-muted-foreground">
-                      · {left} slots left
-                    </span>
+          {/* Meta grid 2×2 */}
+          <section className="grid grid-cols-2 gap-2">
+            <MetaCell
+              emoji="📅"
+              text={`${formatDateLabel(party.date)} · ${formatTime(party.time)}`}
+            />
+            <MetaCell emoji="🕑" text={`Ends ~${formatTime(endTime)}`} />
+            <MetaCell emoji="📍" text={`${party.area}, ${party.city}`} />
+            <MetaCell emoji="👥" text={`Max ${party.maxGuests} guests`} />
+          </section>
+
+          {/* Tag row — multi-color vibe chips + visual 21+/Students tags */}
+          <section className="flex flex-wrap gap-1.5">
+            {vibes.map((v) => {
+              const cls =
+                VIBE_COLORS[v] ||
+                "bg-purple-500/15 text-purple-300 border-purple-500/45";
+              return (
+                <span
+                  key={v}
+                  className={cn(
+                    "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                    cls,
                   )}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {isFull
-                    ? "Sold out — join the waitlist"
-                    : isLow
-                      ? "Almost full, grab your spot"
-                      : "Spots open"}
-                </p>
-              </div>
-            </div>
-            <span
-              className={cn(
-                "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold",
-                isFull
-                  ? "bg-white/5 text-white/60 border border-white/15"
-                  : isLow
-                    ? "bg-yellow-400/15 text-yellow-300 border border-yellow-400/40"
-                    : "bg-yellow-400/10 text-yellow-300 border border-yellow-400/30",
-              )}
-            >
-              {isFull ? "Sold out" : `${left}/${party.maxGuests}`}
+                >
+                  {v}
+                </span>
+              );
+            })}
+            {party.fee > 0 && (
+              <span className="rounded-full border border-coral/35 bg-coral/10 px-2.5 py-0.5 text-[11px] font-semibold text-coral">
+                21+
+              </span>
+            )}
+            <span className="rounded-full border border-amber-500/35 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300">
+              Students
             </span>
           </section>
 
-          {/* Quick facts */}
-          <section className="grid grid-cols-2 gap-2">
-            <Fact
-              icon={<MapPin className="h-4 w-4 text-yellow-400" />}
-              label="Location"
-              value={`${party.area}, ${party.city}`}
-            />
-            <Fact
-              icon={<Calendar className="h-4 w-4 text-yellow-400" />}
-              label="Date"
-              value={formatDateLabel(party.date)}
-            />
-            <Fact
-              icon={<Clock className="h-4 w-4 text-yellow-400" />}
-              label="Time"
-              value={formatTime(party.time)}
-            />
-            <Fact
-              icon={<IndianRupee className="h-4 w-4 text-yellow-400" />}
-              label="Entry"
-              value={formatFee(party.fee)}
-            />
-          </section>
-
-          {/* Get directions — visual-only link to Google Maps */}
-          {party.lat != null && party.lng != null && (
-            <a
-              href={`https://maps.google.com/?q=${party.lat},${party.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-yellow-400/40 bg-yellow-400/5 px-4 py-2.5 text-sm font-semibold text-yellow-400 underline underline-offset-2 transition hover:bg-yellow-400/10 hover:border-yellow-400/60 active:scale-95"
-            >
-              <MapPin className="h-4 w-4" />
-              Get directions
-            </a>
-          )}
-
-          {/* Host card */}
+          {/* Host card — with teal Verified badge */}
           {host && (
-            <section className="overflow-hidden rounded-2xl glass border border-white/10">
-              <div className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-yellow-400 p-[2px]">
-                    <div className="rounded-full bg-card p-[2px]">
-                      <UserAvatar name={host.name} src={host.avatarUrl} size={52} ring />
-                    </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <p className="truncate font-display text-base font-semibold">
-                        {host.name}
-                      </p>
-                      <ShieldCheck className="h-4 w-4 shrink-0 text-yellow-400" />
-                    </div>
-                    <p className="truncate text-xs text-muted-foreground">
-                      @{host.username} · {host.hosted} hosted
-                    </p>
-                  </div>
-                  <RatingPill rating={host.rating} count={host.ratingCount} />
-                </div>
-                {host.bio && (
-                  <p className="mt-3 text-sm leading-relaxed text-foreground/85">
-                    {host.bio}
+            <section className="glass flex items-center gap-3 rounded-2xl p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-500/30 text-sm font-bold text-purple-200">
+                {host.name.slice(0, 1).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {host.name}
                   </p>
-                )}
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-teal-500/15 px-2 py-0.5 text-[10px] font-semibold text-teal-300">
+                    <ShieldCheck className="h-3 w-3" /> Verified
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  <span className="text-amber-300">★★★★★</span>{" "}
+                  <span className="font-medium text-foreground/80">
+                    {host.rating.toFixed(1)}
+                  </span>{" "}
+                  · {host.hosted} parties
+                </p>
               </div>
-              <div className="flex gap-2 border-t border-white/10 p-3">
-                <Button
-                  size="sm"
-                  className="flex-1 rounded-xl bg-yellow-400 font-semibold text-black transition active:scale-95 hover:opacity-95"
+              {!isOwn && (
+                <button
                   onClick={messageHost}
+                  className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-500/10 px-3 text-xs font-semibold text-purple-300 transition active:scale-95"
                 >
-                  <MessageCircle className="mr-1.5 h-4 w-4" />
-                  Message host
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-white/15 text-white hover:bg-white/5 hover:border-yellow-400/60"
-                  onClick={() =>
-                    toast.info("Profile coming soon", {
-                      description: `View ${host.name}'s full profile`,
-                    })
-                  }
-                >
-                  View profile
-                </Button>
-              </div>
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Message
+                </button>
+              )}
             </section>
           )}
 
-          {/* Description */}
+          {/* Who's going — guest initials, locked until payment */}
+          <section className="glass rounded-2xl p-3">
+            <span className="eyebrow">Who's going</span>
+            <div className="mt-2 flex items-center gap-3">
+              <div className="flex items-center">
+                {GUEST_INITIALS.map((letter, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex h-7 w-7 items-center justify-center rounded-full border border-card text-[11px] font-bold",
+                      GUEST_AVATAR_COLORS[i % GUEST_AVATAR_COLORS.length],
+                    )}
+                    style={{
+                      marginLeft: i === 0 ? 0 : -8,
+                      zIndex: GUEST_INITIALS.length - i,
+                    }}
+                  >
+                    {letter}
+                  </div>
+                ))}
+                {going > GUEST_INITIALS.length && (
+                  <div
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-card bg-white/5 text-[10px] font-bold text-muted-foreground"
+                    style={{ marginLeft: -8 }}
+                  >
+                    +{going - GUEST_INITIALS.length}
+                  </div>
+                )}
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {going} going
+              </span>
+            </div>
+            <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <Lock className="h-3 w-3" /> Full names visible after payment
+            </p>
+          </section>
+
+          {/* About this party */}
           {party.description && (
-            <section className="space-y-2">
-              <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-yellow-400">
-                <Info className="h-4 w-4" />
-                About this party
-              </h2>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+            <section className="space-y-1.5">
+              <span className="eyebrow">About this party</span>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                 {party.description}
               </p>
             </section>
           )}
 
-          {/* House rules */}
-          <section className="rounded-2xl glass border border-white/10 p-4">
-            <h2 className="mb-2 flex items-center gap-1.5 font-display text-sm font-semibold text-yellow-400">
-              <ShieldCheck className="h-4 w-4" />
-              House rules
-            </h2>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              {[
-                "Respect the host, the space, and the other guests.",
-                "No means no. Harassment = instant removal + ban.",
-                "ID may be checked at the door for age-restricted events.",
-                "Bring good energy. Leave drama at home.",
-              ].map((r) => (
-                <li key={r} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-400" />
-                  {r}
-                </li>
-              ))}
-            </ul>
+          {/* Menu preview */}
+          <section className="glass rounded-2xl p-3">
+            <span className="eyebrow">Menu preview</span>
+            {menuItems.length === 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                No pre-order menu
+              </p>
+            ) : (
+              <ul className="mt-2.5 space-y-2">
+                {menuItems.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 text-sm"
+                  >
+                    <span className="flex min-w-0 items-center gap-2 text-foreground">
+                      <span className="text-base leading-none">
+                        {item.emoji}
+                      </span>
+                      <span className="truncate font-medium">{item.name}</span>
+                    </span>
+                    <span className="shrink-0 font-medium text-purple-300">
+                      {currency}
+                      {item.price}
+                    </span>
+                  </li>
+                ))}
+                {menuOverflow > 0 && (
+                  <li className="text-xs text-muted-foreground">
+                    +{menuOverflow} more
+                  </li>
+                )}
+              </ul>
+            )}
           </section>
 
-          {/* Reviews */}
+          {/* Reviews — KEEP existing ReviewsSection component */}
           {party.id && <ReviewsSection partyId={party.id} />}
         </div>
       </div>
 
-      {/* Sticky CTA — sits above the bottom nav */}
-      <div className="absolute inset-x-0 bottom-[84px] z-30 mx-auto max-w-[480px] px-3">
-        <div className="glass-strong border border-white/10 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_-6px_30px_-10px_rgba(0,0,0,0.6)]">
+      {/* ── STICKY CTA — Join for £N · get your spot ────────────────── */}
+      <div className="fixed inset-x-0 bottom-[84px] z-30 mx-auto max-w-[480px] px-4">
+        <div className="flex items-center gap-2">
+          {/* Save / heart toggle */}
+          <button
+            onClick={handleSaveToggle}
+            className={cn(
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition active:scale-95",
+              saved
+                ? "border-coral/50 bg-coral/15 text-coral"
+                : "border-border bg-card text-muted-foreground hover:text-foreground",
+            )}
+            aria-label={saved ? "Unsave" : "Save"}
+          >
+            <Heart className={cn("h-5 w-5", saved && "fill-coral")} />
+          </button>
+
+          {/* Primary CTA */}
           {isOwn ? (
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs text-muted-foreground">Your party</p>
-                <p className="text-sm font-semibold">
-                  {party.guestCount}/{party.maxGuests} going
-                </p>
-              </div>
-              <Button
-                className="rounded-full bg-yellow-400 text-black transition active:scale-95 hover:opacity-95"
-                onClick={() => setScreen("requests")}
-              >
-                View requests
-              </Button>
-            </div>
+            <button
+              onClick={() => setScreen("host-dashboard")}
+              className="press-feedback glow-violet flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground"
+            >
+              Manage your party
+            </button>
           ) : (
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <p className="text-[11px] text-muted-foreground">Entry</p>
-                <p className="font-display text-lg font-bold text-yellow-400">
-                  {formatFee(party.fee)}
-                </p>
-              </div>
-              <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-                <DrawerTrigger asChild>
-                  <Button
-                    disabled={isFull}
-                    className="h-12 flex-[2] rounded-xl bg-yellow-400 text-base font-semibold text-black transition active:scale-95 disabled:opacity-50 hover:opacity-95"
-                  >
-                    {isFull ? "Sold out" : "Request to Connect ✉️"}
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent className="mx-auto max-w-[480px] rounded-t-3xl border-white/10 bg-card/95 backdrop-blur-xl">
-                  <DrawerHeader className="text-center">
-                    <DrawerTitle className="font-display text-xl font-bold text-yellow-400">
-                      Request to Connect
-                    </DrawerTitle>
-                    <DrawerDescription className="text-muted-foreground">
-                      Write a short intro to {party.hostName}. They'll review and
-                      get back to you.
-                    </DrawerDescription>
-                  </DrawerHeader>
-                  <div className="space-y-3 px-4">
-                    <div className="rounded-2xl glass border border-white/10 p-3">
-                      <p className="text-[11px] uppercase tracking-wide text-yellow-300">
-                        Tips
-                      </p>
-                      <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                        <li>· Mention your vibe & who you're bringing</li>
-                        <li>· Be friendly — hosts love good energy</li>
-                        <li>· Keep it under 200 chars</li>
-                      </ul>
-                    </div>
-                    <Textarea
-                      autoFocus
-                      rows={4}
-                      maxLength={240}
-                      placeholder="Hey! Loved the description. I'm coming with a +1, big into techno…"
-                      value={intro}
-                      onChange={(e) => setIntro(e.target.value)}
-                      className="rounded-xl border-white/10 bg-card focus:border-yellow-400 focus:ring-yellow-400/25"
-                    />
-                    <p className="text-right text-[11px] text-muted-foreground">
-                      {intro.length}/240
-                    </p>
-                  </div>
-                  <DrawerFooter className="px-4 pb-6">
-                    <Button
-                      onClick={() => requestMutation.mutate()}
-                      disabled={
-                        requestMutation.isPending || intro.trim().length < 5
-                      }
-                      className="h-12 rounded-xl bg-yellow-400 text-base font-semibold text-black transition active:scale-95 hover:opacity-95"
-                    >
-                      {requestMutation.isPending ? (
-                        "Sending…"
-                      ) : (
-                        <>
-                          <Send className="mr-1.5 h-4 w-4" /> Send Request 🚀
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setDrawerOpen(false)}
-                      className="rounded-xl"
-                    >
-                      Cancel
-                    </Button>
-                  </DrawerFooter>
-                </DrawerContent>
-              </Drawer>
-            </div>
+            <button
+              onClick={handleJoin}
+              className={cn(
+                "press-feedback flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition",
+                isFull
+                  ? "bg-white/8 text-muted-foreground"
+                  : "glow-violet bg-primary text-primary-foreground",
+              )}
+            >
+              {isFull ? (
+                "Sold out — join waitlist"
+              ) : (
+                <>
+                  <span>Join for {feeLabel}</span>
+                  <span className="opacity-50">·</span>
+                  <span>get your spot</span>
+                </>
+              )}
+            </button>
           )}
         </div>
       </div>
@@ -517,22 +483,14 @@ export function DetailScreen() {
   );
 }
 
-function Fact({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
+// ── Meta cell for the 2×2 meta grid ──────────────────────────────────
+function MetaCell({ emoji, text }: { emoji: string; text: string }) {
   return (
-    <div className="rounded-2xl glass border border-white/10 p-3">
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-        {icon}
-        {label}
-      </div>
-      <p className="mt-1 text-sm font-semibold">{value}</p>
+    <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-white/4 p-2.5 text-xs">
+      <span aria-hidden className="text-sm leading-none">
+        {emoji}
+      </span>
+      <span className="min-w-0 truncate text-foreground/90">{text}</span>
     </div>
   );
 }

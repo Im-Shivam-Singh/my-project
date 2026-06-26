@@ -8,6 +8,9 @@ import type {
   VibeUser,
   PartyReview,
   HostAnalytics,
+  MenuItem,
+  Order,
+  Ticket,
 } from "@/lib/types";
 
 async function jfetch<T>(url: string, init?: RequestInit): Promise<T> {
@@ -174,4 +177,35 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
+
+  // menu items for a party
+  listMenu: (partyId: string) =>
+    jfetch<{ items: MenuItem[] }>(`/api/menus?partyId=${partyId}`),
+
+  // orders
+  listOrders: (by: { userId?: string; partyId?: string }) => {
+    const sp = new URLSearchParams();
+    if (by.userId) sp.set("userId", by.userId);
+    if (by.partyId) sp.set("partyId", by.partyId);
+    return jfetch<{ orders: Order[] }>(`/api/orders?${sp.toString()}`);
+  },
+  createOrder: (input: {
+    userId: string;
+    partyId: string;
+    items: {
+      menuItemId?: string;
+      name: string;
+      emoji: string;
+      unitPrice: number;
+      quantity: number;
+    }[];
+  }) =>
+    jfetch<{ order: Order; ticket: Ticket }>(`/api/orders`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
+  // tickets
+  listTickets: (userId: string) =>
+    jfetch<{ tickets: Ticket[] }>(`/api/tickets?userId=${userId}`),
 };

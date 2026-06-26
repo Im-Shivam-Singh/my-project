@@ -28,6 +28,9 @@ interface AppState {
   setSelectedPartyId: (id: string | null) => void;
   selectedThreadId: string | null;
   setSelectedThreadId: (id: string | null) => void;
+  // new: the last-created order id (for the confirmation screen)
+  selectedOrderId: string | null;
+  setSelectedOrderId: (id: string | null) => void;
 
   // filters on explore
   cityFilter: string | null;
@@ -88,6 +91,8 @@ export const useAppStore = create<AppState>()(
       setSelectedPartyId: (id) => set({ selectedPartyId: id }),
       selectedThreadId: null,
       setSelectedThreadId: (id) => set({ selectedThreadId: id }),
+      selectedOrderId: null,
+      setSelectedOrderId: (id) => set({ selectedOrderId: id }),
 
       cityFilter: null,
       setCityFilter: (c) => set({ cityFilter: c }),
