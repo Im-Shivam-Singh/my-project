@@ -40,9 +40,9 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
   // Empty state — no parties yet
   if (a.partyCount === 0) {
     return (
-      <section className="flex flex-col items-center rounded-3xl border border-border/60 bg-gradient-to-br from-pink/5 via-violet/5 to-cyan/5 p-6 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5">
-          <TrendingUp className="h-6 w-6 text-pink" />
+      <section className="flex flex-col items-center rounded-3xl border border-white/10 bg-card p-6 text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-400/10">
+          <TrendingUp className="h-6 w-6 text-yellow-400" />
         </div>
         <p className="text-sm font-semibold">No analytics yet</p>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -59,12 +59,12 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
   const ratingDisplay = a.avgRating > 0 ? a.avgRating.toFixed(1) : "—";
 
   return (
-    <section className="space-y-4 rounded-3xl border border-border/60 bg-gradient-to-br from-pink/5 via-violet/5 to-cyan/5 p-4">
+    <section className="space-y-4 rounded-3xl border border-white/10 bg-card p-4">
       {/* Header strip */}
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 font-display text-sm font-bold">
-          <TrendingUp className="h-4 w-4 text-pink" />
-          <span className="vibe-gradient-text">Analytics</span>
+          <TrendingUp className="h-4 w-4 text-yellow-400" />
+          <span className="text-yellow-400">Analytics</span>
         </h2>
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
           {a.partyCount} {a.partyCount === 1 ? "party" : "parties"}
@@ -74,26 +74,26 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
       {/* A. Stats grid (2x2) */}
       <div className="grid grid-cols-2 gap-2">
         <StatCard
-          icon={<Eye className="h-4 w-4 text-pink" />}
-          iconBg="bg-pink/10"
+          icon={<Eye className="h-4 w-4 text-yellow-400" />}
+          iconBg="bg-yellow-400/10"
           value={a.totalViews.toLocaleString()}
           label="Total views"
         />
         <StatCard
-          icon={<Inbox className="h-4 w-4 text-violet" />}
-          iconBg="bg-violet/10"
+          icon={<Inbox className="h-4 w-4 text-yellow-400" />}
+          iconBg="bg-yellow-400/10"
           value={a.totalRequests.toLocaleString()}
           label="Total requests"
         />
         <StatCard
-          icon={<CheckCircle className="h-4 w-4 text-emerald-400" />}
-          iconBg="bg-emerald-500/10"
+          icon={<CheckCircle className="h-4 w-4 text-yellow-400" />}
+          iconBg="bg-yellow-400/10"
           value={`${a.acceptanceRate}%`}
           label="Acceptance rate"
         />
         <StatCard
-          icon={<Star className="h-4 w-4 text-amber-400" />}
-          iconBg="bg-amber-500/10"
+          icon={<Star className="h-4 w-4 text-yellow-400" />}
+          iconBg="bg-yellow-400/10"
           value={ratingDisplay}
           label="Avg rating"
         />
@@ -103,7 +103,7 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
       <div>
         <div className="mb-1.5 flex items-center justify-between text-[11px]">
           <span className="flex items-center gap-1.5 font-medium text-foreground">
-            <Users className="h-3.5 w-3.5 text-cyan" /> Capacity filled
+            <Users className="h-3.5 w-3.5 text-yellow-400" /> Capacity filled
           </span>
           <span className="text-muted-foreground">
             {a.totalGuests} / {a.totalCapacity} guests confirmed
@@ -111,7 +111,7 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-secondary">
           <div
-            className="h-full rounded-full vibe-gradient-bg transition-all duration-700 ease-out"
+            className="h-full rounded-full bg-yellow-400 transition-all duration-700 ease-out"
             style={{ width: `${capacityPct}%` }}
           />
         </div>
@@ -164,7 +164,7 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
                     className={cn(
                       "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
                       isTop
-                        ? "vibe-gradient-bg text-white shadow-[0_0_12px_rgba(236,72,153,0.45)]"
+                        ? "bg-yellow-400 text-black"
                         : "bg-white/5 text-muted-foreground",
                     )}
                   >
@@ -226,10 +226,12 @@ function FunnelPill({
   label: string;
   color: "amber" | "emerald" | "rose";
 }) {
+  // Bumble single-accent: pending & accepted use yellow (varied opacity),
+  // rejected is muted grey (terminal/negative state).
   const styles: Record<typeof color, string> = {
-    amber: "border-amber-500/30 bg-amber-500/5 text-amber-300",
-    emerald: "border-emerald-500/30 bg-emerald-500/5 text-emerald-300",
-    rose: "border-rose-500/30 bg-rose-500/5 text-rose-300",
+    amber: "border-yellow-400/30 bg-yellow-400/5 text-yellow-300/80",
+    emerald: "border-yellow-400/50 bg-yellow-400/15 text-yellow-300",
+    rose: "border-white/10 bg-white/5 text-muted-foreground",
   };
   return (
     <div
@@ -248,7 +250,7 @@ function FunnelPill({
 
 function HostAnalyticsSkeleton() {
   return (
-    <section className="space-y-4 rounded-3xl border border-border/60 bg-gradient-to-br from-pink/5 via-violet/5 to-cyan/5 p-4">
+    <section className="space-y-4 rounded-3xl border border-white/10 bg-card p-4">
       {/* Header strip */}
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-24 rounded-full" />

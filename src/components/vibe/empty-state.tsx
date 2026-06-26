@@ -25,15 +25,10 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="relative">
-        {/* soft pink/violet aura behind the icon */}
-        <div className="absolute inset-0 rounded-full vibe-gradient-bg opacity-40 blur-2xl scale-125" />
-        <div className="absolute inset-0 rounded-3xl vibe-gradient-bg opacity-30 blur-lg" />
-        <div className="relative vibe-float flex h-20 w-20 items-center justify-center rounded-3xl glass-strong vibe-gradient-border glow-pink">
-          <Icon className="h-9 w-9 text-pink text-glow-pink" strokeWidth={2} />
-        </div>
+      <div className="vibe-float flex h-20 w-20 items-center justify-center rounded-3xl glass border-yellow-400/40">
+        <Icon className="h-9 w-9 text-yellow-400" strokeWidth={2} />
       </div>
-      <h3 className="font-display text-xl font-semibold vibe-gradient-text">
+      <h3 className="font-display text-xl font-semibold text-yellow-400">
         {title}
       </h3>
       {description && (

@@ -59,22 +59,22 @@ export function EditProfileScreen() {
 
   return (
     <div className="flex h-full flex-col animate-screen-in">
-      <header className="sticky top-0 z-20 flex items-center gap-2 glass-strong border-b border-border/60 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 flex items-center gap-2 glass-strong border-b border-white/10 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <button
           onClick={goBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-cyan transition hover:bg-cyan/10 hover:text-cyan hover:glow-cyan"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:bg-white/10"
           aria-label="Back"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h1 className="flex-1 font-display text-lg font-bold">
-          <span className="vibe-gradient-text">Edit profile</span>
+        <h1 className="flex-1 font-display text-lg font-bold text-yellow-400">
+          Edit profile
         </h1>
         <Button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
           size="sm"
-          className="rounded-full vibe-gradient-bg glow-pink"
+          className="rounded-full bg-yellow-400 text-black hover:bg-yellow-300"
         >
           <Check className="mr-1 h-4 w-4" /> Save
         </Button>
@@ -84,12 +84,11 @@ export function EditProfileScreen() {
         {/* Avatar */}
         <section className="flex flex-col items-center gap-3">
           <div className="relative">
-            <span className="absolute -inset-1 rounded-full vibe-gradient-bg opacity-80 blur-[2px]" />
-            <span className="relative block rounded-full ring-2 ring-background">
+            <span className="relative block rounded-full ring-2 ring-yellow-400">
               <UserAvatar name={name || "You"} src={avatarUrl} size={96} />
             </span>
-            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full vibe-gradient-bg ring-4 ring-background glow-pink">
-              <Camera className="h-4 w-4 text-white" />
+            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400 ring-4 ring-background">
+              <Camera className="h-4 w-4 text-black" />
             </span>
           </div>
           <div className="no-scrollbar flex gap-2 overflow-x-auto px-4">
@@ -99,8 +98,8 @@ export function EditProfileScreen() {
                 onClick={() => setAvatarUrl(u)}
                 className={`h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 transition ${
                   avatarUrl === u
-                    ? "border-pink glow-pink"
-                    : "border-transparent opacity-70 hover:opacity-100 hover:border-violet/50"
+                    ? "border-yellow-400"
+                    : "border-transparent opacity-70 hover:opacity-100 hover:border-yellow-400/50"
                 }`}
               >
                 <img src={u} alt="" className="h-full w-full object-cover" />
@@ -109,18 +108,18 @@ export function EditProfileScreen() {
           </div>
         </section>
 
-        <div className="space-y-5 rounded-3xl glass-strong vibe-gradient-border p-4">
+        <div className="space-y-5 rounded-3xl glass border border-yellow-400/40 p-4">
           <Field label="Name">
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-12 rounded-xl border-border/60 bg-card/60 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
+              className="h-12 rounded-xl border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
             />
           </Field>
 
           <Field label="Username">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-cyan/80">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-yellow-400/80">
                 @
               </span>
               <Input
@@ -128,7 +127,7 @@ export function EditProfileScreen() {
                 onChange={(e) =>
                   setUsername(e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase())
                 }
-                className="h-12 rounded-xl border-border/60 bg-card/60 pl-7 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
+                className="h-12 rounded-xl border-white/10 bg-card pl-7 focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
                 placeholder="viber123"
               />
             </div>
@@ -140,7 +139,7 @@ export function EditProfileScreen() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={160}
-              className="rounded-xl border-border/60 bg-card/60 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
+              className="rounded-xl border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
               placeholder="Tell people what kind of night-owl you are…"
             />
             <p className="text-right text-[11px] text-muted-foreground">
@@ -152,7 +151,7 @@ export function EditProfileScreen() {
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="h-12 w-full rounded-xl border border-border/60 bg-card/60 px-3 text-sm outline-none transition focus:border-violet/50 focus:ring-2 focus:ring-violet/40"
+              className="h-12 w-full rounded-xl border border-white/10 bg-card px-3 text-sm outline-none transition focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/40"
             >
               {CITIES.map((c) => (
                 <option key={c} value={c} className="bg-card">
@@ -164,13 +163,13 @@ export function EditProfileScreen() {
 
           <Field label="Instagram (optional)">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-cyan/80">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-yellow-400/80">
                 @
               </span>
               <Input
                 value={instagram}
                 onChange={(e) => setInstagram(e.target.value)}
-                className="h-12 rounded-xl border-border/60 bg-card/60 pl-7 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
+                className="h-12 rounded-xl border-white/10 bg-card pl-7 focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
                 placeholder="your.handle"
               />
             </div>
@@ -179,7 +178,7 @@ export function EditProfileScreen() {
 
         <button
           onClick={goBack}
-          className="flex h-11 w-full items-center justify-center rounded-full glass px-4 text-sm font-medium text-foreground/90 ring-1 ring-border/40 transition hover:ring-rose-400/40 hover:text-rose-300"
+          className="flex h-11 w-full items-center justify-center rounded-full glass px-4 text-sm font-medium text-white/70 ring-1 ring-white/10 transition hover:text-white hover:bg-white/5"
         >
           Cancel
         </button>
@@ -197,8 +196,8 @@ function Field({
 }) {
   return (
     <section className="space-y-1.5">
-      <Label className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] text-cyan/90">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-pink shadow-[0_0_6px_rgba(255,46,151,0.8)]" />
+      <Label className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] text-white">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400 shadow-[0_0_6px_rgba(255,203,5,0.8)]" />
         {label}
       </Label>
       {children}

@@ -27,39 +27,36 @@ const STATUS_STYLES: Record<
     extra?: string;
   }
 > = {
-  // Hot magenta — LIVE NOW
+  // LIVE NOW — bright yellow + ring pulse
   live: {
-    bg: "bg-pink/25 border-pink/60",
-    text: "text-pink text-glow-pink",
+    bg: "bg-yellow-400/20 border-yellow-400/60",
+    text: "text-yellow-300",
     icon: Radio,
     label: () => "Live now",
     extra: "vibe-live-ring",
   },
-  // Amber + coral — starting soon (warm urgency)
+  // starting-soon — slightly dimmer yellow
   "starting-soon": {
-    bg: "bg-orange-500/25 border-orange-400/60",
-    text: "text-orange-200",
+    bg: "bg-yellow-400/10 border-yellow-400/40",
+    text: "text-yellow-300/80",
     icon: Hourglass,
     label: (c: string) => `Starts ${c}`,
-    extra: "shadow-[0_0_18px_-4px_rgba(255,107,53,0.7)]",
   },
-  // Electric cyan — today
+  // today — slightly dimmer yellow
   today: {
-    bg: "bg-cyan-500/20 border-cyan-400/55",
-    text: "text-cyan-100",
+    bg: "bg-yellow-400/10 border-yellow-400/40",
+    text: "text-yellow-300/80",
     icon: CalendarClock,
     label: (c: string) => `Today · ${c}`,
-    extra: "shadow-[0_0_16px_-4px_rgba(0,240,255,0.6)]",
   },
-  // Electric violet — upcoming
+  // upcoming — slightly dimmer yellow
   upcoming: {
-    bg: "bg-violet-500/20 border-violet-400/55",
-    text: "text-violet-200",
+    bg: "bg-yellow-400/10 border-yellow-400/40",
+    text: "text-yellow-300/80",
     icon: CalendarClock,
     label: (c: string) => `Starts ${c}`,
-    extra: "shadow-[0_0_16px_-4px_rgba(157,78,221,0.6)]",
   },
-  // Muted — ended
+  // past — muted grey
   past: {
     bg: "bg-secondary/40 border-border/40",
     text: "text-muted-foreground",
@@ -95,7 +92,7 @@ export function LiveCountdown({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border font-semibold backdrop-blur-md",
+        "inline-flex items-center gap-1 rounded-full border font-semibold",
         size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-3 py-1 text-xs",
         cfg.bg,
         cfg.text,

@@ -56,7 +56,7 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
   };
 
   // "Featured" feel: parties that are live OR have a high guest fill ratio get
-  // a rotating holo ring in the top corner. Pure visual flourish.
+  // a simple solid yellow "Featured" pill. Pure visual flourish.
   const featured = isLive || party.guestCount / Math.max(1, party.maxGuests) >= 0.75;
 
   return (
@@ -73,27 +73,15 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
       className={cn(
         "group relative w-full cursor-pointer overflow-hidden rounded-3xl text-left transition-all duration-300 press-feedback",
         "glass vibe-gradient-border",
-        "hover:-translate-y-1 hover:glow-pink",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-pink/60",
-        isLive && "ring-1 ring-pink/40 glow-pink",
+        "hover:-translate-y-1 hover:glow-gold",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/60",
+        isLive && "ring-1 ring-yellow-400/40 glow-gold",
         className,
       )}
     >
       {/* Live now accent strip on top edge */}
       {isLive && (
-        <div className="absolute inset-x-0 top-0 z-20 h-0.5 vibe-gradient-bg animate-pulse" />
-      )}
-
-      {/* Featured holo badge — top-right corner */}
-      {featured && (
-        <div
-          aria-hidden
-          className="absolute right-2.5 top-2.5 z-20 flex h-7 w-7 items-center justify-center"
-        >
-          <span className="absolute inset-0 rounded-full vibe-gradient-bg opacity-60 blur-[6px]" />
-          <span className="absolute inset-0 rounded-full border border-dashed border-white/60 holo-spin" />
-          <Flame className="relative h-3.5 w-3.5 text-white" strokeWidth={2.5} />
-        </div>
+        <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-yellow-400 animate-pulse" />
       )}
 
       {/* Cover */}
@@ -106,24 +94,26 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full vibe-gradient-bg opacity-80" />
+          <div className="h-full w-full bg-yellow-400/15" />
         )}
-        {/* Violet→transparent gradient overlay for that Gen Z mood */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-violet/45 to-transparent" />
-        {/* Subtle holo sheen on hover */}
-        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-cyan/15 via-transparent to-pink/15 mix-blend-screen" />
 
         {/* Top chips */}
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3">
           <div className="flex flex-col gap-1.5">
+            {featured && (
+              <span className="inline-flex w-fit items-center gap-1 rounded-full bg-yellow-400 px-2 py-0.5 text-[10px] font-bold text-black">
+                <Flame className="h-3 w-3" strokeWidth={2.5} />
+                Featured
+              </span>
+            )}
             <span
               className={cn(
-                "rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur-md",
+                "w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold",
                 isFull
-                  ? "bg-rose-500/30 text-rose-100 border border-rose-400/60"
+                  ? "bg-white/10 text-muted-foreground border border-white/15"
                   : isLow
-                    ? "bg-amber-500/30 text-amber-100 border border-amber-400/60 shadow-[0_0_18px_-4px_rgba(255,214,10,0.7)]"
-                    : "bg-lime-400/20 text-lime-100 border border-lime-300/50 shadow-[0_0_18px_-4px_rgba(199,255,0,0.6)]",
+                    ? "bg-yellow-400 text-black"
+                    : "bg-yellow-400/15 text-yellow-300 border border-yellow-400/40",
               )}
             >
               {isFull ? "Sold out" : isLow ? `Only ${left} left` : `${left} slots`}
@@ -136,16 +126,16 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
             onClick={onSave}
             aria-label={saved ? "Unsave" : "Save"}
             className={cn(
-              "relative flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-md border transition active:scale-90",
+              "relative flex h-9 w-9 items-center justify-center rounded-full border transition active:scale-90",
               saved
-                ? "bg-pink/35 border-pink/70 shadow-[0_0_18px_-4px_rgba(255,46,151,0.8)]"
-                : "bg-black/55 border-violet/30 hover:bg-black/75 hover:border-pink/40",
+                ? "bg-yellow-400/20 border-yellow-400/60"
+                : "bg-black/55 border-white/15 hover:bg-black/75 hover:border-yellow-400/40",
             )}
           >
             <Heart
               className={cn(
                 "h-4 w-4 transition",
-                saved ? "fill-pink text-pink text-glow-pink" : "text-foreground/80",
+                saved ? "fill-yellow-400 text-yellow-400" : "text-foreground/80",
               )}
             />
           </button>
@@ -153,14 +143,7 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
 
         {/* Bottom-left: fee badge on cover */}
         <div className="absolute bottom-3 left-3">
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-bold backdrop-blur-md border",
-              party.fee === 0
-                ? "vibe-gradient-bg-acid text-black border-transparent shadow-[0_0_22px_-4px_rgba(199,255,0,0.7)]"
-                : "vibe-gradient-bg-warm text-black border-transparent shadow-[0_0_22px_-6px_rgba(255,107,53,0.7)]",
-            )}
-          >
+          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-400 px-3 py-1 text-sm font-bold text-black">
             <IndianRupee className="h-3.5 w-3.5" strokeWidth={2.5} />
             {formatFee(party.fee)}
           </span>
@@ -169,7 +152,7 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
 
       {/* Body */}
       <div className="space-y-3 p-4">
-        <h3 className="font-display text-lg font-semibold leading-tight text-foreground line-clamp-2 group-hover:text-glow-pink transition">
+        <h3 className="font-display text-lg font-semibold leading-tight text-foreground line-clamp-2 transition">
           {party.title}
         </h3>
 
@@ -182,28 +165,28 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
           </div>
         </div>
 
-        {/* Metadata grid — each icon a different neon */}
+        {/* Metadata grid — all icons yellow */}
         <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
-          <Meta icon={<MapPin className="h-3.5 w-3.5 text-cyan" />}>
+          <Meta icon={<MapPin className="h-3.5 w-3.5 text-yellow-400" />}>
             <span className="truncate">
               {party.area}, {party.city}
             </span>
           </Meta>
-          <Meta icon={<Calendar className="h-3.5 w-3.5 text-coral" />}>
+          <Meta icon={<Calendar className="h-3.5 w-3.5 text-yellow-400" />}>
             {formatDateLabel(party.date)}
           </Meta>
-          <Meta icon={<Clock className="h-3.5 w-3.5 text-sunshine" />}>
+          <Meta icon={<Clock className="h-3.5 w-3.5 text-yellow-400" />}>
             {formatTime(party.time)}
           </Meta>
-          <Meta icon={<Users className="h-3.5 w-3.5 text-lime-300" />}>
+          <Meta icon={<Users className="h-3.5 w-3.5 text-yellow-400" />}>
             {party.guestCount}/{party.maxGuests} going
           </Meta>
         </div>
 
         {/* Footer: host + going avatars */}
-        <div className="flex items-center justify-between gap-2 border-t border-violet/20 pt-3">
+        <div className="flex items-center justify-between gap-2 border-t border-white/10 pt-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 shrink-0 text-pink" />
+            <Sparkles className="h-3.5 w-3.5 shrink-0 text-yellow-400" />
             <span className="truncate">
               <span className="text-muted-foreground/70">by</span>{" "}
               <span className="font-medium text-foreground">{party.hostName}</span>

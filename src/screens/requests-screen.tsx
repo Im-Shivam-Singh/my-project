@@ -76,21 +76,21 @@ export function RequestsScreen() {
 
   return (
     <div className="flex h-full flex-col animate-screen-in">
-      <header className="sticky top-0 z-20 glass-strong border-b border-border/60 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 glass-strong border-b border-white/10 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <div className="flex items-center gap-2">
           <button
             onClick={goBack}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-cyan transition hover:bg-cyan/10 hover:text-cyan hover:glow-cyan"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:bg-white/10"
             aria-label="Back"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <h1 className="flex-1 font-display text-lg font-bold">
-            <span className="vibe-gradient-text">Requests</span>
+          <h1 className="flex-1 font-display text-lg font-bold text-yellow-400">
+            Requests
           </h1>
         </div>
         {/* Tabs */}
-        <div className="mt-3 flex gap-1 rounded-full glass p-1 ring-1 ring-border/40">
+        <div className="mt-3 flex gap-1 rounded-full glass p-1 ring-1 ring-white/10">
           {(["all", "pending", "accepted"] as const).map((t) => (
             <button
               key={t}
@@ -98,8 +98,8 @@ export function RequestsScreen() {
               className={cn(
                 "flex-1 rounded-full py-1.5 text-xs font-semibold capitalize transition",
                 tab === t
-                  ? "vibe-gradient-bg text-white glow-pink"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "bg-yellow-400 text-black"
+                  : "text-white/60 hover:text-white",
               )}
             >
               {t}
@@ -117,7 +117,7 @@ export function RequestsScreen() {
             action={
               <button
                 onClick={() => setScreen("create")}
-                className="rounded-full vibe-gradient-bg px-4 py-2 text-sm font-semibold text-white glow-pink"
+                className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
               >
                 Launch a vibe
               </button>
@@ -155,21 +155,18 @@ export function RequestsScreen() {
             {requests.map((r) => (
               <li
                 key={r.id}
-                className="rounded-2xl glass-strong vibe-gradient-border p-3"
+                className="rounded-2xl glass border border-white/10 p-3"
               >
                 <div className="flex items-start gap-3">
-                  <span className="relative block shrink-0 rounded-full">
-                    <span className="absolute -inset-0.5 rounded-full vibe-gradient-bg opacity-80 blur-[1px]" />
-                    <span className="relative block rounded-full ring-2 ring-background">
-                      <UserAvatar name={r.requesterName} size={40} />
-                    </span>
+                  <span className="relative block shrink-0 rounded-full ring-2 ring-yellow-400/50">
+                    <UserAvatar name={r.requesterName} size={40} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-semibold">
                         {r.requesterName}
                       </p>
-                      <span className="shrink-0 text-[11px] font-medium text-cyan/80">
+                      <span className="shrink-0 text-[11px] font-medium text-white/50">
                         {relativeTime(r.createdAt)}
                       </span>
                     </div>
@@ -180,13 +177,13 @@ export function RequestsScreen() {
                       <div className="mt-2 flex gap-2">
                         <button
                           onClick={() => act(r.id, "accepted")}
-                          className="inline-flex items-center gap-1 rounded-full vibe-gradient-bg-acid px-3 py-1 text-xs font-bold text-black glow-acid transition active:scale-95"
+                          className="inline-flex items-center gap-1 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-black transition active:scale-95"
                         >
                           <Check className="h-3.5 w-3.5" /> Accept
                         </button>
                         <button
                           onClick={() => act(r.id, "rejected")}
-                          className="inline-flex items-center gap-1 rounded-full glass px-3 py-1 text-xs font-semibold text-rose-300 ring-1 ring-rose-500/40 transition hover:bg-rose-500/15 hover:text-rose-200"
+                          className="inline-flex items-center gap-1 rounded-full glass px-3 py-1 text-xs font-semibold text-white/60 ring-1 ring-white/10 transition hover:text-white hover:bg-white/5"
                         >
                           <X className="h-3.5 w-3.5" /> Decline
                         </button>
@@ -196,8 +193,8 @@ export function RequestsScreen() {
                         className={cn(
                           "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1",
                           r.status === "accepted"
-                            ? "bg-lime-400/15 text-lime-300 ring-lime-400/40"
-                            : "bg-rose-500/15 text-rose-300 ring-rose-500/40",
+                            ? "bg-yellow-400 text-black ring-yellow-400"
+                            : "bg-white/5 text-white/40 ring-white/10",
                         )}
                       >
                         <Clock className="h-3 w-3" />

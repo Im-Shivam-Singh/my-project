@@ -231,11 +231,11 @@ export function ChatScreen() {
   return (
     <div className="flex h-full flex-col animate-screen-in">
       {/* Header */}
-      <header className="sticky top-0 z-20 glass-strong border-b border-border/60 px-2 py-2 pt-[max(env(safe-area-inset-top),10px)]">
+      <header className="sticky top-0 z-20 glass-strong border-b border-white/10 px-2 py-2 pt-[max(env(safe-area-inset-top),10px)]">
         <div className="flex items-center gap-2">
           <button
             onClick={goBack}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-cyan transition hover:bg-cyan/10 hover:text-cyan hover:glow-cyan"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:bg-white/10"
             aria-label="Back"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -244,22 +244,19 @@ export function ChatScreen() {
             onClick={() => toast.info("Profile view coming soon")}
             className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
           >
-            <span className="relative block rounded-full">
-              <span className="absolute -inset-0.5 rounded-full vibe-gradient-bg opacity-80 blur-[1px]" />
-              <span className="relative block rounded-full ring-2 ring-background">
-                <UserAvatar name={other.name} src={other.avatarUrl} size={40} />
-              </span>
+            <span className="relative block rounded-full ring-2 ring-yellow-400/60">
+              <UserAvatar name={other.name} src={other.avatarUrl} size={40} />
             </span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{other.name}</p>
+              <p className="truncate text-sm font-semibold text-white">{other.name}</p>
               <p
                 className={cn(
                   "flex items-center gap-1 text-[11px] font-medium",
                   isTyping
-                    ? "text-pink text-glow-pink"
+                    ? "text-yellow-400"
                     : online
-                      ? "text-lime-300 text-glow-lime"
-                      : "text-muted-foreground",
+                      ? "text-yellow-400"
+                      : "text-white/50",
                 )}
               >
                 {isTyping ? (
@@ -267,7 +264,7 @@ export function ChatScreen() {
                 ) : (
                   <>
                     {online && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-lime-300 shadow-[0_0_6px_rgba(199,255,0,0.8)]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
                     )}
                     {online ? "Online now" : "Active recently"}
                   </>
@@ -277,21 +274,21 @@ export function ChatScreen() {
           </button>
           <button
             onClick={() => toast.info("Calling coming soon")}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-violet/10 hover:text-violet"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/10 hover:text-white"
             aria-label="Call"
           >
             <Phone className="h-4 w-4" />
           </button>
           <button
             onClick={() => toast.info("Video coming soon")}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-violet/10 hover:text-violet"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/10 hover:text-white"
             aria-label="Video"
           >
             <Video className="h-4 w-4" />
           </button>
           <button
             onClick={() => setSheetOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-pink/10 hover:text-pink"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/10 hover:text-white"
             aria-label="More"
           >
             <MoreVertical className="h-4 w-4" />
@@ -305,15 +302,12 @@ export function ChatScreen() {
         className="fancy-scrollbar flex-1 space-y-1 overflow-y-auto px-3 py-4"
       >
         {/* Intro banner */}
-        <div className="mb-5 flex flex-col items-center gap-2.5 rounded-2xl glass vibe-gradient-border p-5 text-center vibe-float">
-          <span className="relative block rounded-full">
-            <span className="absolute -inset-0.5 rounded-full vibe-gradient-bg opacity-80 blur-[1px]" />
-            <span className="relative block rounded-full ring-2 ring-background">
-              <UserAvatar name={other.name} src={other.avatarUrl} size={64} />
-            </span>
+        <div className="mb-5 flex flex-col items-center gap-2.5 rounded-2xl glass border border-white/10 p-5 text-center vibe-float">
+          <span className="relative block rounded-full ring-2 ring-yellow-400/60">
+            <UserAvatar name={other.name} src={other.avatarUrl} size={64} />
           </span>
           <div className="flex items-center gap-2">
-            <p className="font-display text-base font-semibold">{other.name}</p>
+            <p className="font-display text-base font-semibold text-white">{other.name}</p>
             <RatingPill rating={other.rating} />
           </div>
           {other.bio && (
@@ -321,8 +315,8 @@ export function ChatScreen() {
               {other.bio}
             </p>
           )}
-          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet/15 px-3 py-1 text-[11px] font-medium text-violet-200 ring-1 ring-violet/30">
-            <Sparkles className="h-3 w-3 text-cyan" />
+          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-yellow-400/15 px-3 py-1 text-[11px] font-medium text-yellow-300 ring-1 ring-yellow-400/30">
+            <Sparkles className="h-3 w-3 text-yellow-400" />
             You connected over a party. Be kind, be safe.
           </p>
         </div>
@@ -330,7 +324,7 @@ export function ChatScreen() {
         {grouped.map(({ label, items }) => (
           <div key={label} className="space-y-1">
             <div className="my-3 flex justify-center">
-              <span className="rounded-full glass px-3 py-1 text-[10px] uppercase tracking-wide text-cyan/70">
+              <span className="rounded-full glass px-3 py-1 text-[10px] uppercase tracking-wide text-white/50">
                 {label}
               </span>
             </div>
@@ -369,9 +363,9 @@ export function ChatScreen() {
                       className={cn(
                         "cursor-pointer rounded-2xl px-3 py-2 text-sm transition",
                         mine
-                          ? "rounded-br-md vibe-gradient-bg text-white glow-pink"
-                          : "rounded-bl-md glass text-foreground ring-1 ring-border/40",
-                        reactingFor === m.id && "ring-2 ring-cyan/70",
+                          ? "rounded-br-md bg-yellow-400 text-black"
+                          : "rounded-bl-md glass text-white ring-1 ring-white/10",
+                        reactingFor === m.id && "ring-2 ring-yellow-400/70",
                       )}
                     >
                       <p className="whitespace-pre-line break-words">
@@ -380,13 +374,13 @@ export function ChatScreen() {
                       <div
                         className={cn(
                           "mt-0.5 flex items-center justify-end gap-1 text-[10px]",
-                          mine ? "text-white/80" : "text-muted-foreground",
+                          mine ? "text-black/60" : "text-muted-foreground",
                         )}
                       >
                         {relativeTime(m.createdAt)}
                         {mine &&
                           (m.read ? (
-                            <CheckCheck className="h-3 w-3 text-cyan-100" />
+                            <CheckCheck className="h-3 w-3 text-yellow-700" />
                           ) : (
                             <Check className="h-3 w-3" />
                           ))}
@@ -404,7 +398,7 @@ export function ChatScreen() {
                         {reactionEntries.map(([emoji, count]) => (
                           <span
                             key={emoji}
-                            className="inline-flex items-center gap-0.5 rounded-full border border-pink/30 bg-pink/10 px-1.5 py-0.5 text-[11px]"
+                            className="inline-flex items-center gap-0.5 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-1.5 py-0.5 text-[11px]"
                           >
                             {emoji} {count > 1 && count}
                           </span>
@@ -444,17 +438,17 @@ export function ChatScreen() {
         {isTyping && (
           <div className="flex items-end gap-2">
             <UserAvatar name={other.name} src={other.avatarUrl} size={24} />
-            <div className="flex gap-1 rounded-2xl rounded-bl-md glass px-3 py-2.5 ring-1 ring-border/40">
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-pink [animation-delay:-0.3s]" />
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet [animation-delay:-0.15s]" />
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan" />
+            <div className="flex gap-1 rounded-2xl rounded-bl-md glass px-3 py-2.5 ring-1 ring-white/10">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-yellow-400 [animation-delay:-0.3s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-yellow-400 [animation-delay:-0.15s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-yellow-400" />
             </div>
           </div>
         )}
       </div>
 
       {/* Composer */}
-      <footer className="relative border-t border-border/60 glass-strong px-2 py-2 safe-bottom">
+      <footer className="relative border-t border-white/10 glass-strong px-2 py-2 safe-bottom">
         {/* Quick reply suggestions (only when input is empty) */}
         {!text.trim() && messages.length < 6 && (
           <div className="no-scrollbar mb-2 flex gap-2 overflow-x-auto px-1">
@@ -462,7 +456,7 @@ export function ChatScreen() {
               <button
                 key={q}
                 onClick={() => send(q)}
-                className="shrink-0 rounded-full glass px-3 py-1.5 text-xs text-foreground/90 ring-1 ring-border/40 transition hover:ring-pink/50 hover:text-pink"
+                className="shrink-0 rounded-full glass px-3 py-1.5 text-xs text-white/80 ring-1 ring-white/10 transition hover:ring-yellow-400/50 hover:text-yellow-300"
               >
                 {q}
               </button>
@@ -470,7 +464,7 @@ export function ChatScreen() {
           </div>
         )}
         {showEmoji && (
-          <div className="absolute inset-x-2 bottom-full mb-2 flex gap-2 rounded-2xl glass-strong p-2 ring-1 ring-border/40">
+          <div className="absolute inset-x-2 bottom-full mb-2 flex gap-2 rounded-2xl glass-strong p-2 ring-1 ring-white/10">
             {QUICK_EMOJIS.map((e) => (
               <button
                 key={e}
@@ -478,7 +472,7 @@ export function ChatScreen() {
                   send(e);
                   setShowEmoji(false);
                 }}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:scale-125 hover:bg-pink/15"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:scale-125 hover:bg-yellow-400/15"
               >
                 {e}
               </button>
@@ -490,7 +484,7 @@ export function ChatScreen() {
             onClick={() => setShowEmoji((s) => !s)}
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-full transition",
-              showEmoji ? "bg-pink/15 text-pink" : "text-muted-foreground hover:bg-violet/10 hover:text-violet",
+              showEmoji ? "bg-yellow-400/15 text-yellow-300" : "text-muted-foreground hover:bg-white/10 hover:text-white",
             )}
             aria-label="Emoji"
           >
@@ -506,12 +500,12 @@ export function ChatScreen() {
               }
             }}
             placeholder={`Message ${other.name.split(" ")[0]}…`}
-            className="h-10 flex-1 rounded-full border-border/60 bg-card/60 focus-visible:ring-2 focus-visible:ring-violet/60 focus-visible:border-violet/50"
+            className="h-10 flex-1 rounded-full border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
           />
           <button
             onClick={() => send()}
             disabled={!text.trim()}
-            className="flex h-10 w-10 items-center justify-center rounded-full vibe-gradient-bg text-white glow-pink transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-400 text-black transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
             aria-label="Send"
           >
             <Send className="h-4 w-4" />
@@ -523,11 +517,11 @@ export function ChatScreen() {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent
           side="bottom"
-          className="mx-auto max-w-[480px] rounded-t-3xl border-border/60 glass-strong"
+          className="mx-auto max-w-[480px] rounded-t-3xl border-white/10 glass-strong"
         >
           <SheetHeader>
-            <SheetTitle className="font-display">
-              <span className="vibe-gradient-text">{other.name}</span>
+            <SheetTitle className="font-display text-yellow-400">
+              {other.name}
             </SheetTitle>
             <SheetDescription className="sr-only">
               Chat options
@@ -565,10 +559,10 @@ export function ChatScreen() {
 
       {/* Report dialog */}
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="max-w-[420px] rounded-3xl border-border/60 glass-strong">
+        <DialogContent className="max-w-[420px] rounded-3xl border-white/10 glass-strong">
           <DialogHeader>
-            <DialogTitle className="font-display">
-              Report <span className="vibe-gradient-text">{other.name}</span>?
+            <DialogTitle className="font-display text-white">
+              Report <span className="text-yellow-400">{other.name}</span>?
             </DialogTitle>
             <DialogDescription>
               Help us keep VibeMatch safe. Our team reviews every report.
@@ -588,12 +582,12 @@ export function ChatScreen() {
                 className={cn(
                   "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition glass",
                   reportReason === r
-                    ? "border-pink ring-1 ring-pink/50 text-pink"
-                    : "border-border/60 hover:border-pink/40",
+                    ? "border-yellow-400 ring-1 ring-yellow-400/50 text-yellow-300"
+                    : "border-white/10 hover:border-yellow-400/40",
                 )}
               >
                 {r}
-                {reportReason === r && <Check className="h-4 w-4 text-pink" />}
+                {reportReason === r && <Check className="h-4 w-4 text-yellow-400" />}
               </button>
             ))}
           </div>
@@ -607,7 +601,7 @@ export function ChatScreen() {
             </Button>
             <Button
               onClick={confirmReport}
-              className="rounded-full bg-rose-500 text-white hover:bg-rose-600"
+              className="rounded-full bg-destructive text-white hover:bg-destructive/90"
             >
               Submit report
             </Button>
@@ -634,7 +628,7 @@ function SheetButton({
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition hover:bg-white/5",
-        destructive ? "text-rose-400" : "text-foreground",
+        destructive ? "text-destructive" : "text-foreground",
       )}
     >
       {icon}
@@ -645,7 +639,7 @@ function SheetButton({
 
 function ChatHeaderSkeleton() {
   return (
-    <header className="sticky top-0 z-20 glass-strong border-b border-border/60 px-2 py-2">
+    <header className="sticky top-0 z-20 glass-strong border-b border-white/10 px-2 py-2">
       <div className="flex items-center gap-2">
         <Skeleton className="h-9 w-9 rounded-full vibe-skeleton" />
         <Skeleton className="h-10 w-10 rounded-full vibe-skeleton" />

@@ -107,7 +107,7 @@ export function ReviewsSection({ partyId }: ReviewsSectionProps) {
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-1">
-              <Star className="h-6 w-6 fill-amber-400 text-amber-400" />
+              <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
               <span className="font-display text-4xl font-extrabold leading-none">
                 {avgRating > 0 ? avgRating.toFixed(1) : "—"}
               </span>
@@ -131,10 +131,10 @@ export function ReviewsSection({ partyId }: ReviewsSectionProps) {
                   <span className="flex w-3 items-center justify-end text-[10px] text-muted-foreground">
                     {lvl}
                   </span>
-                  <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />
+                  <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full vibe-gradient-bg transition-all duration-500"
+                      className="h-full rounded-full bg-yellow-400 transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -149,7 +149,7 @@ export function ReviewsSection({ partyId }: ReviewsSectionProps) {
 
         <Button
           onClick={() => setDialogOpen(true)}
-          className="mt-4 h-11 w-full rounded-full vibe-gradient-bg text-sm font-semibold shadow-[0_8px_24px_-8px_rgba(236,72,153,0.6)]"
+          className="mt-4 h-11 w-full rounded-full bg-yellow-400 text-black text-sm font-semibold hover:bg-yellow-400"
         >
           <Star className="h-4 w-4" />
           Write a review
@@ -187,7 +187,7 @@ export function ReviewsSection({ partyId }: ReviewsSectionProps) {
 function SectionHeading() {
   return (
     <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold">
-      <MessageSquare className="h-4 w-4 text-pink" /> Reviews
+      <MessageSquare className="h-4 w-4 text-yellow-400" /> Reviews
     </h2>
   );
 }
@@ -196,7 +196,7 @@ function ReviewItem({ review }: { review: PartyReview }) {
   const name = review.user?.name || "Anonymous";
   const avatarUrl = review.user?.avatarUrl ?? null;
   return (
-    <li className="rounded-2xl border border-border/60 bg-card/40 p-3 transition-colors hover:border-pink/40">
+    <li className="rounded-2xl border border-border/60 bg-card/40 p-3 transition-colors hover:border-yellow-400/40">
       <div className="flex items-center gap-2.5">
         <UserAvatar name={name} src={avatarUrl} size={36} />
         <div className="min-w-0 flex-1">
@@ -236,7 +236,7 @@ function Stars({
           className={cn(
             "h-3.5 w-3.5",
             lvl <= Math.round(rating)
-              ? "fill-amber-400 text-amber-400"
+              ? "fill-yellow-400 text-yellow-400"
               : "text-muted-foreground",
           )}
         />
@@ -292,7 +292,7 @@ function WriteReviewDialog({
       <DialogContent className="mx-auto max-w-[420px] rounded-3xl border-border/60 bg-card/95 backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle className="font-display text-xl font-bold">
-            <span className="vibe-gradient-text">Review this party</span>
+            <span className="text-yellow-400">Review this party</span>
           </DialogTitle>
           <DialogDescription>
             Share your experience to help other viber heads
@@ -316,8 +316,8 @@ function WriteReviewDialog({
                     className={cn(
                       "flex h-11 w-11 items-center justify-center rounded-xl border transition-all",
                       active
-                        ? "vibe-gradient-bg border-transparent shadow-[0_6px_20px_-6px_rgba(236,72,153,0.7)]"
-                        : "border-border/60 bg-background/40 hover:border-pink/40",
+                        ? "bg-yellow-400 border-transparent"
+                        : "border-border/60 bg-background/40 hover:border-yellow-400/40",
                     )}
                   >
                     <Star
@@ -355,7 +355,7 @@ function WriteReviewDialog({
               <span
                 className={cn(
                   "tabular-nums",
-                  comment.length > MAX_COMMENT - 30 && "text-amber-300",
+                  comment.length > MAX_COMMENT - 30 && "text-yellow-300",
                 )}
               >
                 {comment.length}/{MAX_COMMENT}
@@ -376,7 +376,7 @@ function WriteReviewDialog({
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="rounded-xl vibe-gradient-bg font-semibold"
+            className="rounded-xl bg-yellow-400 text-black font-semibold hover:bg-yellow-400"
           >
             {submitting ? (
               "Posting…"

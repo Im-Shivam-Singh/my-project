@@ -32,16 +32,16 @@ export function MyPartiesScreen() {
 
   return (
     <div className="flex h-full flex-col animate-screen-in">
-      <header className="sticky top-0 z-20 flex items-center gap-2 glass-strong border-b border-border/60 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 flex items-center gap-2 glass-strong border-b border-white/10 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <button
           onClick={goBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-cyan transition hover:bg-cyan/10 hover:text-cyan hover:glow-cyan"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:bg-white/10"
           aria-label="Back"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h1 className="flex-1 font-display text-lg font-bold">
-          <span className="vibe-gradient-text">My parties</span>
+        <h1 className="flex-1 font-display text-lg font-bold text-yellow-400">
+          My parties
         </h1>
       </header>
 
@@ -57,7 +57,7 @@ export function MyPartiesScreen() {
             {[0, 1].map((i) => (
               <div
                 key={i}
-                className="overflow-hidden rounded-3xl glass-strong vibe-gradient-border"
+                className="overflow-hidden rounded-3xl glass border border-white/10"
               >
                 <Skeleton className="aspect-[16/10] w-full rounded-none vibe-skeleton" />
                 <div className="space-y-2 p-4">
@@ -77,7 +77,7 @@ export function MyPartiesScreen() {
             action={
               <button
                 onClick={openCreate}
-                className="rounded-full vibe-gradient-bg px-4 py-2 text-sm font-semibold text-white glow-pink"
+                className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
               >
                 Launch a vibe
               </button>
@@ -87,7 +87,7 @@ export function MyPartiesScreen() {
 
         {!isLoading && parties.length > 0 && (
           <>
-            <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-cyan/80">
+            <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-yellow-300">
               <CalendarClock className="h-3.5 w-3.5" /> {parties.length} parties hosted
             </div>
             {parties.map((p) => (

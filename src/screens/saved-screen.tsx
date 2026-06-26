@@ -30,23 +30,23 @@ export function SavedScreen() {
 
   return (
     <div className="flex h-full flex-col animate-screen-in">
-      <header className="sticky top-0 z-20 flex items-center gap-2 glass-strong border-b border-border/60 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 flex items-center gap-2 glass-strong border-b border-white/10 px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <button
           onClick={goBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-cyan transition hover:bg-cyan/10 hover:text-cyan hover:glow-cyan"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:bg-white/10"
           aria-label="Back"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
-          <h1 className="font-display text-lg font-bold">
-            <span className="vibe-gradient-text">Saved</span>
+          <h1 className="font-display text-lg font-bold text-yellow-400">
+            Saved
           </h1>
-          <p className="text-[11px] font-medium text-cyan/80">
+          <p className="text-[11px] font-medium text-white/50">
             {saved.length} saved
           </p>
         </div>
-        <Heart className="h-5 w-5 fill-pink text-pink text-glow-pink" />
+        <Heart className="h-5 w-5 fill-yellow-400 text-yellow-400" />
       </header>
 
       <div className="fancy-scrollbar flex-1 space-y-3 overflow-y-auto p-4">
@@ -55,7 +55,7 @@ export function SavedScreen() {
             {[0, 1].map((i) => (
               <div
                 key={i}
-                className="h-48 animate-pulse rounded-3xl glass-strong vibe-gradient-border vibe-skeleton"
+                className="h-48 animate-pulse rounded-3xl glass border border-white/10 vibe-skeleton"
               />
             ))}
           </div>
@@ -64,12 +64,12 @@ export function SavedScreen() {
         {!isLoading && saved.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
             <div className="vibe-float">
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl vibe-gradient-bg-warm text-4xl shadow-lg glow-pink">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-yellow-400 text-4xl">
                 🔖
               </div>
             </div>
             <div className="space-y-1">
-              <p className="font-display text-lg font-bold vibe-gradient-text">
+              <p className="font-display text-lg font-bold text-yellow-400">
                 No saved parties yet
               </p>
               <p className="mx-auto max-w-xs text-sm text-muted-foreground">
@@ -78,7 +78,7 @@ export function SavedScreen() {
             </div>
             <button
               onClick={() => setScreen("home")}
-              className="rounded-full vibe-gradient-bg px-4 py-2 text-sm font-semibold text-white glow-pink transition active:scale-95"
+              className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
             >
               Explore parties
             </button>

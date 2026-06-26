@@ -23,24 +23,16 @@ export function UserAvatar({
   ring,
   className,
 }: UserAvatarProps) {
-  // Padding around the avatar so the gradient ring can breathe. 0 when ring
-  // is off so existing tight layouts are unchanged.
-  const padding = ring ? Math.max(2, Math.round(size * 0.08)) : 0;
-  const innerSize = size - padding * 2;
-
   return (
     <div
       className={cn(
         "relative shrink-0",
-        ring && "rounded-full vibe-gradient-bg glow-pink",
+        ring && "rounded-full ring-2 ring-yellow-400",
         className,
       )}
-      style={{ width: size, height: size, padding }}
+      style={{ width: size, height: size }}
     >
-      {/* Inner avatar — sits inside the gradient ring */}
-      <div
-        className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-violet/40 to-pink/40 ring-1 ring-background"
-      >
+      <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-card">
         {src ? (
           <img
             src={src}
@@ -50,8 +42,8 @@ export function UserAvatar({
           />
         ) : (
           <span
-            className="font-display font-semibold text-white drop-shadow-[0_0_6px_rgba(255,46,151,0.6)]"
-            style={{ fontSize: innerSize * 0.36 }}
+            className="font-display font-semibold text-white"
+            style={{ fontSize: size * 0.36 }}
           >
             {initials(name)}
           </span>
@@ -62,11 +54,10 @@ export function UserAvatar({
       {ring && (
         <span
           aria-hidden
-          className="absolute bottom-0 right-0 block rounded-full bg-lime-300 ring-2 ring-background"
+          className="absolute bottom-0 right-0 block rounded-full bg-yellow-400 ring-2 ring-background"
           style={{
             width: Math.max(8, Math.round(size * 0.22)),
             height: Math.max(8, Math.round(size * 0.22)),
-            boxShadow: "0 0 10px 2px rgba(199,255,0,0.85)",
           }}
         />
       )}

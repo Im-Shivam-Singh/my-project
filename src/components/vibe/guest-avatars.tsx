@@ -11,20 +11,9 @@ interface GuestAvatarsProps {
 }
 
 /**
- * Rotating neon ring colors — pink → violet → cyan → acid → coral — so the
- * stacked avatars read like a colorful sticker pack.
- */
-const RING_COLORS = [
-  "ring-pink shadow-[0_0_10px_-2px_rgba(255,46,151,0.8)]",
-  "ring-violet shadow-[0_0_10px_-2px_rgba(157,78,221,0.8)]",
-  "ring-cyan shadow-[0_0_10px_-2px_rgba(0,240,255,0.8)]",
-  "ring-lime-300 shadow-[0_0_10px_-2px_rgba(199,255,0,0.8)]",
-  "ring-orange-400 shadow-[0_0_10px_-2px_rgba(255,107,53,0.8)]",
-];
-
-/**
  * Overlapping avatar stack showing who's going. Renders up to `max` avatars
- * then a "+N" pill if total exceeds the shown count.
+ * then a "+N" pill if total exceeds the shown count. All rings are the same
+ * Bumble yellow — no rotating color cycle.
  */
 export function GuestAvatars({
   avatars,
@@ -43,10 +32,7 @@ export function GuestAvatars({
         {shown.map((src, i) => (
           <span
             key={i}
-            className={cn(
-              "relative overflow-hidden rounded-full ring-2 ring-offset-1 ring-offset-background bg-card",
-              RING_COLORS[i % RING_COLORS.length],
-            )}
+            className="relative overflow-hidden rounded-full ring-2 ring-yellow-400/60 ring-offset-1 ring-offset-background bg-card"
             style={{
               width: size,
               height: size,
@@ -65,7 +51,7 @@ export function GuestAvatars({
       </div>
       {extra > 0 && (
         <span
-          className="flex items-center justify-center rounded-full vibe-gradient-bg text-[10px] font-bold text-black ring-2 ring-card ring-offset-1 ring-offset-background shadow-[0_0_12px_-2px_rgba(255,46,151,0.7)]"
+          className="flex items-center justify-center rounded-full bg-yellow-400 text-[10px] font-bold text-black ring-2 ring-card ring-offset-1 ring-offset-background"
           style={{
             width: size,
             height: size,

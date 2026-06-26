@@ -170,20 +170,19 @@ export function DetailScreen() {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full vibe-gradient-bg opacity-80" />
+            <div className="h-full w-full bg-yellow-400 opacity-80" />
           )}
-          {/* violet→transparent overlay + holographic sheen */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-violet/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-tr from-cyan/15 via-transparent to-pink/20 mix-blend-screen" aria-hidden />
+          {/* Black→transparent overlay for legibility (no violet, no sheen) */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
           {/* Top bar */}
           <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 pt-[max(env(safe-area-inset-top),12px)]">
             <button
               onClick={goBack}
-              className="flex h-10 w-10 items-center justify-center rounded-full glass glow-cyan border border-cyan/40 active:scale-95 transition"
+              className="flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 active:scale-95 transition hover:border-yellow-400/50"
               aria-label="Back"
             >
-              <ChevronLeft className="h-5 w-5 text-cyan" />
+              <ChevronLeft className="h-5 w-5 text-white" />
             </button>
             <div className="flex gap-2">
               <button
@@ -194,21 +193,21 @@ export function DetailScreen() {
                   });
                 }}
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full glass border border-violet/30 transition active:scale-95",
-                  saved ? "glow-pink border-pink/50" : "",
+                  "flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 transition active:scale-95",
+                  saved ? "border-yellow-400/60" : "",
                 )}
                 aria-label="Save"
               >
                 <Heart
                   className={cn(
                     "h-4 w-4 transition",
-                    saved ? "fill-pink text-pink" : "text-foreground",
+                    saved ? "fill-yellow-400 text-yellow-400" : "text-white",
                   )}
                 />
               </button>
               <button
                 onClick={share}
-                className="flex h-10 w-10 items-center justify-center rounded-full glass border border-violet/30 text-violet transition hover:border-violet/60 hover:bg-violet/10 active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 text-white transition hover:border-yellow-400/60 hover:bg-yellow-400/10 active:scale-95"
                 aria-label="Share"
               >
                 <Share2 className="h-4 w-4" />
@@ -222,8 +221,8 @@ export function DetailScreen() {
           {/* Title + vibes */}
           <section className="space-y-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <h1 className="flex-1 font-display text-3xl font-extrabold leading-tight">
-                <span className="vibe-gradient-text">{party.title}</span>
+              <h1 className="flex-1 font-display text-3xl font-extrabold leading-tight text-white">
+                {party.title}
               </h1>
               <LiveCountdown
                 date={party.date}
@@ -239,7 +238,7 @@ export function DetailScreen() {
           </section>
 
           {/* Who's going — social proof */}
-          <section className="flex items-center justify-between gap-3 rounded-2xl glass border border-violet/25 p-3">
+          <section className="flex items-center justify-between gap-3 rounded-2xl glass border border-white/10 p-3">
             <div className="flex min-w-0 items-center gap-3">
               {party.guestCount > 0 ? (
                 <GuestAvatars
@@ -275,10 +274,10 @@ export function DetailScreen() {
               className={cn(
                 "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold",
                 isFull
-                  ? "bg-rose-500/15 text-rose-200 border border-rose-400/30"
+                  ? "bg-white/5 text-white/60 border border-white/15"
                   : isLow
-                    ? "bg-amber-500/15 text-amber-200 border border-amber-400/30"
-                    : "bg-emerald-500/15 text-emerald-200 border border-emerald-400/30",
+                    ? "bg-yellow-400/15 text-yellow-300 border border-yellow-400/40"
+                    : "bg-yellow-400/10 text-yellow-300 border border-yellow-400/30",
               )}
             >
               {isFull ? "Sold out" : `${left}/${party.maxGuests}`}
@@ -288,22 +287,22 @@ export function DetailScreen() {
           {/* Quick facts */}
           <section className="grid grid-cols-2 gap-2">
             <Fact
-              icon={<MapPin className="h-4 w-4 text-pink" />}
+              icon={<MapPin className="h-4 w-4 text-yellow-400" />}
               label="Location"
               value={`${party.area}, ${party.city}`}
             />
             <Fact
-              icon={<Calendar className="h-4 w-4 text-violet" />}
+              icon={<Calendar className="h-4 w-4 text-yellow-400" />}
               label="Date"
               value={formatDateLabel(party.date)}
             />
             <Fact
-              icon={<Clock className="h-4 w-4 text-cyan" />}
+              icon={<Clock className="h-4 w-4 text-yellow-400" />}
               label="Time"
               value={formatTime(party.time)}
             />
             <Fact
-              icon={<IndianRupee className="h-4 w-4 text-sunshine" />}
+              icon={<IndianRupee className="h-4 w-4 text-yellow-400" />}
               label="Entry"
               value={formatFee(party.fee)}
             />
@@ -315,7 +314,7 @@ export function DetailScreen() {
               href={`https://maps.google.com/?q=${party.lat},${party.lng}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan/40 bg-cyan/5 px-4 py-2.5 text-sm font-semibold text-cyan transition hover:bg-cyan/10 hover:border-cyan/60 active:scale-95"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-yellow-400/40 bg-yellow-400/5 px-4 py-2.5 text-sm font-semibold text-yellow-400 underline underline-offset-2 transition hover:bg-yellow-400/10 hover:border-yellow-400/60 active:scale-95"
             >
               <MapPin className="h-4 w-4" />
               Get directions
@@ -324,10 +323,10 @@ export function DetailScreen() {
 
           {/* Host card */}
           {host && (
-            <section className="overflow-hidden rounded-2xl glass border border-violet/25">
+            <section className="overflow-hidden rounded-2xl glass border border-white/10">
               <div className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-full vibe-gradient-bg p-[2px] glow-pink">
+                  <div className="rounded-full bg-yellow-400 p-[2px]">
                     <div className="rounded-full bg-card p-[2px]">
                       <UserAvatar name={host.name} src={host.avatarUrl} size={52} ring />
                     </div>
@@ -337,7 +336,7 @@ export function DetailScreen() {
                       <p className="truncate font-display text-base font-semibold">
                         {host.name}
                       </p>
-                      <ShieldCheck className="h-4 w-4 shrink-0 text-acid" />
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-yellow-400" />
                     </div>
                     <p className="truncate text-xs text-muted-foreground">
                       @{host.username} · {host.hosted} hosted
@@ -351,10 +350,10 @@ export function DetailScreen() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-2 border-t border-violet/20 p-3">
+              <div className="flex gap-2 border-t border-white/10 p-3">
                 <Button
                   size="sm"
-                  className="flex-1 rounded-xl vibe-gradient-bg font-semibold glow-pink transition active:scale-95"
+                  className="flex-1 rounded-xl bg-yellow-400 font-semibold text-black transition active:scale-95 hover:opacity-95"
                   onClick={messageHost}
                 >
                   <MessageCircle className="mr-1.5 h-4 w-4" />
@@ -363,7 +362,7 @@ export function DetailScreen() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-xl border-cyan/40 text-cyan hover:bg-cyan/10 hover:border-cyan/60"
+                  className="rounded-xl border-white/15 text-white hover:bg-white/5 hover:border-yellow-400/60"
                   onClick={() =>
                     toast.info("Profile coming soon", {
                       description: `View ${host.name}'s full profile`,
@@ -379,9 +378,9 @@ export function DetailScreen() {
           {/* Description */}
           {party.description && (
             <section className="space-y-2">
-              <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold">
-                <Info className="h-4 w-4 text-violet" />
-                <span className="vibe-gradient-text">About this party</span>
+              <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-yellow-400">
+                <Info className="h-4 w-4" />
+                About this party
               </h2>
               <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">
                 {party.description}
@@ -390,10 +389,10 @@ export function DetailScreen() {
           )}
 
           {/* House rules */}
-          <section className="rounded-2xl glass border border-violet/25 p-4">
-            <h2 className="mb-2 flex items-center gap-1.5 font-display text-sm font-semibold">
-              <ShieldCheck className="h-4 w-4 text-acid" />
-              <span className="vibe-gradient-text">House rules</span>
+          <section className="rounded-2xl glass border border-white/10 p-4">
+            <h2 className="mb-2 flex items-center gap-1.5 font-display text-sm font-semibold text-yellow-400">
+              <ShieldCheck className="h-4 w-4" />
+              House rules
             </h2>
             <ul className="space-y-2 text-sm text-muted-foreground">
               {[
@@ -403,7 +402,7 @@ export function DetailScreen() {
                 "Bring good energy. Leave drama at home.",
               ].map((r) => (
                 <li key={r} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-acid" />
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-400" />
                   {r}
                 </li>
               ))}
@@ -417,7 +416,7 @@ export function DetailScreen() {
 
       {/* Sticky CTA — sits above the bottom nav */}
       <div className="absolute inset-x-0 bottom-[84px] z-30 mx-auto max-w-[480px] px-3">
-        <div className="glass-strong vibe-gradient-border flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_-6px_30px_-10px_rgba(0,0,0,0.6)]">
+        <div className="glass-strong border border-white/10 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_-6px_30px_-10px_rgba(0,0,0,0.6)]">
           {isOwn ? (
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -427,7 +426,7 @@ export function DetailScreen() {
                 </p>
               </div>
               <Button
-                className="rounded-full vibe-gradient-bg glow-pink transition active:scale-95"
+                className="rounded-full bg-yellow-400 text-black transition active:scale-95 hover:opacity-95"
                 onClick={() => setScreen("requests")}
               >
                 View requests
@@ -437,7 +436,7 @@ export function DetailScreen() {
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <p className="text-[11px] text-muted-foreground">Entry</p>
-                <p className="font-display text-lg font-bold text-sunshine">
+                <p className="font-display text-lg font-bold text-yellow-400">
                   {formatFee(party.fee)}
                 </p>
               </div>
@@ -445,15 +444,15 @@ export function DetailScreen() {
                 <DrawerTrigger asChild>
                   <Button
                     disabled={isFull}
-                    className="h-12 flex-[2] rounded-xl vibe-gradient-bg text-base font-semibold glow-pink transition active:scale-95 disabled:opacity-50"
+                    className="h-12 flex-[2] rounded-xl bg-yellow-400 text-base font-semibold text-black transition active:scale-95 disabled:opacity-50 hover:opacity-95"
                   >
                     {isFull ? "Sold out" : "Request to Connect ✉️"}
                   </Button>
                 </DrawerTrigger>
-                <DrawerContent className="mx-auto max-w-[480px] rounded-t-3xl border-violet/30 bg-card/95 backdrop-blur-xl">
+                <DrawerContent className="mx-auto max-w-[480px] rounded-t-3xl border-white/10 bg-card/95 backdrop-blur-xl">
                   <DrawerHeader className="text-center">
-                    <DrawerTitle className="font-display text-xl font-bold">
-                      <span className="vibe-gradient-text text-glow-pink">Request to Connect</span>
+                    <DrawerTitle className="font-display text-xl font-bold text-yellow-400">
+                      Request to Connect
                     </DrawerTitle>
                     <DrawerDescription className="text-muted-foreground">
                       Write a short intro to {party.hostName}. They'll review and
@@ -461,8 +460,8 @@ export function DetailScreen() {
                     </DrawerDescription>
                   </DrawerHeader>
                   <div className="space-y-3 px-4">
-                    <div className="rounded-2xl glass border border-violet/30 p-3">
-                      <p className="text-[11px] uppercase tracking-wide text-cyan">
+                    <div className="rounded-2xl glass border border-white/10 p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-yellow-300">
                         Tips
                       </p>
                       <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
@@ -478,7 +477,7 @@ export function DetailScreen() {
                       placeholder="Hey! Loved the description. I'm coming with a +1, big into techno…"
                       value={intro}
                       onChange={(e) => setIntro(e.target.value)}
-                      className="rounded-xl border-violet/30 bg-card/60 focus:border-cyan/60 focus:ring-cyan/25"
+                      className="rounded-xl border-white/10 bg-card focus:border-yellow-400 focus:ring-yellow-400/25"
                     />
                     <p className="text-right text-[11px] text-muted-foreground">
                       {intro.length}/240
@@ -490,7 +489,7 @@ export function DetailScreen() {
                       disabled={
                         requestMutation.isPending || intro.trim().length < 5
                       }
-                      className="h-12 rounded-xl vibe-gradient-bg text-base font-semibold glow-pink transition active:scale-95"
+                      className="h-12 rounded-xl bg-yellow-400 text-base font-semibold text-black transition active:scale-95 hover:opacity-95"
                     >
                       {requestMutation.isPending ? (
                         "Sending…"
@@ -528,7 +527,7 @@ function Fact({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl glass border border-violet/25 p-3">
+    <div className="rounded-2xl glass border border-white/10 p-3">
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
         {icon}
         {label}

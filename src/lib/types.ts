@@ -34,18 +34,17 @@ export const VIBE_EMOJI: Record<string, string> = {
   Retro: "📼",
 };
 
-// Vibe tag colors — Gen Z neon palette. Each tag gets its own neon hue so the
-// feed reads like a colorful sticker pack: cyan techno, magenta EDM, violet
-// lo-fi, lime boardgames, coral Bollywood, amber BYOB, sky chill, rose retro.
+// Vibe tag colors — Bumble monochrome: all vibes use the same yellow brand
+// accent, varied only by subtle opacity/border weight. Clean and consistent.
 export const VIBE_COLORS: Record<string, string> = {
-  Techno: "from-cyan-500/30 to-blue-600/20 text-cyan-200 border-cyan-400/50",
-  Bollywood: "from-orange-500/30 to-rose-600/20 text-orange-200 border-orange-400/50",
-  BYOB: "from-amber-400/30 to-yellow-600/20 text-amber-100 border-amber-300/50",
-  Boardgames: "from-lime-400/30 to-green-600/20 text-lime-100 border-lime-300/50",
-  "Lo-fi": "from-violet-500/30 to-purple-700/20 text-violet-200 border-violet-400/50",
-  Chill: "from-sky-400/30 to-cyan-600/20 text-sky-100 border-sky-300/50",
-  EDM: "from-pink-500/30 to-fuchsia-700/20 text-pink-200 border-pink-400/50",
-  Retro: "from-rose-500/30 to-pink-700/20 text-rose-200 border-rose-400/50",
+  Techno: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
+  Bollywood: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
+  BYOB: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
+  Boardgames: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
+  "Lo-fi": "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
+  Chill: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
+  EDM: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
+  Retro: "bg-yellow-400/15 text-yellow-300 border-yellow-400/45",
 };
 
 export interface Party {
@@ -432,11 +431,12 @@ export function funTier(score: number): FunTier {
   return "low";
 }
 
-// Tier metadata for the map pin animation — each tier is a distinct Gen Z neon.
-//   low    → cyan     (chill / low-key)
-//   warm   → violet   (warming up)
-//   lively → hot pink (lively)
-//   lit    → lime+coral (absolutely lit 🔥)
+// Tier metadata for the map pin animation — Bumble monochrome: all tiers use
+// the same yellow accent, varied by OPACITY + INTENSITY (not color).
+//   low    → faint yellow, gentle breathing
+//   warm   → soft yellow, pulsing
+//   lively → solid yellow, bouncy
+//   lit    → bright yellow, energetic bounce + sparkle ring
 export const FUN_TIER_META: Record<
   FunTier,
   {
@@ -452,43 +452,43 @@ export const FUN_TIER_META: Record<
 > = {
   low: {
     label: "Low-key",
-    ringClass: "border-cyan-400/60",
+    ringClass: "border-yellow-400/50",
     animClass: "fun-breathe",
-    glowClass: "shadow-[0_0_14px_-3px_rgba(0,240,255,0.65)]",
-    dotClass: "bg-cyan-400",
-    textClass: "text-cyan-200",
-    chipClass: "bg-cyan-500/15 text-cyan-200 border-cyan-400/40",
-    sparkClass: "bg-cyan-300",
+    glowClass: "shadow-[0_0_12px_-3px_rgba(255,203,5,0.45)]",
+    dotClass: "bg-yellow-400/70",
+    textClass: "text-yellow-300",
+    chipClass: "bg-yellow-400/10 text-yellow-300 border-yellow-400/40",
+    sparkClass: "bg-yellow-300",
   },
   warm: {
     label: "Warming up",
-    ringClass: "border-violet-400/70",
+    ringClass: "border-yellow-400/65",
     animClass: "fun-pulse",
-    glowClass: "shadow-[0_0_18px_-3px_rgba(157,78,221,0.75)]",
-    dotClass: "bg-violet-400",
-    textClass: "text-violet-200",
-    chipClass: "bg-violet-500/15 text-violet-200 border-violet-400/40",
-    sparkClass: "bg-violet-300",
+    glowClass: "shadow-[0_0_16px_-3px_rgba(255,203,5,0.6)]",
+    dotClass: "bg-yellow-400",
+    textClass: "text-yellow-300",
+    chipClass: "bg-yellow-400/15 text-yellow-300 border-yellow-400/50",
+    sparkClass: "bg-yellow-300",
   },
   lively: {
     label: "Lively",
-    ringClass: "border-pink-400/75",
+    ringClass: "border-yellow-400/80",
     animClass: "fun-bounce",
-    glowClass: "shadow-[0_0_22px_-3px_rgba(255,46,151,0.85)]",
-    dotClass: "bg-pink-400",
-    textClass: "text-pink-200",
-    chipClass: "bg-pink-500/15 text-pink-200 border-pink-400/45",
-    sparkClass: "bg-pink-300",
+    glowClass: "shadow-[0_0_20px_-3px_rgba(255,203,5,0.8)]",
+    dotClass: "bg-yellow-400",
+    textClass: "text-yellow-300",
+    chipClass: "bg-yellow-400/20 text-yellow-200 border-yellow-400/60",
+    sparkClass: "bg-yellow-300",
   },
   lit: {
     label: "Lit 🔥",
-    ringClass: "border-lime-300/80",
+    ringClass: "border-yellow-300",
     animClass: "fun-lit",
-    glowClass: "shadow-[0_0_26px_-2px_rgba(199,255,0,0.95)]",
-    dotClass: "bg-lime-300",
-    textClass: "text-lime-200",
-    chipClass: "bg-lime-400/15 text-lime-100 border-lime-300/50",
-    sparkClass: "bg-orange-400",
+    glowClass: "shadow-[0_0_24px_-2px_rgba(255,203,5,0.95)]",
+    dotClass: "bg-yellow-300",
+    textClass: "text-yellow-200",
+    chipClass: "bg-yellow-400/25 text-yellow-100 border-yellow-300",
+    sparkClass: "bg-yellow-300",
   },
 };
 

@@ -31,22 +31,19 @@ export function InboxScreen() {
 
   return (
     <div className="flex h-full flex-col animate-screen-in">
-      <header className="sticky top-0 z-20 glass-strong border-b border-border/60 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)]">
-        <div className="pointer-events-none absolute inset-x-0 -top-10 h-24 overflow-hidden">
-          <div className="absolute left-1/2 top-0 h-24 w-64 -translate-x-1/2 rounded-full bg-pink/25 blur-3xl" />
-        </div>
+      <header className="sticky top-0 z-20 glass-strong border-b border-white/10 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)]">
         <div className="relative flex items-center justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-cyan/80">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">
               Messages
             </p>
-            <h1 className="font-display text-2xl font-extrabold">
-              <span className="vibe-gradient-text">Inbox</span>
+            <h1 className="font-display text-2xl font-extrabold text-yellow-400">
+              Inbox
             </h1>
           </div>
           <button
             onClick={() => setScreen("home")}
-            className="flex h-10 items-center gap-1.5 rounded-full border border-border/60 glass px-3 text-xs font-medium text-foreground/90 transition hover:border-cyan/40 hover:text-cyan"
+            className="flex h-10 items-center gap-1.5 rounded-full border border-white/10 bg-card px-3 text-xs font-medium text-white/80 transition hover:border-yellow-400/50 hover:text-yellow-300"
           >
             <Search className="h-4 w-4" /> Find
           </button>
@@ -79,7 +76,7 @@ export function InboxScreen() {
             action={
               <button
                 onClick={() => setScreen("home")}
-                className="rounded-full vibe-gradient-bg px-4 py-2 text-sm font-semibold text-white glow-pink"
+                className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
               >
                 Explore parties
               </button>
@@ -98,13 +95,12 @@ export function InboxScreen() {
                   <button
                     onClick={() => openThread(t.id)}
                     className={cn(
-                      "group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition glass vibe-gradient-border press-feedback",
-                      unread ? "glow-pink" : "hover:glow-violet",
+                      "group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition glass press-feedback",
+                      unread ? "border border-yellow-400/50" : "border border-white/10 hover:border-yellow-400/40",
                     )}
                   >
                     <div className="relative">
-                      <span className="absolute -inset-0.5 rounded-full vibe-gradient-bg opacity-80 blur-[1px]" />
-                      <span className="relative block rounded-full ring-2 ring-background">
+                      <span className="relative block rounded-full ring-2 ring-yellow-400/60">
                         <UserAvatar
                           name={t.otherUser?.name || "User"}
                           src={t.otherUser?.avatarUrl}
@@ -112,7 +108,7 @@ export function InboxScreen() {
                         />
                       </span>
                       {unread && (
-                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink px-1 text-[10px] font-bold text-white vibe-live-ring ring-2 ring-background">
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow-400 px-1 text-[10px] font-bold text-black vibe-live-ring ring-2 ring-background">
                           {t.unreadCount}
                         </span>
                       )}
@@ -122,12 +118,12 @@ export function InboxScreen() {
                         <p
                           className={cn(
                             "truncate text-sm",
-                            unread ? "font-bold text-foreground" : "font-semibold text-foreground/90",
+                            unread ? "font-bold text-white" : "font-semibold text-white/90",
                           )}
                         >
                           {t.otherUser?.name || "Unknown"}
                         </p>
-                        <span className="shrink-0 text-[11px] font-medium text-cyan/80">
+                        <span className="shrink-0 text-[11px] font-medium text-white/50">
                           {last ? relativeTime(last.createdAt) : ""}
                         </span>
                       </div>
