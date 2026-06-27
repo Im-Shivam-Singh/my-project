@@ -74,14 +74,14 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
         "group relative w-full cursor-pointer overflow-hidden rounded-3xl text-left transition-all duration-300 press-feedback",
         "glass vibe-gradient-border",
         "hover:-translate-y-1 hover:glow-gold",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/60",
-        isLive && "ring-1 ring-yellow-400/40 glow-gold",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60",
+        isLive && "ring-1 ring-amber-400/40 glow-gold",
         className,
       )}
     >
       {/* Live now accent strip on top edge */}
       {isLive && (
-        <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-yellow-400 animate-pulse" />
+        <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-amber-400 animate-pulse" />
       )}
 
       {/* Cover */}
@@ -94,14 +94,14 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full bg-yellow-400/15" />
+          <div className="h-full w-full bg-amber-400/15" />
         )}
 
         {/* Top chips */}
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3">
           <div className="flex flex-col gap-1.5">
             {featured && (
-              <span className="inline-flex w-fit items-center gap-1 rounded-full bg-yellow-400 px-2 py-0.5 text-[10px] font-bold text-black">
+              <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-black">
                 <Flame className="h-3 w-3" strokeWidth={2.5} />
                 Featured
               </span>
@@ -112,8 +112,8 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
                 isFull
                   ? "bg-white/10 text-muted-foreground border border-white/15"
                   : isLow
-                    ? "bg-yellow-400 text-black"
-                    : "bg-yellow-400/15 text-yellow-300 border border-yellow-400/40",
+                    ? "bg-amber-400 text-black"
+                    : "bg-amber-400/15 text-amber-300 border border-amber-400/40",
               )}
             >
               {isFull ? "Sold out" : isLow ? `Only ${left} left` : `${left} slots`}
@@ -128,14 +128,14 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
             className={cn(
               "relative flex h-9 w-9 items-center justify-center rounded-full border transition active:scale-90",
               saved
-                ? "bg-yellow-400/20 border-yellow-400/60"
-                : "bg-black/55 border-white/15 hover:bg-black/75 hover:border-yellow-400/40",
+                ? "bg-amber-400/20 border-amber-400/60"
+                : "bg-black/55 border-white/15 hover:bg-black/75 hover:border-amber-400/40",
             )}
           >
             <Heart
               className={cn(
                 "h-4 w-4 transition",
-                saved ? "fill-yellow-400 text-yellow-400" : "text-foreground/80",
+                saved ? "fill-amber-400 text-amber-400" : "text-foreground/80",
               )}
             />
           </button>
@@ -143,7 +143,7 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
 
         {/* Bottom-left: fee badge on cover */}
         <div className="absolute bottom-3 left-3">
-          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-400 px-3 py-1 text-sm font-bold text-black">
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-sm font-bold text-black">
             <IndianRupee className="h-3.5 w-3.5" strokeWidth={2.5} />
             {formatFee(party.fee)}
           </span>
@@ -167,18 +167,18 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
 
         {/* Metadata grid — all icons yellow */}
         <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
-          <Meta icon={<MapPin className="h-3.5 w-3.5 text-yellow-400" />}>
+          <Meta icon={<MapPin className="h-3.5 w-3.5 text-amber-400" />}>
             <span className="truncate">
               {party.area}, {party.city}
             </span>
           </Meta>
-          <Meta icon={<Calendar className="h-3.5 w-3.5 text-yellow-400" />}>
+          <Meta icon={<Calendar className="h-3.5 w-3.5 text-amber-400" />}>
             {formatDateLabel(party.date)}
           </Meta>
-          <Meta icon={<Clock className="h-3.5 w-3.5 text-yellow-400" />}>
+          <Meta icon={<Clock className="h-3.5 w-3.5 text-amber-400" />}>
             {formatTime(party.time)}
           </Meta>
-          <Meta icon={<Users className="h-3.5 w-3.5 text-yellow-400" />}>
+          <Meta icon={<Users className="h-3.5 w-3.5 text-amber-400" />}>
             {party.guestCount}/{party.maxGuests} going
           </Meta>
         </div>
@@ -186,7 +186,7 @@ export function PartyCard({ party, onOpen, className }: PartyCardProps) {
         {/* Footer: host + going avatars */}
         <div className="flex items-center justify-between gap-2 border-t border-white/10 pt-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 shrink-0 text-yellow-400" />
+            <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400" />
             <span className="truncate">
               <span className="text-muted-foreground/70">by</span>{" "}
               <span className="font-medium text-foreground">{party.hostName}</span>

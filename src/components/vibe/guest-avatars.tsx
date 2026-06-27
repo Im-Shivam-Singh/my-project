@@ -12,8 +12,8 @@ interface GuestAvatarsProps {
 
 /**
  * Overlapping avatar stack showing who's going. Renders up to `max` avatars
- * then a "+N" pill if total exceeds the shown count. All rings are the same
- * Bumble yellow — no rotating color cycle.
+ * then a "+N" pill if total exceeds the shown count. All rings are purple
+ * to match the VibeMatch brand palette.
  */
 export function GuestAvatars({
   avatars,
@@ -32,7 +32,7 @@ export function GuestAvatars({
         {shown.map((src, i) => (
           <span
             key={i}
-            className="relative overflow-hidden rounded-full ring-2 ring-yellow-400/60 ring-offset-1 ring-offset-background bg-card"
+            className="relative overflow-hidden rounded-full ring-2 ring-purple-500/60 ring-offset-1 ring-offset-background bg-card"
             style={{
               width: size,
               height: size,
@@ -51,7 +51,7 @@ export function GuestAvatars({
       </div>
       {extra > 0 && (
         <span
-          className="flex items-center justify-center rounded-full bg-yellow-400 text-[10px] font-bold text-black ring-2 ring-card ring-offset-1 ring-offset-background"
+          className="flex items-center justify-center rounded-full bg-purple-500 text-[10px] font-bold text-white ring-2 ring-card ring-offset-1 ring-offset-background"
           style={{
             width: size,
             height: size,

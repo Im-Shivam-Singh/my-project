@@ -25,9 +25,12 @@ import {
   slotsLeft,
   partyLiveStatus,
   currencyForCity,
+  CITY_CENTERS,
+  haversineKm,
   type Party,
 } from "@/lib/types";
 import { EmptyState } from "@/components/vibe/empty-state";
+import { MusicPlayerButton } from "@/components/vibe/music-player";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -71,7 +74,19 @@ export function HomeScreen() {
       }),
   });
 
-  const parties = data?.parties ?? [];
+  // Radius filter — when the user has selected a city + set a nearby radius,
+  // narrow the feed to parties within that distance of the city center.
+  const radiusKm = useAppStore((s) => s.radiusKm);
+  const allParties = data?.parties ?? [];
+  const parties = useMemo(() => {
+    if (!cityFilter || radiusKm === 0) return allParties;
+    const center = CITY_CENTERS[cityFilter];
+    if (!center) return allParties;
+    return allParties.filter((p) => {
+      if (p.lat == null || p.lng == null) return false;
+      return haversineKm(center, { lat: p.lat, lng: p.lng }) <= radiusKm;
+    });
+  }, [allParties, cityFilter, radiusKm]);
 
   const hotTonight = useMemo(
     () =>
@@ -110,6 +125,7 @@ export function HomeScreen() {
             Vibe<span className="text-purple-400">Match</span>
           </div>
           <div className="flex items-center gap-2">
+            <MusicPlayerButton />
             <button
               onClick={() => setScreen("filter")}
               aria-label="Filter parties"

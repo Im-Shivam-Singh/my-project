@@ -244,7 +244,7 @@ export function ChatScreen() {
             onClick={() => toast.info("Profile view coming soon")}
             className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
           >
-            <span className="relative block rounded-full ring-2 ring-yellow-400/60">
+            <span className="relative block rounded-full ring-2 ring-purple-500/60">
               <UserAvatar name={other.name} src={other.avatarUrl} size={40} />
             </span>
             <div className="min-w-0">
@@ -253,9 +253,9 @@ export function ChatScreen() {
                 className={cn(
                   "flex items-center gap-1 text-[11px] font-medium",
                   isTyping
-                    ? "text-yellow-400"
+                    ? "text-purple-500"
                     : online
-                      ? "text-yellow-400"
+                      ? "text-purple-500"
                       : "text-white/50",
                 )}
               >
@@ -264,7 +264,7 @@ export function ChatScreen() {
                 ) : (
                   <>
                     {online && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
                     )}
                     {online ? "Online now" : "Active recently"}
                   </>
@@ -303,7 +303,7 @@ export function ChatScreen() {
       >
         {/* Intro banner */}
         <div className="mb-5 flex flex-col items-center gap-2.5 rounded-2xl glass border border-white/10 p-5 text-center vibe-float">
-          <span className="relative block rounded-full ring-2 ring-yellow-400/60">
+          <span className="relative block rounded-full ring-2 ring-purple-500/60">
             <UserAvatar name={other.name} src={other.avatarUrl} size={64} />
           </span>
           <div className="flex items-center gap-2">
@@ -315,8 +315,8 @@ export function ChatScreen() {
               {other.bio}
             </p>
           )}
-          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-yellow-400/15 px-3 py-1 text-[11px] font-medium text-yellow-300 ring-1 ring-yellow-400/30">
-            <Sparkles className="h-3 w-3 text-yellow-400" />
+          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-purple-500/15 px-3 py-1 text-[11px] font-medium text-purple-300 ring-1 ring-purple-500/30">
+            <Sparkles className="h-3 w-3 text-purple-500" />
             You connected over a party. Be kind, be safe.
           </p>
         </div>
@@ -363,9 +363,9 @@ export function ChatScreen() {
                       className={cn(
                         "cursor-pointer rounded-2xl px-3 py-2 text-sm transition",
                         mine
-                          ? "rounded-br-md bg-yellow-400 text-black"
+                          ? "rounded-br-md bg-purple-500 text-black"
                           : "rounded-bl-md glass text-white ring-1 ring-white/10",
-                        reactingFor === m.id && "ring-2 ring-yellow-400/70",
+                        reactingFor === m.id && "ring-2 ring-purple-500/70",
                       )}
                     >
                       <p className="whitespace-pre-line break-words">
@@ -380,7 +380,7 @@ export function ChatScreen() {
                         {relativeTime(m.createdAt)}
                         {mine &&
                           (m.read ? (
-                            <CheckCheck className="h-3 w-3 text-yellow-700" />
+                            <CheckCheck className="h-3 w-3 text-purple-700" />
                           ) : (
                             <Check className="h-3 w-3" />
                           ))}
@@ -398,7 +398,7 @@ export function ChatScreen() {
                         {reactionEntries.map(([emoji, count]) => (
                           <span
                             key={emoji}
-                            className="inline-flex items-center gap-0.5 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-1.5 py-0.5 text-[11px]"
+                            className="inline-flex items-center gap-0.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-1.5 py-0.5 text-[11px]"
                           >
                             {emoji} {count > 1 && count}
                           </span>
@@ -439,9 +439,9 @@ export function ChatScreen() {
           <div className="flex items-end gap-2">
             <UserAvatar name={other.name} src={other.avatarUrl} size={24} />
             <div className="flex gap-1 rounded-2xl rounded-bl-md glass px-3 py-2.5 ring-1 ring-white/10">
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-yellow-400 [animation-delay:-0.3s]" />
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-yellow-400 [animation-delay:-0.15s]" />
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-yellow-400" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-purple-500 [animation-delay:-0.3s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-purple-500 [animation-delay:-0.15s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-purple-500" />
             </div>
           </div>
         )}
@@ -456,7 +456,7 @@ export function ChatScreen() {
               <button
                 key={q}
                 onClick={() => send(q)}
-                className="shrink-0 rounded-full glass px-3 py-1.5 text-xs text-white/80 ring-1 ring-white/10 transition hover:ring-yellow-400/50 hover:text-yellow-300"
+                className="shrink-0 rounded-full glass px-3 py-1.5 text-xs text-white/80 ring-1 ring-white/10 transition hover:ring-purple-500/50 hover:text-purple-300"
               >
                 {q}
               </button>
@@ -472,7 +472,7 @@ export function ChatScreen() {
                   send(e);
                   setShowEmoji(false);
                 }}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:scale-125 hover:bg-yellow-400/15"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:scale-125 hover:bg-purple-500/15"
               >
                 {e}
               </button>
@@ -484,7 +484,7 @@ export function ChatScreen() {
             onClick={() => setShowEmoji((s) => !s)}
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-full transition",
-              showEmoji ? "bg-yellow-400/15 text-yellow-300" : "text-muted-foreground hover:bg-white/10 hover:text-white",
+              showEmoji ? "bg-purple-500/15 text-purple-300" : "text-muted-foreground hover:bg-white/10 hover:text-white",
             )}
             aria-label="Emoji"
           >
@@ -500,12 +500,12 @@ export function ChatScreen() {
               }
             }}
             placeholder={`Message ${other.name.split(" ")[0]}…`}
-            className="h-10 flex-1 rounded-full border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
+            className="h-10 flex-1 rounded-full border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-purple-500/60 focus-visible:border-purple-500"
           />
           <button
             onClick={() => send()}
             disabled={!text.trim()}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-400 text-black transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500 text-black transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
             aria-label="Send"
           >
             <Send className="h-4 w-4" />
@@ -520,7 +520,7 @@ export function ChatScreen() {
           className="mx-auto max-w-[480px] rounded-t-3xl border-white/10 glass-strong"
         >
           <SheetHeader>
-            <SheetTitle className="font-display text-yellow-400">
+            <SheetTitle className="font-display text-purple-500">
               {other.name}
             </SheetTitle>
             <SheetDescription className="sr-only">
@@ -562,7 +562,7 @@ export function ChatScreen() {
         <DialogContent className="max-w-[420px] rounded-3xl border-white/10 glass-strong">
           <DialogHeader>
             <DialogTitle className="font-display text-white">
-              Report <span className="text-yellow-400">{other.name}</span>?
+              Report <span className="text-purple-500">{other.name}</span>?
             </DialogTitle>
             <DialogDescription>
               Help us keep VibeMatch safe. Our team reviews every report.
@@ -582,12 +582,12 @@ export function ChatScreen() {
                 className={cn(
                   "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition glass",
                   reportReason === r
-                    ? "border-yellow-400 ring-1 ring-yellow-400/50 text-yellow-300"
-                    : "border-white/10 hover:border-yellow-400/40",
+                    ? "border-purple-500 ring-1 ring-purple-500/50 text-purple-300"
+                    : "border-white/10 hover:border-purple-500/40",
                 )}
               >
                 {r}
-                {reportReason === r && <Check className="h-4 w-4 text-yellow-400" />}
+                {reportReason === r && <Check className="h-4 w-4 text-purple-500" />}
               </button>
             ))}
           </div>

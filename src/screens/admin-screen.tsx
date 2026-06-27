@@ -238,7 +238,7 @@ export function AdminScreen() {
         {pendingCount > 0 && (
           <div className="amber-foil flex items-center gap-2 rounded-2xl p-3">
             <span className="text-base leading-none">⚠</span>
-            <p className="text-sm font-medium text-amber-300">
+            <p className="text-sm font-medium text-purple-300">
               {pendingCount} {pendingCount === 1 ? "guest" : "guests"} waiting
               for approval
             </p>

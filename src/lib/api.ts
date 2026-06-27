@@ -208,4 +208,23 @@ export const api = {
   // tickets
   listTickets: (userId: string) =>
     jfetch<{ tickets: Ticket[] }>(`/api/tickets?userId=${userId}`),
+
+  // ===== Guest TRUST ratings (host → guest) =====
+  getTrustRatings: (guestId: string) =>
+    jfetch<{
+      ratings: any[];
+      trustScore: number;
+      trustCount: number;
+    }>(`/api/trust-ratings?guestId=${guestId}`),
+  createTrustRating: (input: {
+    partyId: string;
+    hostId: string;
+    guestId: string;
+    rating: number;
+    note?: string;
+  }) =>
+    jfetch<{ trust: any; trustScore: number }>(`/api/trust-ratings`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
 };

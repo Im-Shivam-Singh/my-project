@@ -20,6 +20,9 @@ function serialize(p: any): Party {
     lat: p.lat,
     lng: p.lng,
     guestCount: p.guestCount,
+    securityBooked: p.securityBooked,
+    securityFee: p.securityFee,
+    securityStatus: p.securityStatus,
     createdAt: p.createdAt.toISOString(),
   };
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   Users,
@@ -9,6 +9,8 @@ import {
   Clock,
   ShoppingBag,
   ScanLine,
+  Star,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -351,6 +353,20 @@ export function HostDashboardScreen() {
           )}
         </section>
 
+        {/* ── Rate guests TRUST ───────────────────────────────────────
+            Hosts give each guest a TRUST score (1..5) after the party.
+            This is the "assurity" signal for future hosts. */}
+        {acceptedRequests.length > 0 && (
+          <TrustRatingSection
+            partyId={selectedPartyId!}
+            hostId={currentUser?.id ?? ""}
+            guests={acceptedRequests.map((r) => ({
+              guestId: r.requesterId ?? "",
+              guestName: r.requesterName,
+            }))}
+          />
+        )}
+
         {/* ── Prep list ─────────────────────────────────────────── */}
         <section className="space-y-3">
           <span className="eyebrow">Prep list — buy exactly this</span>
@@ -564,5 +580,119 @@ function HostDashboardSkeleton() {
         <Skeleton className="h-12 w-full rounded-2xl vibe-skeleton" />
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// TrustRatingSection — hosts rate each guest's TRUST (1..5) after a party.
+// The rating is persisted via POST /api/trust-ratings and aggregated on the
+// guest's profile as an assurity signal for future hosts.
+// ─────────────────────────────────────────────────────────────────────
+function TrustRatingSection({
+  partyId,
+  hostId,
+  guests,
+}: {
+  partyId: string;
+  hostId: string;
+  guests: { guestId: string; guestName: string }[];
+}) {
+  const qc = useQueryClient();
+  const [ratings, setRatings] = useState<Record<string, { score: number; saved: boolean }>>({});
+
+  const mutation = useMutation({
+    mutationFn: (input: { guestId: string; guestName: string; rating: number }) =>
+      api.createTrustRating({
+        partyId,
+        hostId,
+        guestId: input.guestId,
+        rating: input.rating,
+      }),
+    onSuccess: (_data, vars) => {
+      setRatings((prev) => ({
+        ...prev,
+        [vars.guestId]: { score: vars.rating, saved: true },
+      }));
+      qc.invalidateQueries({ queryKey: ["party", partyId] });
+      toast.success(`TRUST rating saved for ${vars.guestName}`, {
+        description: "Helps future hosts know they're reliable.",
+        duration: 2500,
+      });
+    },
+    onError: (err: Error) => {
+      toast.error("Couldn't save rating", { description: err.message });
+    },
+  });
+
+  const setScore = (guestId: string, guestName: string, score: number) => {
+    setRatings((prev) => ({
+      ...prev,
+      [guestId]: { score, saved: false },
+    }));
+    mutation.mutate({ guestId, guestName, rating: score });
+  };
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="eyebrow inline-flex items-center gap-1.5">
+          <ShieldCheck className="h-3.5 w-3.5 text-teal-400" />
+          Rate guests · TRUST
+        </span>
+        <span className="text-[10px] text-muted-foreground">Hosts only</span>
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground -mt-1">
+        Give each guest a TRUST score. This helps future hosts know who's
+        reliable — your assurity signal to the community.
+      </p>
+      <div className="space-y-2">
+        {guests
+          .filter((g) => g.guestId && g.guestId !== hostId)
+          .map((g) => {
+            const state = ratings[g.guestId];
+            return (
+              <div
+                key={g.guestId}
+                className="flex items-center gap-3 rounded-2xl glass p-3"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-500/20 text-sm font-bold text-teal-200">
+                  {g.guestName?.slice(0, 1).toUpperCase() ?? "?"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {g.guestName}
+                  </p>
+                  {state?.saved && (
+                    <p className="text-[10px] text-teal-300">✓ Rated</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-0.5">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const active = (state?.score ?? 0) >= star;
+                    return (
+                      <button
+                        key={star}
+                        onClick={() => setScore(g.guestId, g.guestName, star)}
+                        disabled={mutation.isPending}
+                        aria-label={`Rate ${g.guestName} ${star} stars`}
+                        className="p-0.5 transition active:scale-90 disabled:opacity-50"
+                      >
+                        <Star
+                          className={cn(
+                            "h-4 w-4 transition",
+                            active
+                              ? "fill-teal-400 text-teal-400"
+                              : "text-muted-foreground/40 hover:text-teal-400/60",
+                          )}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+      </div>
+    </section>
   );
 }

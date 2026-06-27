@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ImagePlus, CalendarDays, Clock, IndianRupee, Users, Check, Sparkles } from "lucide-react";
+import { ChevronLeft, ImagePlus, CalendarDays, Clock, IndianRupee, Users, Check, Sparkles, ShieldCheck, Info } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -55,9 +55,23 @@ export function CreateScreen() {
     description: "",
     hostName: currentUser?.name || "You",
     coverUrl: COVER_PRESETS[0],
+    securityBooked: false,
+    securityFee: 0,
   });
 
   const [submitting, setSubmitting] = useState(false);
+
+  // Security fee is city-dependent: £40-60 for UK, ₹800-1500 for India.
+  // We pick the midpoint of the range as the default when the host toggles
+  // the bouncer add-on on.
+  const isIndia = ["Delhi", "Mumbai", "Bangalore", "Goa", "Pune"].includes(
+    form.city,
+  );
+  const securityFeeDefault = isIndia ? 1000 : 50;
+  const securityFeeMin = isIndia ? 800 : 40;
+  const securityFeeMax = isIndia ? 1500 : 60;
+  const currency = isIndia ? "₹" : "£";
+  const platformFeePct = 18; // 15-20% — we show 18% as the midpoint
 
   const set = <K extends keyof PartyCreateInput>(k: K, v: PartyCreateInput[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -109,14 +123,14 @@ export function CreateScreen() {
       <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-white/10 glass px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
         <button
           onClick={goBack}
-          className="flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 text-white hover:bg-yellow-400/10 active:scale-95 transition"
+          className="flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 text-white hover:bg-purple-400/10 active:scale-95 transition"
           aria-label="Back"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
           <h1 className="font-display text-lg font-bold leading-tight">
-            Launch a <span className="text-yellow-400">Vibe</span>
+            Launch a <span className="text-purple-400">Vibe</span>
           </h1>
           <p className="text-[11px] text-muted-foreground">
             Fill the details and go live in seconds
@@ -125,14 +139,14 @@ export function CreateScreen() {
       </header>
 
       <div className="fancy-scrollbar flex-1 overflow-y-auto p-4">
-        <div className="glass-strong rounded-3xl border border-yellow-400/40 p-4 space-y-6">
+        <div className="glass-strong rounded-3xl border border-purple-400/40 p-4 space-y-6">
           {/* Cover preview */}
           <section className="space-y-2">
             <Label className="text-xs uppercase tracking-wide text-white flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" aria-hidden />
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
               Cover
             </Label>
-            <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-yellow-400/40">
+            <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-purple-400/40">
               {form.coverUrl && (
                 <img
                   src={form.coverUrl}
@@ -140,9 +154,9 @@ export function CreateScreen() {
                   className="h-full w-full object-cover"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-yellow-400/10" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-purple-400/10" />
               <div className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full glass border border-white/10 px-2 py-1 text-[10px] text-foreground backdrop-blur">
-                <ImagePlus className="h-3 w-3 text-yellow-300" /> Tap a preset below
+                <ImagePlus className="h-3 w-3 text-purple-300" /> Tap a preset below
               </div>
             </div>
             <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
@@ -153,13 +167,13 @@ export function CreateScreen() {
                   className={cn(
                     "relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border transition active:scale-95",
                     form.coverUrl === url
-                      ? "border-yellow-400 ring-2 ring-yellow-400/50"
-                      : "border-white/10 hover:border-yellow-400/40",
+                      ? "border-purple-400 ring-2 ring-purple-400/50"
+                      : "border-white/10 hover:border-purple-400/40",
                   )}
                 >
                   <img src={url} alt="" className="h-full w-full object-cover" />
                   {form.coverUrl === url && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-yellow-400/30">
+                    <span className="absolute inset-0 flex items-center justify-center bg-purple-400/30">
                       <Check className="h-4 w-4 text-white" />
                     </span>
                   )}
@@ -171,7 +185,7 @@ export function CreateScreen() {
           {/* Title */}
           <section className="space-y-1.5">
             <Label htmlFor="title" className="text-white flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" aria-hidden />
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
               Party title
             </Label>
             <Input
@@ -179,7 +193,7 @@ export function CreateScreen() {
               placeholder="e.g. Neon Rooftop: Techno Till Dawn"
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
-              className="h-12 rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
+              className="h-12 rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
               maxLength={80}
             />
           </section>
@@ -188,13 +202,13 @@ export function CreateScreen() {
           <section className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-white flex items-center gap-1.5">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" aria-hidden />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
                 City
               </Label>
               <select
                 value={form.city}
                 onChange={(e) => set("city", e.target.value)}
-                className="h-12 w-full rounded-xl border border-white/10 bg-card px-3 text-sm text-foreground outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
+                className="h-12 w-full rounded-xl border border-white/10 bg-card px-3 text-sm text-foreground outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
               >
                 {CITIES.map((c) => (
                   <option key={c} value={c} className="bg-card">
@@ -205,7 +219,7 @@ export function CreateScreen() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="area" className="text-white flex items-center gap-1.5">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" aria-hidden />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
                 Area
               </Label>
               <Input
@@ -213,7 +227,7 @@ export function CreateScreen() {
                 placeholder="Bandra West"
                 value={form.area}
                 onChange={(e) => set("area", e.target.value)}
-                className="h-12 rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
+                className="h-12 rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
               />
             </div>
           </section>
@@ -222,24 +236,24 @@ export function CreateScreen() {
           <section className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="flex items-center gap-1.5 text-white">
-                <CalendarDays className="h-3.5 w-3.5 text-yellow-400" /> Date
+                <CalendarDays className="h-3.5 w-3.5 text-purple-400" /> Date
               </Label>
               <Input
                 type="date"
                 value={form.date}
                 onChange={(e) => set("date", e.target.value)}
-                className="h-12 rounded-xl border-white/10 bg-card text-foreground focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
+                className="h-12 rounded-xl border-white/10 bg-card text-foreground focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
               />
             </div>
             <div className="space-y-1.5">
               <Label className="flex items-center gap-1.5 text-white">
-                <Clock className="h-3.5 w-3.5 text-yellow-400" /> Time
+                <Clock className="h-3.5 w-3.5 text-purple-400" /> Time
               </Label>
               <Input
                 type="time"
                 value={form.time}
                 onChange={(e) => set("time", e.target.value)}
-                className="h-12 rounded-xl border-white/10 bg-card text-foreground focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
+                className="h-12 rounded-xl border-white/10 bg-card text-foreground focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
               />
             </div>
           </section>
@@ -247,7 +261,7 @@ export function CreateScreen() {
           {/* Entry type quick */}
           <section className="space-y-2">
             <Label className="text-white flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" aria-hidden />
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
               Entry type
             </Label>
             <div className="grid grid-cols-3 gap-2">
@@ -260,8 +274,8 @@ export function CreateScreen() {
                     className={cn(
                       "rounded-xl border px-3 py-2 text-left transition active:scale-95",
                       active
-                        ? "border-yellow-400 bg-yellow-400/10"
-                        : "border-white/10 bg-card hover:border-yellow-400/40",
+                        ? "border-purple-400 bg-purple-400/10"
+                        : "border-white/10 bg-card hover:border-purple-400/40",
                     )}
                   >
                     <div className="text-xs font-semibold">{t.label}</div>
@@ -273,13 +287,13 @@ export function CreateScreen() {
               })}
             </div>
             <div className="relative">
-              <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-yellow-400" />
+              <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-400" />
               <Input
                 type="number"
                 min={0}
                 value={form.fee}
                 onChange={(e) => set("fee", Number(e.target.value) || 0)}
-                className="h-11 rounded-xl border-white/10 bg-card pl-9 text-foreground focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
+                className="h-11 rounded-xl border-white/10 bg-card pl-9 text-foreground focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
               />
             </div>
           </section>
@@ -287,7 +301,7 @@ export function CreateScreen() {
           {/* Max guests */}
           <section className="space-y-2">
             <Label className="flex items-center gap-1.5 text-white">
-              <Users className="h-3.5 w-3.5 text-yellow-400" /> Max guests
+              <Users className="h-3.5 w-3.5 text-purple-400" /> Max guests
             </Label>
             <div className="flex items-center gap-3">
               <input
@@ -308,16 +322,155 @@ export function CreateScreen() {
                   } as React.CSSProperties
                 }
               />
-              <span className="w-12 rounded-lg border border-white/10 bg-card py-1.5 text-center text-sm font-semibold text-yellow-400">
+              <span className="w-12 rounded-lg border border-white/10 bg-card py-1.5 text-center text-sm font-semibold text-purple-400">
                 {form.maxGuests}
               </span>
             </div>
           </section>
 
+          {/* ── Security / Bouncer booking add-on ──────────────────────
+              Hosts can opt in to add a verified security person for the
+              night. £40-60 (UK) / ₹800-1500 (India) for 4 hours. Platform
+              takes 15-20% booking fee; bouncer gets the rest after the event.
+              This is a major trust signal — especially for women guests. */}
+          <section className="space-y-2">
+            <Label className="text-white flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-teal-400" />
+              Security add-on (optional)
+            </Label>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !form.securityBooked;
+                setForm((f) => ({
+                  ...f,
+                  securityBooked: next,
+                  securityFee: next ? securityFeeDefault : 0,
+                }));
+              }}
+              aria-pressed={form.securityBooked}
+              className={cn(
+                "w-full rounded-2xl border p-3.5 text-left transition active:scale-[0.98]",
+                form.securityBooked
+                  ? "border-teal-500/50 bg-teal-500/10 ring-1 ring-teal-500/30"
+                  : "border-white/10 bg-white/5 hover:border-teal-500/40",
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                    form.securityBooked
+                      ? "bg-teal-500/20 text-teal-300"
+                      : "bg-white/5 text-muted-foreground",
+                  )}
+                >
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      Add a verified security person
+                    </p>
+                    <span
+                      className={cn(
+                        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                        form.securityBooked ? "bg-teal-500" : "bg-secondary",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-1 left-1 h-4 w-4 rounded-full bg-white transition-transform",
+                          form.securityBooked && "translate-x-5",
+                        )}
+                      />
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                    {currency}{securityFeeMin}–{currency}{securityFeeMax} for 4 hours ·
+                    platform takes {platformFeePct}% · bouncer paid after event
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            {form.securityBooked && (
+              <div className="animate-screen-in rounded-2xl border border-teal-500/20 bg-teal-500/5 p-3.5 space-y-3">
+                {/* Why this matters */}
+                <div className="flex items-start gap-2">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-400" />
+                  <p className="text-[11px] leading-relaxed text-teal-200/80">
+                    <span className="font-semibold">Why add security?</span> A
+                    verified bouncer lets you confidently host 20-25 guests
+                    instead of capping at 12. Women guests especially trust
+                    parties with on-site security — it could be the difference
+                    between someone joining or not.
+                  </p>
+                </div>
+
+                {/* Fee slider */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      Security fee
+                    </span>
+                    <span className="text-sm font-semibold text-teal-300 tabular-nums">
+                      {currency}{form.securityFee || securityFeeDefault}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={securityFeeMin}
+                    max={securityFeeMax}
+                    step={isIndia ? 50 : 5}
+                    value={form.securityFee || securityFeeDefault}
+                    onChange={(e) =>
+                      set("securityFee", Number(e.target.value))
+                    }
+                    aria-label="Security fee"
+                    className="mt-2 h-1.5 w-full cursor-pointer accent-teal-500"
+                  />
+                  <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+                    <span>{currency}{securityFeeMin}</span>
+                    <span>{currency}{securityFeeMax}</span>
+                  </div>
+                </div>
+
+                {/* Breakdown */}
+                <div className="rounded-xl bg-white/5 p-2.5 text-[11px] space-y-1">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Security fee</span>
+                    <span className="tabular-nums">
+                      {currency}{form.securityFee || securityFeeDefault}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-coral/80">
+                    <span>Platform booking fee ({platformFeePct}%)</span>
+                    <span className="tabular-nums">
+                      −{currency}
+                      {Math.round((form.securityFee || securityFeeDefault) * platformFeePct / 100)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-teal-300 border-t border-white/10 pt-1">
+                    <span>Bouncer payout (after event)</span>
+                    <span className="tabular-nums">
+                      {currency}
+                      {Math.round((form.securityFee || securityFeeDefault) * (100 - platformFeePct) / 100)}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  🔒 Verified & licensed · paid out after the event ·
+                  refundable if you cancel the party
+                </p>
+              </div>
+            )}
+          </section>
+
           {/* Vibe chips multi-select */}
           <section className="space-y-2">
             <Label className="text-white flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" aria-hidden />
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
               Vibes (pick what fits)
             </Label>
             <div className="flex flex-wrap gap-2">
@@ -330,8 +483,8 @@ export function CreateScreen() {
                     className={cn(
                       "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95",
                       active
-                        ? "scale-110 border-yellow-400/50 bg-yellow-400/15 text-yellow-300"
-                        : "border-white/10 bg-white/5 text-white/60 hover:text-foreground hover:border-yellow-400/40",
+                        ? "scale-110 border-purple-400/50 bg-purple-400/15 text-purple-300"
+                        : "border-white/10 bg-white/5 text-white/60 hover:text-foreground hover:border-purple-400/40",
                     )}
                   >
                     <span aria-hidden>{VIBE_EMOJI[v]}</span>
@@ -346,7 +499,7 @@ export function CreateScreen() {
           {/* Description */}
           <section className="space-y-1.5">
             <Label htmlFor="desc" className="text-white flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" aria-hidden />
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
               Description
             </Label>
             <Textarea
@@ -355,7 +508,7 @@ export function CreateScreen() {
               placeholder="Set the scene: music, vibe, dress code, what to bring, house rules…"
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              className="rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
+              className="rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
               maxLength={600}
             />
             <p className="text-right text-[11px] text-muted-foreground">
@@ -366,24 +519,24 @@ export function CreateScreen() {
           {/* Host name */}
           <section className="space-y-1.5">
             <Label htmlFor="host" className="text-white flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" aria-hidden />
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
               Host name
             </Label>
             <Input
               id="host"
               value={form.hostName}
               onChange={(e) => set("hostName", e.target.value)}
-              className="h-12 rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/25"
+              className="h-12 rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
             />
           </section>
 
           {/* Live preview — how the party card will look */}
           <section className="space-y-2">
             <Label className="text-white flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-yellow-400" />
+              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
               Live preview
             </Label>
-            <div className="overflow-hidden rounded-2xl glass border border-yellow-400/40">
+            <div className="overflow-hidden rounded-2xl glass border border-purple-400/40">
               <div className="relative aspect-[16/9] w-full">
                 {form.coverUrl ? (
                   <img
@@ -392,10 +545,10 @@ export function CreateScreen() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full bg-yellow-400 opacity-60" />
+                  <div className="h-full w-full bg-purple-400 opacity-60" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                <span className="absolute right-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold text-yellow-400 backdrop-blur">
+                <span className="absolute right-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold text-purple-400 backdrop-blur">
                   {formatFee(form.fee)}
                 </span>
               </div>
@@ -414,7 +567,7 @@ export function CreateScreen() {
                     {form.vibes.map((v) => (
                       <span
                         key={v}
-                        className="inline-flex items-center gap-1 rounded-full border border-yellow-400/50 bg-yellow-400/15 px-2 py-0.5 text-[10px] font-medium text-yellow-300"
+                        className="inline-flex items-center gap-1 rounded-full border border-purple-400/50 bg-purple-400/15 px-2 py-0.5 text-[10px] font-medium text-purple-300"
                       >
                         {VIBE_EMOJI[v]} {v}
                       </span>
@@ -423,7 +576,7 @@ export function CreateScreen() {
                 )}
                 <p className="text-[11px] text-foreground/70">
                   Hosted by{" "}
-                  <span className="font-semibold text-yellow-400">
+                  <span className="font-semibold text-purple-400">
                     {form.hostName || "You"}
                   </span>{" "}
                   · up to {form.maxGuests} guests
@@ -440,7 +593,7 @@ export function CreateScreen() {
           onClick={submit}
           disabled={submitting}
           className={cn(
-            "h-12 w-full rounded-xl bg-yellow-400 text-base font-semibold text-black transition active:scale-95 disabled:opacity-60",
+            "h-12 w-full rounded-xl bg-purple-400 text-base font-semibold text-black transition active:scale-95 disabled:opacity-60",
             !submitting && "vibe-pulse",
           )}
         >

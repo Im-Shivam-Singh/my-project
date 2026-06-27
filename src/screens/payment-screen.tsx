@@ -94,8 +94,21 @@ export function PaymentScreen() {
       });
       setScreen("confirmation");
     },
-    onError: () => {
-      toast.error("Payment failed — try again");
+    onError: (err: Error) => {
+      const msg = err.message || "";
+      if (msg.toLowerCase().includes("session has expired") || msg.toLowerCase().includes("log in")) {
+        toast.error("Session expired", {
+          description: "Please log in again to continue.",
+        });
+        // Clear stale user and redirect to login
+        setTimeout(() => {
+          useAppStore.getState().logout();
+        }, 1500);
+      } else {
+        toast.error("Payment failed", {
+          description: msg || "Something went wrong. Please try again.",
+        });
+      }
     },
   });
 

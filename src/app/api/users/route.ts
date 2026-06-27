@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { VibeUser } from "@/lib/types";
 
-function serializeUser(u: { id: string; name: string; username: string | null; bio: string | null; avatarUrl: string | null; city: string | null; instagram: string | null; vibePrefs: string; vibes: number; hosted: number; rating: number; ratingCount: number }): VibeUser {
+function serializeUser(u: any): VibeUser {
   return {
     id: u.id,
     name: u.name,
@@ -16,6 +16,8 @@ function serializeUser(u: { id: string; name: string; username: string | null; b
     hosted: u.hosted,
     rating: u.rating,
     ratingCount: u.ratingCount,
+    trustScore: u.trustScore,
+    trustCount: u.trustCount,
   };
 }
 

@@ -29,6 +29,11 @@ model User {
   hosted      Int      @default(0)
   rating      Float    @default(5.0)
   ratingCount Int      @default(0)
+  // Guest TRUST score — given by hosts after a party (1..5). Avg of all
+  // trust ratings received. High trust = reliable guest. Shown on the
+  // guest's profile so future hosts have an assurity signal.
+  trustScore  Float    @default(5.0)
+  trustCount  Int      @default(0)
   // moderation
   blocked     String   @default("") // comma-separated user ids
   createdAt   DateTime @default(now())
@@ -44,6 +49,8 @@ model User {
   reviews      Review[]
   orders       Order[]
   tickets      Ticket[]
+  trustGiven   TrustRating[] @relation("TrustGiven")
+  trustReceived TrustRating[] @relation("TrustReceived")
 }
 
 model Party {
@@ -69,6 +76,11 @@ model Party {
   approvalRequired Boolean  @default(true)
   acceptJoiners    Boolean  @default(true)
   menuOpen         Boolean  @default(true)
+  // Security/bouncer booking add-on — host can opt in during party creation.
+  // Platform takes 15-20% booking fee; bouncer gets the rest after the event.
+  securityBooked   Boolean  @default(false)
+  securityFee      Int      @default(0) // total fee paid (£ or ₹)
+  securityStatus   String   @default("") // "" | "requested" | "confirmed" | "completed"
   // When the exact address is revealed to confirmed guests (spec slide 6 — location drop)
   locationRevealAt DateTime?
   createdAt   DateTime @default(now())
@@ -82,6 +94,7 @@ model Party {
   menuItems MenuItem[]
   orders    Order[]
   tickets   Ticket[]
+  trustRatings TrustRating[]
 }
 
 model JoinRequest {
@@ -230,4 +243,27 @@ model Ticket {
 
   @@index([userId])
   @@index([partyId])
+}
+
+// ===== Guest TRUST ratings — host rates guests after a party =====
+// Hosts give guests a TRUST score (1..5) + optional note after the party.
+// The avg is shown on the guest's profile as an assurity signal for future
+// hosts. "TRUST" is distinct from the host's "vibe" rating — it specifically
+// signals whether the guest was respectful, showed up, and didn't cause issues.
+model TrustRating {
+  id        String   @id @default(cuid())
+  partyId   String
+  // hostId gives the rating; guestId receives it
+  hostId    String
+  guestId   String
+  rating    Int      // 1..5
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  party Party @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  host  User  @relation("TrustGiven", fields: [hostId], references: [id])
+  guest User  @relation("TrustReceived", fields: [guestId], references: [id])
+
+  @@unique([partyId, guestId]) // one trust rating per guest per party
+  @@index([guestId])
 }

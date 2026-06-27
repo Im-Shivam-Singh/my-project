@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Settings2 } from "lucide-react";
+import { ChevronLeft, Settings2, MapPin, Navigation } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 import { CITIES, PROFESSIONS } from "@/lib/types";
@@ -29,6 +29,8 @@ export function FilterScreen() {
   // Store-backed filters (sync with home).
   const cityFilter = useAppStore((s) => s.cityFilter);
   const setCityFilter = useAppStore((s) => s.setCityFilter);
+  const radiusKm = useAppStore((s) => s.radiusKm);
+  const setRadiusKm = useAppStore((s) => s.setRadiusKm);
   const goBack = useAppStore((s) => s.goBack);
   const setScreen = useAppStore((s) => s.setScreen);
 
@@ -180,6 +182,59 @@ export function FilterScreen() {
               );
             })}
           </div>
+
+          {/* ── Nearby subsection — radius slider (km) ───────────────────
+              Only shown when a city is selected. Lets the user narrow the
+              feed to parties within N km of the city center. */}
+          {cityFilter && (
+            <div className="mt-3 glass rounded-2xl p-4 space-y-3 animate-screen-in">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 eyebrow !text-purple-300">
+                  <Navigation className="h-3.5 w-3.5" />
+                  Nearby
+                </span>
+                <span className="text-sm font-medium text-purple-300 tabular-nums">
+                  {radiusKm === 0 ? "City-wide" : `Within ${radiusKm} km`}
+                </span>
+              </div>
+              <Slider
+                value={[radiusKm]}
+                onValueChange={(v) => setRadiusKm(v[0] ?? 0)}
+                min={0}
+                max={50}
+                step={1}
+                aria-label="Nearby radius in kilometers"
+                className={
+                  "[&_[data-slot=slider-track]]:h-[3px] " +
+                  "[&_[data-slot=slider-track]]:rounded-full " +
+                  "[&_[data-slot=slider-track]]:bg-secondary " +
+                  "[&_[data-slot=slider-range]]:bg-purple-500 " +
+                  "[&_[data-slot=slider-thumb]]:size-5 " +
+                  "[&_[data-slot=slider-thumb]]:border-2 " +
+                  "[&_[data-slot=slider-thumb]]:border-white " +
+                  "[&_[data-slot=slider-thumb]]:bg-purple-500 " +
+                  "[&_[data-slot=slider-thumb]]:shadow-[0_2px_10px_-2px_rgba(83,74,183,0.8)] " +
+                  "[&_[data-slot=slider-thumb]]:ring-0 " +
+                  "[&_[data-slot=slider-thumb]]:hover:ring-0 " +
+                  "[&_[data-slot=slider-thumb]]:focus-visible:ring-2 " +
+                  "[&_[data-slot=slider-thumb]]:focus-visible:ring-purple-300/50"
+                }
+              />
+              <div className="flex justify-between text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> 0
+                </span>
+                <span>10</span>
+                <span>25</span>
+                <span>50 km</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                {radiusKm === 0
+                  ? "Showing all parties in this city regardless of distance."
+                  : `Only showing parties within ${radiusKm} km of the city center. Drag to widen or narrow your vibe radius.`}
+              </p>
+            </div>
+          )}
         </section>
 
         {/* ── Date pills (single-select, local only) ─────────────────── */}

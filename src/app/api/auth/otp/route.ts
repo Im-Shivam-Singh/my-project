@@ -16,6 +16,8 @@ function serializeUser(u: any): VibeUser {
     hosted: u.hosted,
     rating: u.rating,
     ratingCount: u.ratingCount,
+    trustScore: u.trustScore,
+    trustCount: u.trustCount,
   };
 }
 

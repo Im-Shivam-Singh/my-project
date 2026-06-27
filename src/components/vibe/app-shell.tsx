@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useAppStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { BottomNav } from "./bottom-nav";
 import { LoginScreen } from "@/screens/login-screen";
 import { OnboardingScreen } from "@/screens/onboarding-screen";
@@ -23,11 +24,13 @@ import { PaymentScreen } from "@/screens/payment-screen";
 import { ConfirmationScreen } from "@/screens/confirmation-screen";
 import { HostDashboardScreen } from "@/screens/host-dashboard-screen";
 import { AdminScreen } from "@/screens/admin-screen";
+import { MusicPlayerBar } from "@/components/vibe/music-player";
 
 export function AppShell() {
   const screen = useAppStore((s) => s.screen);
   const authed = useAppStore((s) => s.authed);
   const onboarded = useAppStore((s) => s.onboarded);
+  const currentUser = useAppStore((s) => s.currentUser);
   const setScreen = useAppStore((s) => s.setScreen);
 
   // If not authed, force login screen
@@ -37,8 +40,29 @@ export function AppShell() {
     }
   }, [authed, screen, setScreen]);
 
+  // ── Validate the persisted user on app load ──────────────────────
+  // If the user ID in localStorage is stale (e.g. DB was reset between
+  // sessions), the server will 404 on getUser. We log the user out so
+  // they re-authenticate cleanly instead of hitting foreign-key errors
+  // on every order/ticket/request mutation.
+  useEffect(() => {
+    if (!authed || !currentUser?.id) return;
+    let cancelled = false;
+    api
+      .getUser({ id: currentUser.id })
+      .then(() => {
+        // user exists — nothing to do
+      })
+      .catch(() => {
+        if (cancelled) return;
+        useAppStore.getState().logout();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authed, currentUser?.id]);
+
   // After auth (incl. rehydration from persist), if still on login screen, route correctly.
-  // screen is NOT persisted, so after a refresh we need to push the authed user off "login".
   useEffect(() => {
     if (authed && screen === "login") {
       setScreen(onboarded ? "home" : "onboarding");
@@ -81,6 +105,7 @@ export function AppShell() {
           {current === "admin" && <AdminScreen />}
         </div>
       </main>
+      <MusicPlayerBar />
       <BottomNav />
     </div>
   );

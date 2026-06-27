@@ -67,14 +67,14 @@ export function EditProfileScreen() {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h1 className="flex-1 font-display text-lg font-bold text-yellow-400">
+        <h1 className="flex-1 font-display text-lg font-bold text-amber-400">
           Edit profile
         </h1>
         <Button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
           size="sm"
-          className="rounded-full bg-yellow-400 text-black hover:bg-yellow-300"
+          className="rounded-full bg-amber-400 text-black hover:bg-amber-300"
         >
           <Check className="mr-1 h-4 w-4" /> Save
         </Button>
@@ -84,10 +84,10 @@ export function EditProfileScreen() {
         {/* Avatar */}
         <section className="flex flex-col items-center gap-3">
           <div className="relative">
-            <span className="relative block rounded-full ring-2 ring-yellow-400">
+            <span className="relative block rounded-full ring-2 ring-amber-400">
               <UserAvatar name={name || "You"} src={avatarUrl} size={96} />
             </span>
-            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400 ring-4 ring-background">
+            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 ring-4 ring-background">
               <Camera className="h-4 w-4 text-black" />
             </span>
           </div>
@@ -98,8 +98,8 @@ export function EditProfileScreen() {
                 onClick={() => setAvatarUrl(u)}
                 className={`h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 transition ${
                   avatarUrl === u
-                    ? "border-yellow-400"
-                    : "border-transparent opacity-70 hover:opacity-100 hover:border-yellow-400/50"
+                    ? "border-amber-400"
+                    : "border-transparent opacity-70 hover:opacity-100 hover:border-amber-400/50"
                 }`}
               >
                 <img src={u} alt="" className="h-full w-full object-cover" />
@@ -108,18 +108,18 @@ export function EditProfileScreen() {
           </div>
         </section>
 
-        <div className="space-y-5 rounded-3xl glass border border-yellow-400/40 p-4">
+        <div className="space-y-5 rounded-3xl glass border border-amber-400/40 p-4">
           <Field label="Name">
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-12 rounded-xl border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
+              className="h-12 rounded-xl border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-amber-400/60 focus-visible:border-amber-400"
             />
           </Field>
 
           <Field label="Username">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-yellow-400/80">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-amber-400/80">
                 @
               </span>
               <Input
@@ -127,7 +127,7 @@ export function EditProfileScreen() {
                 onChange={(e) =>
                   setUsername(e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase())
                 }
-                className="h-12 rounded-xl border-white/10 bg-card pl-7 focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
+                className="h-12 rounded-xl border-white/10 bg-card pl-7 focus-visible:ring-2 focus-visible:ring-amber-400/60 focus-visible:border-amber-400"
                 placeholder="viber123"
               />
             </div>
@@ -139,7 +139,7 @@ export function EditProfileScreen() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={160}
-              className="rounded-xl border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
+              className="rounded-xl border-white/10 bg-card focus-visible:ring-2 focus-visible:ring-amber-400/60 focus-visible:border-amber-400"
               placeholder="Tell people what kind of night-owl you are…"
             />
             <p className="text-right text-[11px] text-muted-foreground">
@@ -151,7 +151,7 @@ export function EditProfileScreen() {
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="h-12 w-full rounded-xl border border-white/10 bg-card px-3 text-sm outline-none transition focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/40"
+              className="h-12 w-full rounded-xl border border-white/10 bg-card px-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/40"
             >
               {CITIES.map((c) => (
                 <option key={c} value={c} className="bg-card">
@@ -163,13 +163,13 @@ export function EditProfileScreen() {
 
           <Field label="Instagram (optional)">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-yellow-400/80">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-amber-400/80">
                 @
               </span>
               <Input
                 value={instagram}
                 onChange={(e) => setInstagram(e.target.value)}
-                className="h-12 rounded-xl border-white/10 bg-card pl-7 focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:border-yellow-400"
+                className="h-12 rounded-xl border-white/10 bg-card pl-7 focus-visible:ring-2 focus-visible:ring-amber-400/60 focus-visible:border-amber-400"
                 placeholder="your.handle"
               />
             </div>
@@ -197,7 +197,7 @@ function Field({
   return (
     <section className="space-y-1.5">
       <Label className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] text-white">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400 shadow-[0_0_6px_rgba(255,203,5,0.8)]" />
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(255,203,5,0.8)]" />
         {label}
       </Label>
       {children}

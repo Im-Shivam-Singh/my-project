@@ -98,6 +98,10 @@ export interface Party {
   approvalRequired?: boolean;
   acceptJoiners?: boolean;
   menuOpen?: boolean;
+  // Security/bouncer booking add-on
+  securityBooked?: boolean;
+  securityFee?: number;
+  securityStatus?: string;
   locationRevealAt?: string | null; // ISO datetime when exact address drops
   createdAt: string;
 }
@@ -116,6 +120,8 @@ export interface PartyCreateInput {
   coverUrl?: string;
   lat?: number;
   lng?: number;
+  securityBooked?: boolean;
+  securityFee?: number;
 }
 
 export interface JoinRequest {
@@ -148,6 +154,9 @@ export interface VibeUser {
   hosted: number;
   rating: number;
   ratingCount: number;
+  // Guest TRUST score — avg of trust ratings given by hosts (1..5)
+  trustScore?: number;
+  trustCount?: number;
 }
 
 export interface ChatThread {

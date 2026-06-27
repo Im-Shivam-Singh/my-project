@@ -1,0 +1,423 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+.card-header { padding: 10px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; font-weight: 500; color: var(--color-text-primary); display: flex; align-items: center; gap: 6px; }
+.city-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer; transition: background 0.15s; }
+.city-row:last-child { border-bottom: none; }
+.city-row:hover { background: var(--color-background-secondary); }
+.city-row.active { background: var(--color-background-secondary); }
+.city-rank { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.city-info { flex: 1; min-width: 0; }
+.city-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.city-desc { font-size: 11px; color: var(--color-text-secondary); margin-top: 1px; }
+.city-right { text-align: right; flex-shrink: 0; }
+.city-rev { font-size: 13px; font-weight: 500; }
+.city-parties { font-size: 10px; color: var(--color-text-tertiary); margin-top: 2px; }
+.city-bar-track { flex: 1; height: 5px; background: var(--color-background-secondary); border-radius: 3px; overflow: hidden; max-width: 80px; }
+.city-bar-fill { height: 100%; border-radius: 3px; }
+.detail-panel { padding: 14px; display: none; }
+.detail-panel.show { display: block; }
+.detail-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
+.d-metric { background: var(--color-background-secondary); border-radius: 8px; padding: 8px; text-align: center; }
+.d-label { font-size: 10px; color: var(--color-text-tertiary); margin-bottom: 3px; }
+.d-val { font-size: 15px; font-weight: 500; }
+.insight-row { display: flex; gap: 8px; font-size: 11px; color: var(--color-text-secondary); margin-bottom: 5px; align-items: flex-start; line-height: 1.5; }
+.insight-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.slider-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 12px; }
+.slider-row:last-child { border-bottom: none; }
+.slider-label { min-width: 130px; color: var(--color-text-primary); font-size: 12px; }
+.slider-val { min-width: 60px; text-align: right; font-weight: 500; color: var(--color-text-primary); font-size: 12px; }
+.total-row { display: flex; justify-content: space-between; padding: 12px 14px; font-size: 15px; font-weight: 500; background: var(--color-background-secondary); }
+.stream-row { display: flex; justify-content: space-between; padding: 8px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 12px; }
+.stream-row:last-child { border-bottom: none; }
+.phase-row { display: flex; gap: 12px; padding: 10px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); align-items: flex-start; }
+.phase-row:last-child { border-bottom: none; }
+.phase-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+.phase-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+.phase-sub { font-size: 11px; color: var(--color-text-secondary); line-height: 1.6; }
+.num-pill { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 500; display: inline-block; margin: 3px 3px 0 0; }
+.note { font-size: 11px; color: var(--color-text-tertiary); padding: 8px 14px; background: var(--color-background-secondary); border-top: 0.5px solid var(--color-border-tertiary); display: flex; gap: 6px; }
+.grand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 14px; }
+.grand-metric { background: var(--color-background-secondary); border-radius: 8px; padding: 12px; text-align: center; }
+.grand-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 5px; }
+.grand-val { font-size: 22px; font-weight: 500; }
+</style>
+
+<div style="padding:1rem 0;">
+
+<!-- CITY BY CITY -->
+<div class="card">
+  <div class="card-header">India city breakdown — tap any city for details</div>
+
+  <!-- BANGALORE -->
+  <div class="city-row" onclick="toggleCity('blr')">
+    <div class="city-rank" style="background:#EEEDFE;color:#3C3489;">1</div>
+    <div class="city-info">
+      <div class="city-name">Bangalore</div>
+      <div class="city-desc">Tech capital · highest disposable income · party culture strong</div>
+    </div>
+    <div class="city-bar-track"><div class="city-bar-fill" style="width:100%;background:#534AB7;"></div></div>
+    <div class="city-right">
+      <div class="city-rev" style="color:#534AB7;">₹8L–₹18L/mo</div>
+      <div class="city-parties">400–800 parties/mo at scale</div>
+    </div>
+  </div>
+  <div class="detail-panel" id="blr">
+    <div class="detail-grid">
+      <div class="d-metric"><div class="d-label">Youth population</div><div class="d-val" style="color:#534AB7;">4.2M</div></div>
+      <div class="d-metric"><div class="d-label">Avg ticket (₹)</div><div class="d-val" style="color:#534AB7;">₹400</div></div>
+      <div class="d-metric"><div class="d-label">App cut/party</div><div class="d-val" style="color:#0F6E56;">₹1,800</div></div>
+    </div>
+    <div class="insight-row"><div class="insight-dot" style="background:#534AB7;"></div>Koramangala, Indiranagar, HSR Layout — densely packed young professionals. One neighbourhood alone has thousands of potential users.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#534AB7;"></div>Strong house party culture already exists — people host "flat parties" regularly but collect money on GPay with no structure. VibeMatch formalises what's already happening.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#534AB7;"></div>Safety angle is real here — women especially will pay for a platform with verified hosts and security booking. That's a marketing angle no competitor has.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#534AB7;"></div>Start here first. Prove it works in one Bangalore neighbourhood before city-wide rollout.</div>
+  </div>
+
+  <!-- MUMBAI -->
+  <div class="city-row" onclick="toggleCity('bom')">
+    <div class="city-rank" style="background:#E1F5EE;color:#085041;">2</div>
+    <div class="city-info">
+      <div class="city-name">Mumbai</div>
+      <div class="city-desc">Highest spending · Bandra / Andheri party belt · finance + media crowd</div>
+    </div>
+    <div class="city-bar-track"><div class="city-bar-fill" style="width:88%;background:#1D9E75;"></div></div>
+    <div class="city-right">
+      <div class="city-rev" style="color:#1D9E75;">₹10L–₹22L/mo</div>
+      <div class="city-parties">500–900 parties/mo at scale</div>
+    </div>
+  </div>
+  <div class="detail-panel" id="bom">
+    <div class="detail-grid">
+      <div class="d-metric"><div class="d-label">Youth population</div><div class="d-val" style="color:#1D9E75;">6.1M</div></div>
+      <div class="d-metric"><div class="d-label">Avg ticket (₹)</div><div class="d-val" style="color:#1D9E75;">₹600</div></div>
+      <div class="d-metric"><div class="d-label">App cut/party</div><div class="d-val" style="color:#0F6E56;">₹2,400</div></div>
+    </div>
+    <div class="insight-row"><div class="insight-dot" style="background:#1D9E75;"></div>Mumbai has the highest average spend per person at a party in India. Bandra alone has more young professionals per square km than most Indian cities entirely.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#1D9E75;"></div>Flat sizes are small — intimate gatherings are normal here. A 15-person terrace party in Bandra is already a cultural norm. VibeMatch just monetises it properly.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#1D9E75;"></div>Finance, media, fashion industries mean higher disposable income. Ticket prices of ₹500–₹800 are very realistic here vs ₹300–₹400 in smaller cities.</div>
+  </div>
+
+  <!-- DELHI / GURGAON -->
+  <div class="city-row" onclick="toggleCity('del')">
+    <div class="city-rank" style="background:#FAEEDA;color:#633806;">3</div>
+    <div class="city-info">
+      <div class="city-name">Delhi + Gurgaon</div>
+      <div class="city-desc">NCR belt · corporate crowd · massive student population · DU + JNU</div>
+    </div>
+    <div class="city-bar-track"><div class="city-bar-fill" style="width:82%;background:#EF9F27;"></div></div>
+    <div class="city-right">
+      <div class="city-rev" style="color:#854F0B;">₹9L–₹20L/mo</div>
+      <div class="city-parties">450–850 parties/mo at scale</div>
+    </div>
+  </div>
+  <div class="detail-panel" id="del">
+    <div class="detail-grid">
+      <div class="d-metric"><div class="d-label">Youth population</div><div class="d-val" style="color:#854F0B;">7.8M</div></div>
+      <div class="d-metric"><div class="d-label">Avg ticket (₹)</div><div class="d-val" style="color:#854F0B;">₹500</div></div>
+      <div class="d-metric"><div class="d-val" style="color:#0F6E56;">₹2,100</div><div class="d-label">App cut/party</div></div>
+    </div>
+    <div class="insight-row"><div class="insight-dot" style="background:#EF9F27;"></div>Delhi University alone has 300,000+ students across colleges. That is your exact target market in one place — social meetups and house parties become extremely relevant here.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#EF9F27;"></div>Gurgaon is the corporate twin city — young IT and finance professionals with money and no established social network. The social meetups track (cafe gatherings, no profile photos) is perfectly suited here.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#EF9F27;"></div>Safety is the strongest selling point in Delhi specifically — your verified host, guest approval, and security booking feature become a major differentiator here more than anywhere else in India.</div>
+  </div>
+
+  <!-- PUNE -->
+  <div class="city-row" onclick="toggleCity('pun')">
+    <div class="city-rank" style="background:#FAECE7;color:#712B13;">4</div>
+    <div class="city-info">
+      <div class="city-name">Pune</div>
+      <div class="city-desc">Student capital of India · FC Road culture · young and price-conscious</div>
+    </div>
+    <div class="city-bar-track"><div class="city-bar-fill" style="width:60%;background:#D85A30;"></div></div>
+    <div class="city-right">
+      <div class="city-rev" style="color:#993C1D;">₹4L–₹9L/mo</div>
+      <div class="city-parties">200–400 parties/mo at scale</div>
+    </div>
+  </div>
+  <div class="detail-panel" id="pun">
+    <div class="detail-grid">
+      <div class="d-metric"><div class="d-label">Youth population</div><div class="d-val" style="color:#993C1D;">2.8M</div></div>
+      <div class="d-metric"><div class="d-label">Avg ticket (₹)</div><div class="d-val" style="color:#993C1D;">₹250</div></div>
+      <div class="d-metric"><div class="d-label">App cut/party</div><div class="d-val" style="color:#0F6E56;">₹900</div></div>
+    </div>
+    <div class="insight-row"><div class="insight-dot" style="background:#D85A30;"></div>Pune has one of the highest student-to-population ratios in India. COEP, Symbiosis, Fergusson, SPPU — hundreds of thousands of students actively socialising.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#D85A30;"></div>Lower ticket prices than metro cities but extremely high volume. The social meetups track (cafe meetups, low fee or free) is perfectly suited to Pune's coffee culture on FC Road and Koregaon Park.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#D85A30;"></div>Good second or third city to launch in after Bangalore — similar demographics, lower competition, strong word-of-mouth among student communities.</div>
+  </div>
+
+  <!-- HYDERABAD -->
+  <div class="city-row" onclick="toggleCity('hyd')">
+    <div class="city-rank" style="background:#E6F1FB;color:#0C447C;">5</div>
+    <div class="city-info">
+      <div class="city-name">Hyderabad</div>
+      <div class="city-desc">HITEC City boom · growing IT crowd · Jubilee Hills party culture</div>
+    </div>
+    <div class="city-bar-track"><div class="city-bar-fill" style="width:65%;background:#378ADD;"></div></div>
+    <div class="city-right">
+      <div class="city-rev" style="color:#185FA5;">₹5L–₹11L/mo</div>
+      <div class="city-parties">250–450 parties/mo at scale</div>
+    </div>
+  </div>
+  <div class="detail-panel" id="hyd">
+    <div class="detail-grid">
+      <div class="d-metric"><div class="d-label">Youth population</div><div class="d-val" style="color:#185FA5;">3.2M</div></div>
+      <div class="d-metric"><div class="d-label">Avg ticket (₹)</div><div class="d-val" style="color:#185FA5;">₹350</div></div>
+      <div class="d-metric"><div class="d-label">App cut/party</div><div class="d-val" style="color:#0F6E56;">₹1,300</div></div>
+    </div>
+    <div class="insight-row"><div class="insight-dot" style="background:#378ADD;"></div>HITEC City has created one of India's fastest growing young professional populations. Amazon, Google, Microsoft campuses all within a few kilometres — exactly your demographic.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#378ADD;"></div>Hyderabad has a strong biryani and food culture — the drinks add-on mechanic works differently here. Think food pre-orders (biryani, kebabs) rather than alcohol at many parties. Adapting the menu feature for food is a smart localisation.</div>
+  </div>
+
+  <!-- GOA -->
+  <div class="city-row" onclick="toggleCity('goa')">
+    <div class="city-rank" style="background:#EAF3DE;color:#27500A;">6</div>
+    <div class="city-info">
+      <div class="city-name">Goa</div>
+      <div class="city-desc">Tourism-driven · seasonal · beach parties · unique use case</div>
+    </div>
+    <div class="city-bar-track"><div class="city-bar-fill" style="width:40%;background:#639922;"></div></div>
+    <div class="city-right">
+      <div class="city-rev" style="color:#3B6D11;">₹3L–₹7L/mo</div>
+      <div class="city-parties">Seasonal spikes · peak Oct–Feb</div>
+    </div>
+  </div>
+  <div class="detail-panel" id="goa">
+    <div class="detail-grid">
+      <div class="d-metric"><div class="d-label">Tourist inflow</div><div class="d-val" style="color:#3B6D11;">8M/yr</div></div>
+      <div class="d-metric"><div class="d-label">Avg ticket (₹)</div><div class="d-val" style="color:#3B6D11;">₹800</div></div>
+      <div class="d-metric"><div class="d-label">App cut/party</div><div class="d-val" style="color:#0F6E56;">₹2,800</div></div>
+    </div>
+    <div class="insight-row"><div class="insight-dot" style="background:#639922;"></div>Goa is a completely different use case — tourists visiting for a week who want to meet other travellers and join curated experiences. Your discover feed becomes a "what's happening tonight" for visitors.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#639922;"></div>Highest ticket prices in India because tourists expect to pay. A beach gathering at ₹800–₹1,200 per person is completely normal. App earns ₹2,500–₹3,500 per party here.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#639922;"></div>Seasonal — October to February is peak. But during peak, the volume is enormous. Don't launch here first — add it once the metro model is working.</div>
+  </div>
+
+  <!-- SMALLER CITIES -->
+  <div class="city-row" onclick="toggleCity('small')">
+    <div class="city-rank" style="background:#F1EFE8;color:#444441;">+</div>
+    <div class="city-info">
+      <div class="city-name">Tier 2 cities</div>
+      <div class="city-desc">Jaipur, Chandigarh, Kochi, Ahmedabad, Indore, Lucknow, Coimbatore</div>
+    </div>
+    <div class="city-bar-track"><div class="city-bar-fill" style="width:35%;background:#888780;"></div></div>
+    <div class="city-right">
+      <div class="city-rev" style="color:#5F5E5A;">₹1L–₹3L/mo each</div>
+      <div class="city-parties">50–150 parties/mo each</div>
+    </div>
+  </div>
+  <div class="detail-panel" id="small">
+    <div class="detail-grid">
+      <div class="d-metric"><div class="d-label">Combined cities</div><div class="d-val" style="color:#5F5E5A;">7+</div></div>
+      <div class="d-metric"><div class="d-label">Avg ticket (₹)</div><div class="d-val" style="color:#5F5E5A;">₹150–₹250</div></div>
+      <div class="d-metric"><div class="d-label">Social meetups</div><div class="d-val" style="color:#0F6E56;">Strong fit</div></div>
+    </div>
+    <div class="insight-row"><div class="insight-dot" style="background:#888780;"></div>Tier 2 cities are actually better for the social meetups track than house parties — the culture around alcohol-fuelled house parties is more conservative, but cafe meetups and interest-based gatherings are completely acceptable.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#888780;"></div>Jaipur and Chandigarh have strong young professional populations growing fast. Ahmedabad is a business hub. These cities combined add up to meaningful revenue without requiring individual city launches.</div>
+    <div class="insight-row"><div class="insight-dot" style="background:#888780;"></div>Don't target these first — they'll follow naturally once the metro cities have traction and people from Jaipur or Chandigarh hear about VibeMatch from friends in Bangalore or Delhi.</div>
+  </div>
+</div>
+
+<!-- INDIA REVENUE CALCULATOR -->
+<div class="card">
+  <div class="card-header">India revenue calculator</div>
+  <div class="slider-row">
+    <span class="slider-label">Active cities</span>
+    <input type="range" min="1" max="10" value="3" step="1" id="cities" oninput="calcIndia()" style="flex:1;">
+    <span class="slider-val" id="c-v">3</span>
+  </div>
+  <div class="slider-row">
+    <span class="slider-label">Parties/city/month</span>
+    <input type="range" min="10" max="800" value="200" step="10" id="ppcm" oninput="calcIndia()" style="flex:1;">
+    <span class="slider-val" id="ppcm-v">200</span>
+  </div>
+  <div class="slider-row">
+    <span class="slider-label">Guests per party</span>
+    <input type="range" min="8" max="30" value="15" step="1" id="gprt" oninput="calcIndia()" style="flex:1;">
+    <span class="slider-val" id="gprt-v">15</span>
+  </div>
+  <div class="slider-row">
+    <span class="slider-label">Avg ticket price (₹)</span>
+    <input type="range" min="100" max="1000" value="400" step="50" id="tprice" oninput="calcIndia()" style="flex:1;">
+    <span class="slider-val" id="tp-v">₹400</span>
+  </div>
+  <div class="slider-row">
+    <span class="slider-label">Drinks avg/guest (₹)</span>
+    <input type="range" min="0" max="500" value="200" step="50" id="dprice" oninput="calcIndia()" style="flex:1;">
+    <span class="slider-val" id="dp-v">₹200</span>
+  </div>
+  <div class="slider-row">
+    <span class="slider-label">Security bookings (%)</span>
+    <input type="range" min="0" max="80" value="40" step="5" id="secpct" oninput="calcIndia()" style="flex:1;">
+    <span class="slider-val" id="sp-v">40%</span>
+  </div>
+
+  <div style="border-top:0.5px solid var(--color-border-tertiary);">
+    <div class="stream-row"><span style="color:var(--color-text-secondary);">🎟️ Ticket fees (28%)</span><span style="font-weight:500;" id="i-ticket">₹33.6L</span></div>
+    <div class="stream-row"><span style="color:var(--color-text-secondary);">🍹 Drinks cut (10%)</span><span style="font-weight:500;" id="i-drinks">₹9L</span></div>
+    <div class="stream-row"><span style="color:var(--color-text-secondary);">🛡️ Security (20% of ₹1,500)</span><span style="font-weight:500;" id="i-sec">₹3.6L</span></div>
+    <div class="stream-row"><span style="color:var(--color-text-secondary);">⭐ Pro hosts (₹799/mo)</span><span style="font-weight:500;" id="i-pro">₹0.8L</span></div>
+    <div class="total-row">
+      <span>Monthly revenue</span>
+      <span id="i-total" style="color:#0F6E56;">₹47L/mo</span>
+    </div>
+  </div>
+
+  <div class="grand-grid">
+    <div class="grand-metric">
+      <div class="grand-label">Monthly in £</div>
+      <div class="grand-val" id="i-gbp" style="color:#534AB7;">£45,000</div>
+    </div>
+    <div class="grand-metric">
+      <div class="grand-label">Annual run rate</div>
+      <div class="grand-val" id="i-annual" style="color:#0F6E56;">£5.4L</div>
+    </div>
+    <div class="grand-metric">
+      <div class="grand-label">Total parties/mo</div>
+      <div class="grand-val" id="i-parties" style="color:#534AB7;">600</div>
+    </div>
+    <div class="grand-metric">
+      <div class="grand-label">Per party earned</div>
+      <div class="grand-val" id="i-pparty" style="color:#534AB7;">₹7,840</div>
+    </div>
+  </div>
+  <div class="note">Razorpay fees ~2% per transaction in India vs Stripe 1.4%+20p in UK. Already factored in above.</div>
+</div>
+
+<!-- LAUNCH SEQUENCE -->
+<div class="card">
+  <div class="card-header">India launch sequence — city by city</div>
+  <div class="phase-row">
+    <div class="phase-dot" style="background:#E1F5EE;color:#085041;">1</div>
+    <div>
+      <div class="phase-title">Month 1–3 · Koramangala, Bangalore only</div>
+      <div class="phase-sub">One neighbourhood. Not even all of Bangalore. Build density before breadth — 50 users in one area is more valuable than 5 users across 10 cities. Host the first party yourself or through a friend.</div>
+      <div style="margin-top:6px;">
+        <span class="num-pill" style="background:#E1F5EE;color:#085041;">10–20 parties/mo</span>
+        <span class="num-pill" style="background:#E1F5EE;color:#085041;">₹1.5L–₹3L/mo</span>
+      </div>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-dot" style="background:#EEEDFE;color:#3C3489;">2</div>
+    <div>
+      <div class="phase-title">Month 4–6 · All of Bangalore + Mumbai</div>
+      <div class="phase-sub">Expand to Indiranagar and HSR Layout in Bangalore. Launch Mumbai with Bandra as the seed neighbourhood. Use learnings from Bangalore to move faster in Mumbai.</div>
+      <div style="margin-top:6px;">
+        <span class="num-pill" style="background:#EEEDFE;color:#3C3489;">80–150 parties/mo</span>
+        <span class="num-pill" style="background:#EEEDFE;color:#3C3489;">₹10L–₹18L/mo</span>
+      </div>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-dot" style="background:#FAEEDA;color:#633806;">3</div>
+    <div>
+      <div class="phase-title">Month 7–12 · Delhi NCR + Pune + Hyderabad</div>
+      <div class="phase-sub">Three cities simultaneously using the playbook you've proven. Security booking feature live. Pro host subscriptions launched. Social meetups track very strong in Delhi and Pune.</div>
+      <div style="margin-top:6px;">
+        <span class="num-pill" style="background:#FAEEDA;color:#633806;">400–700 parties/mo</span>
+        <span class="num-pill" style="background:#FAEEDA;color:#633806;">₹45L–₹80L/mo</span>
+      </div>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-dot" style="background:#FAECE7;color:#712B13;">4</div>
+    <div>
+      <div class="phase-title">Year 2 · Goa + Tier 2 + diaspora markets</div>
+      <div class="phase-sub">Add Goa for the tourist market (highest ticket prices). Tier 2 cities grow organically. Launch UK as the diaspora play — Indian students in Edinburgh, London, Manchester already familiar with VibeMatch from home.</div>
+      <div style="margin-top:6px;">
+        <span class="num-pill" style="background:#FAECE7;color:#712B13;">2,000+ parties/mo</span>
+        <span class="num-pill" style="background:#FAECE7;color:#712B13;">₹1.5Cr–₹3Cr/mo</span>
+        <span class="num-pill" style="background:#FAECE7;color:#712B13;">£150K–£300K/mo</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHY INDIA WINS -->
+<div class="card">
+  <div class="card-header">Why India is actually the bigger opportunity</div>
+  <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--color-text-secondary);line-height:1.6;">
+      <span style="font-size:18px;flex-shrink:0;">👥</span>
+      <span><strong style="color:var(--color-text-primary);">600 million people under 25.</strong> India has more young people than the entire population of the EU. Even capturing 0.1% of that market is 600,000 users.</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--color-text-secondary);line-height:1.6;">
+      <span style="font-size:18px;flex-shrink:0;">💸</span>
+      <span><strong style="color:var(--color-text-primary);">Indian youth spend heavily on experiences.</strong> Post-pandemic, spending on going out, events and socialising has grown 35%+ year on year among urban youth. This is not a market cutting back.</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--color-text-secondary);line-height:1.6;">
+      <span style="font-size:18px;flex-shrink:0;">📱</span>
+      <span><strong style="color:var(--color-text-primary);">UPI makes payments frictionless.</strong> India processes more digital payments than any country on earth. Your entire payment layer — tickets, drinks, security — all works instantly via UPI/Razorpay with zero card friction.</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--color-text-secondary);line-height:1.6;">
+      <span style="font-size:18px;flex-shrink:0;">🚫</span>
+      <span><strong style="color:var(--color-text-primary);">Zero direct competition.</strong> Skiddle doesn't operate in India. Meetup is generic and declining. Nobody owns the small gathering space in India. You'd be entering an empty room.</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--color-text-secondary);line-height:1.6;">
+      <span style="font-size:18px;flex-shrink:0;">🛡️</span>
+      <span><strong style="color:var(--color-text-primary);">Safety sells.</strong> Especially for women in Indian cities, a verified, approval-gated, security-bookable party platform is not just a nice-to-have — it's the reason they'd use your app over WhatsApp group chaos.</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function toggleCity(id) {
+  const panel = document.getElementById(id);
+  const isOpen = panel.classList.contains('show');
+  document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('show'));
+  if (!isOpen) panel.classList.add('show');
+}
+
+function fmtINR(n) {
+  if (n >= 10000000) return '₹' + (n/10000000).toFixed(1) + 'Cr';
+  if (n >= 100000)   return '₹' + (n/100000).toFixed(1) + 'L';
+  if (n >= 1000)     return '₹' + Math.round(n/1000) + 'K';
+  return '₹' + Math.round(n);
+}
+function fmtGBP(n) {
+  if (n >= 1000000) return '£' + (n/1000000).toFixed(2) + 'M';
+  if (n >= 1000)    return '£' + Math.round(n/1000) + 'K';
+  return '£' + Math.round(n);
+}
+
+function calcIndia() {
+  const cities  = parseInt(document.getElementById('cities').value);
+  const ppcm    = parseInt(document.getElementById('ppcm').value);
+  const gprt    = parseInt(document.getElementById('gprt').value);
+  const tprice  = parseInt(document.getElementById('tprice').value);
+  const dprice  = parseInt(document.getElementById('dprice').value);
+  const secpct  = parseInt(document.getElementById('secpct').value) / 100;
+
+  document.getElementById('c-v').textContent    = cities;
+  document.getElementById('ppcm-v').textContent = ppcm;
+  document.getElementById('gprt-v').textContent = gprt;
+  document.getElementById('tp-v').textContent   = '₹' + tprice;
+  document.getElementById('dp-v').textContent   = '₹' + dprice;
+  document.getElementById('sp-v').textContent   = Math.round(secpct*100) + '%';
+
+  const totalParties = cities * ppcm;
+  const rzrFee       = (tprice + dprice) * 0.02;
+  const ticketRev    = Math.max(0, (tprice * 0.28 - rzrFee) * gprt * totalParties);
+  const drinksRev    = dprice * 0.10 * gprt * totalParties;
+  const secRev       = totalParties * secpct * 1500 * 0.20;
+  const proRev       = Math.round(totalParties * 0.05) * 799;
+  const total        = ticketRev + drinksRev + secRev + proRev;
+  const gbp          = total / 105;
+  const perParty     = total / Math.max(1, totalParties);
+
+  document.getElementById('i-ticket').textContent  = fmtINR(ticketRev);
+  document.getElementById('i-drinks').textContent  = fmtINR(drinksRev);
+  document.getElementById('i-sec').textContent     = fmtINR(secRev);
+  document.getElementById('i-pro').textContent     = fmtINR(proRev);
+  document.getElementById('i-total').textContent   = fmtINR(total) + '/mo';
+  document.getElementById('i-gbp').textContent     = fmtGBP(gbp);
+  document.getElementById('i-annual').textContent  = fmtGBP(gbp * 12);
+  document.getElementById('i-parties').textContent = totalParties.toLocaleString();
+  document.getElementById('i-pparty').textContent  = '₹' + Math.round(perParty).toLocaleString();
+}
+calcIndia();
+</script>

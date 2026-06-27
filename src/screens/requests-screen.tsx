@@ -85,7 +85,7 @@ export function RequestsScreen() {
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <h1 className="flex-1 font-display text-lg font-bold text-yellow-400">
+          <h1 className="flex-1 font-display text-lg font-bold text-amber-400">
             Requests
           </h1>
         </div>
@@ -98,7 +98,7 @@ export function RequestsScreen() {
               className={cn(
                 "flex-1 rounded-full py-1.5 text-xs font-semibold capitalize transition",
                 tab === t
-                  ? "bg-yellow-400 text-black"
+                  ? "bg-amber-400 text-black"
                   : "text-white/60 hover:text-white",
               )}
             >
@@ -117,7 +117,7 @@ export function RequestsScreen() {
             action={
               <button
                 onClick={() => setScreen("create")}
-                className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
+                className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
               >
                 Launch a vibe
               </button>
@@ -158,7 +158,7 @@ export function RequestsScreen() {
                 className="rounded-2xl glass border border-white/10 p-3"
               >
                 <div className="flex items-start gap-3">
-                  <span className="relative block shrink-0 rounded-full ring-2 ring-yellow-400/50">
+                  <span className="relative block shrink-0 rounded-full ring-2 ring-amber-400/50">
                     <UserAvatar name={r.requesterName} size={40} />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -177,7 +177,7 @@ export function RequestsScreen() {
                       <div className="mt-2 flex gap-2">
                         <button
                           onClick={() => act(r.id, "accepted")}
-                          className="inline-flex items-center gap-1 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-black transition active:scale-95"
+                          className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-black transition active:scale-95"
                         >
                           <Check className="h-3.5 w-3.5" /> Accept
                         </button>
@@ -193,7 +193,7 @@ export function RequestsScreen() {
                         className={cn(
                           "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1",
                           r.status === "accepted"
-                            ? "bg-yellow-400 text-black ring-yellow-400"
+                            ? "bg-amber-400 text-black ring-amber-400"
                             : "bg-white/5 text-white/40 ring-white/10",
                         )}
                       >

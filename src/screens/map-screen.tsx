@@ -63,10 +63,10 @@ const CARTO_ATTRIBUTION =
 
 // Solid yellow bar for the tooltip's fun-score progress (Bumble = single accent).
 const TIER_BAR: Record<FunTier, string> = {
-  low: "bg-yellow-400",
-  warm: "bg-yellow-400",
-  lively: "bg-yellow-400",
-  lit: "bg-yellow-400",
+  low: "bg-amber-400",
+  warm: "bg-amber-400",
+  lively: "bg-amber-400",
+  lit: "bg-amber-400",
 };
 
 /**
@@ -392,16 +392,16 @@ export function MapScreen() {
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-lg font-extrabold leading-tight text-yellow-400">
+          <h1 className="font-display text-lg font-extrabold leading-tight text-amber-400">
             Map
           </h1>
           <p className="truncate text-[11px] text-white/50">
-            <Navigation className="mr-0.5 inline h-3 w-3 text-yellow-400" />
+            <Navigation className="mr-0.5 inline h-3 w-3 text-amber-400" />
             within {radiusLabel} of {center.label}
             {liveOnly && (
               <>
                 {" · "}
-                <span className="text-yellow-400">
+                <span className="text-amber-400">
                   {liveCount} live
                 </span>
               </>
@@ -410,7 +410,7 @@ export function MapScreen() {
         </div>
         <button
           onClick={handleListToggle}
-          className="flex h-9 items-center gap-1.5 rounded-full glass border border-white/10 px-3 text-xs font-semibold text-white/70 transition hover:border-yellow-400/50 hover:text-yellow-300"
+          className="flex h-9 items-center gap-1.5 rounded-full glass border border-white/10 px-3 text-xs font-semibold text-white/70 transition hover:border-amber-400/50 hover:text-amber-300"
           aria-label="Switch to list view"
         >
           <List className="h-4 w-4" />
@@ -434,8 +434,8 @@ export function MapScreen() {
                 className={cn(
                   "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold transition",
                   active
-                    ? "bg-yellow-400 scale-105 text-black"
-                    : "glass border border-white/10 text-white/70 hover:border-yellow-400/50 hover:text-yellow-300",
+                    ? "bg-amber-400 scale-105 text-black"
+                    : "glass border border-white/10 text-white/70 hover:border-amber-400/50 hover:text-amber-300",
                 )}
               >
                 {r < 1 ? `${r * 1000}m` : `${r}km`}
@@ -449,8 +449,8 @@ export function MapScreen() {
           className={cn(
             "flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition",
             liveOnly
-              ? "bg-yellow-400 vibe-live-ring scale-105 text-black"
-              : "glass border border-white/10 text-white/70 hover:border-yellow-400/50 hover:text-yellow-300",
+              ? "bg-amber-400 vibe-live-ring scale-105 text-black"
+              : "glass border border-white/10 text-white/70 hover:border-amber-400/50 hover:text-amber-300",
           )}
         >
           <Flame
@@ -491,8 +491,8 @@ export function MapScreen() {
         {/* Tile loading shimmer — shown until Leaflet fires whenReady. */}
         {!mapReady && (
           <div className="absolute inset-0 z-[2] flex items-center justify-center bg-[#e8eaed]">
-            <div className="flex items-center gap-2 rounded-full border border-yellow-400/40 bg-black/85 px-4 py-2 text-xs font-semibold text-yellow-300 backdrop-blur-sm">
-              <Sparkles className="h-3.5 w-3.5 vibe-pulse text-yellow-400" />
+            <div className="flex items-center gap-2 rounded-full border border-amber-400/40 bg-black/85 px-4 py-2 text-xs font-semibold text-amber-300 backdrop-blur-sm">
+              <Sparkles className="h-3.5 w-3.5 vibe-pulse text-amber-400" />
               Loading map…
             </div>
           </div>
@@ -511,16 +511,16 @@ export function MapScreen() {
               aria-label="Use my location"
             >
               {/* pulsing rings — pointer-events-none so they don't block pin clicks */}
-              <span className="pointer-events-none absolute h-6 w-6 rounded-full bg-yellow-400/40 here-pulse" />
+              <span className="pointer-events-none absolute h-6 w-6 rounded-full bg-amber-400/40 here-pulse" />
               <span
-                className="pointer-events-none absolute h-10 w-10 rounded-full bg-yellow-400/25 here-pulse"
+                className="pointer-events-none absolute h-10 w-10 rounded-full bg-amber-400/25 here-pulse"
                 style={{ animationDelay: "0.4s" }}
               />
               {/* solid yellow disc + white center dot */}
-              <span className="relative flex h-4 w-4 items-center justify-center rounded-full bg-yellow-400 ring-2 ring-black/60 shadow-[0_0_18px_-2px_rgba(255,203,5,0.95)]">
+              <span className="relative flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 ring-2 ring-black/60 shadow-[0_0_18px_-2px_rgba(255,203,5,0.95)]">
                 <span className="h-1.5 w-1.5 rounded-full bg-white" />
               </span>
-              <span className="pointer-events-none mt-1.5 whitespace-nowrap rounded-full border border-yellow-400/40 bg-black/80 px-2 py-0.5 text-[9px] font-bold text-yellow-400 backdrop-blur-sm">
+              <span className="pointer-events-none mt-1.5 whitespace-nowrap rounded-full border border-amber-400/40 bg-black/80 px-2 py-0.5 text-[9px] font-bold text-amber-400 backdrop-blur-sm">
                 {locating ? "Locating…" : "You"}
               </span>
             </button>
@@ -561,7 +561,7 @@ export function MapScreen() {
                   {/* Lit-tier rotating sparkle ring — uniform yellow */}
                   {m.tier === "lit" && (
                     <span
-                      className="pointer-events-none absolute -top-1 h-14 w-14 rounded-full border border-yellow-300/40 fun-sparkle-ring"
+                      className="pointer-events-none absolute -top-1 h-14 w-14 rounded-full border border-amber-300/40 fun-sparkle-ring"
                       style={{
                         background:
                           "conic-gradient(from 0deg, transparent 0%, rgba(255,203,5,0.40) 25%, transparent 50%, rgba(255,203,5,0.40) 75%, transparent 100%)",
@@ -617,10 +617,10 @@ export function MapScreen() {
                       Black ring + drop shadow helps it pop on the light map tiles. */}
                   <span
                     className={cn(
-                      "relative flex items-center justify-center rounded-full border-2 border-black/80 bg-yellow-400 shadow-[0_3px_10px_-1px_rgba(0,0,0,0.45)]",
+                      "relative flex items-center justify-center rounded-full border-2 border-black/80 bg-amber-400 shadow-[0_3px_10px_-1px_rgba(0,0,0,0.45)]",
                       tier.animClass,
                       tier.glowClass,
-                      m.isLive && "ring-2 ring-yellow-400 ring-offset-1 ring-offset-black/40",
+                      m.isLive && "ring-2 ring-amber-400 ring-offset-1 ring-offset-black/40",
                     )}
                     style={{ height: sizePx, width: sizePx }}
                   >
@@ -644,7 +644,7 @@ export function MapScreen() {
 
                   {/* Hovered/focused tooltip — title + tier label + score bar + distance */}
                   {isHovered && (
-                    <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-3 w-44 -translate-x-1/2 rounded-xl glass-strong border border-yellow-400/30 px-2.5 py-2 shadow-lg animate-pop-in">
+                    <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-3 w-44 -translate-x-1/2 rounded-xl glass-strong border border-amber-400/30 px-2.5 py-2 shadow-lg animate-pop-in">
                       <span className="block max-w-[160px] truncate font-display text-[11px] font-bold text-white">
                         {m.party.title}
                       </span>
@@ -677,7 +677,7 @@ export function MapScreen() {
                           ? `${Math.round(m.dist * 1000)}m away`
                           : `${m.dist.toFixed(1)}km away`}
                         {m.isLive && (
-                          <span className="ml-1 text-yellow-300">· Live</span>
+                          <span className="ml-1 text-amber-300">· Live</span>
                         )}
                       </span>
                     </span>
@@ -685,7 +685,7 @@ export function MapScreen() {
 
                   {/* Pin tail — yellow diamond pointing at the exact spot */}
                   <span
-                    className="block -mt-1 h-2 w-2 rotate-45 border-b-2 border-r-2 border-black/80 bg-yellow-400"
+                    className="block -mt-1 h-2 w-2 rotate-45 border-b-2 border-r-2 border-black/80 bg-amber-400"
                     aria-hidden
                   />
                 </button>
@@ -695,8 +695,8 @@ export function MapScreen() {
             {/* Loading overlay — vibe-pulse on the scanner chip */}
             {isLoading && mapReady && (
               <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2">
-                <div className="flex items-center gap-2 rounded-full glass border border-yellow-400/30 px-3 py-1.5 text-[11px] text-yellow-300">
-                  <Sparkles className="h-3 w-3 vibe-pulse text-yellow-400" />
+                <div className="flex items-center gap-2 rounded-full glass border border-amber-400/30 px-3 py-1.5 text-[11px] text-amber-300">
+                  <Sparkles className="h-3 w-3 vibe-pulse text-amber-400" />
                   Scanning the area…
                 </div>
               </div>
@@ -711,7 +711,7 @@ export function MapScreen() {
           href={mapLinkUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute right-3 top-3 z-20 flex h-9 items-center gap-1.5 rounded-full border border-yellow-400/40 bg-black/85 px-3 text-[11px] font-bold text-yellow-300 backdrop-blur-sm transition hover:border-yellow-400 hover:text-yellow-200"
+          className="absolute right-3 top-3 z-20 flex h-9 items-center gap-1.5 rounded-full border border-amber-400/40 bg-black/85 px-3 text-[11px] font-bold text-amber-300 backdrop-blur-sm transition hover:border-amber-400 hover:text-amber-200"
           aria-label="Open in Google Maps (full interactive view)"
         >
           <ExternalLink className="h-3.5 w-3.5" />
@@ -728,7 +728,7 @@ export function MapScreen() {
               action={
                 <button
                   onClick={() => refetch()}
-                  className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-bold text-black transition active:scale-95"
+                  className="rounded-full bg-amber-400 px-4 py-2 text-sm font-bold text-black transition active:scale-95"
                 >
                   Retry
                 </button>
@@ -740,11 +740,11 @@ export function MapScreen() {
         {/* Empty state — floating 🗺️ + yellow title + hint to widen radius */}
         {!isLoading && !isError && parties.length === 0 && (
           <div className="absolute inset-0 z-20 flex items-center justify-center px-6">
-            <div className="flex flex-col items-center gap-3 rounded-3xl glass border border-yellow-400/30 px-6 py-8 text-center">
+            <div className="flex flex-col items-center gap-3 rounded-3xl glass border border-amber-400/30 px-6 py-8 text-center">
               <span className="text-4xl vibe-float" aria-hidden>
                 🗺️
               </span>
-              <h3 className="font-display text-base font-extrabold text-yellow-400">
+              <h3 className="font-display text-base font-extrabold text-amber-400">
                 No parties nearby
               </h3>
               <p className="max-w-[220px] text-xs text-muted-foreground">
@@ -758,7 +758,7 @@ export function MapScreen() {
                 onClick={() =>
                   liveOnly ? setLiveOnly(false) : setScreen("create")
                 }
-                className="rounded-full bg-yellow-400 px-4 py-2 text-xs font-bold text-black transition active:scale-95"
+                className="rounded-full bg-amber-400 px-4 py-2 text-xs font-bold text-black transition active:scale-95"
               >
                 {liveOnly ? "Show all parties" : "Launch a vibe"}
               </button>
@@ -771,11 +771,11 @@ export function MapScreen() {
           <button
             onClick={useMyLocation}
             disabled={locating}
-            className="flex h-11 w-11 items-center justify-center rounded-full glass-strong border border-white/10 text-yellow-400 transition hover:border-yellow-400/50 disabled:opacity-70"
+            className="flex h-11 w-11 items-center justify-center rounded-full glass-strong border border-white/10 text-amber-400 transition hover:border-amber-400/50 disabled:opacity-70"
             aria-label="Use my GPS location"
           >
             {locating ? (
-              <span className="h-4 w-4 rounded-full border-2 border-white/20 border-t-yellow-400 vibe-pulse animate-spin" />
+              <span className="h-4 w-4 rounded-full border-2 border-white/20 border-t-amber-400 vibe-pulse animate-spin" />
             ) : (
               <Crosshair className="h-4 w-4" />
             )}
@@ -801,16 +801,16 @@ export function MapScreen() {
       {/* Bottom sheet — glass-strong with solid yellow top accent + drag handle */}
       <section className="glass-strong relative z-10 mb-20 flex max-h-[34vh] flex-col border-t border-white/10">
         {/* Solid yellow top accent line */}
-        <div className="absolute -top-px left-0 right-0 h-px bg-yellow-400" aria-hidden />
+        <div className="absolute -top-px left-0 right-0 h-px bg-amber-400" aria-hidden />
         {/* Drag handle — short solid bar */}
         <div className="mx-auto my-2 h-1.5 w-12 rounded-full bg-white/30" />
 
         <div className="flex items-center justify-between px-4 pb-1">
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-sm font-extrabold text-yellow-400">
+            <h2 className="font-display text-sm font-extrabold text-amber-400">
               Nearby parties
             </h2>
-            <span className="rounded-full bg-yellow-400 px-1.5 py-0.5 text-[10px] font-bold text-black">
+            <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-black">
               {parties.length}
             </span>
           </div>
@@ -853,8 +853,8 @@ export function MapScreen() {
                   onMouseLeave={() => setHoveredId(null)}
                   className={cn(
                     "relative flex w-full items-center gap-3 overflow-hidden rounded-2xl glass border px-3 py-2.5 text-left transition",
-                    "border-white/10 hover:border-yellow-400/50",
-                    isHovered && "border-yellow-400/50",
+                    "border-white/10 hover:border-amber-400/50",
+                    isHovered && "border-amber-400/50",
                     m.dimmed && "opacity-40",
                   )}
                   aria-label={`${m.party.title} — ${m.dist.toFixed(1)}km — ${tier.label}`}
@@ -862,7 +862,7 @@ export function MapScreen() {
                   {/* left yellow accent bar on hover */}
                   <span
                     className={cn(
-                      "absolute left-0 top-0 h-full w-1 bg-yellow-400 transition-opacity",
+                      "absolute left-0 top-0 h-full w-1 bg-amber-400 transition-opacity",
                       isHovered ? "opacity-100" : "opacity-0",
                     )}
                     aria-hidden
@@ -892,8 +892,8 @@ export function MapScreen() {
                         {tier.label}
                       </span>
                       {m.isLive && (
-                        <span className="flex items-center gap-0.5 font-bold text-yellow-300">
-                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400 vibe-pulse" />
+                        <span className="flex items-center gap-0.5 font-bold text-amber-300">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 vibe-pulse" />
                           Live
                         </span>
                       )}
@@ -940,12 +940,12 @@ function CityDot({
         className={cn(
           "h-3 w-3 rounded-full transition",
           active
-            ? "bg-yellow-400 scale-110"
+            ? "bg-amber-400 scale-110"
             : "glass border border-white/20",
         )}
       />
       {active && (
-        <span className="text-[10px] font-bold text-yellow-400">
+        <span className="text-[10px] font-bold text-amber-400">
           {label}
         </span>
       )}

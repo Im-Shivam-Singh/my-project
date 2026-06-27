@@ -27,32 +27,32 @@ const STATUS_STYLES: Record<
     extra?: string;
   }
 > = {
-  // LIVE NOW — bright yellow + ring pulse
+  // LIVE NOW — bright coral + ring pulse
   live: {
-    bg: "bg-yellow-400/20 border-yellow-400/60",
-    text: "text-yellow-300",
+    bg: "bg-coral/20 border-coral/60",
+    text: "text-coral",
     icon: Radio,
     label: () => "Live now",
     extra: "vibe-live-ring",
   },
-  // starting-soon — slightly dimmer yellow
+  // starting-soon — amber warmth
   "starting-soon": {
-    bg: "bg-yellow-400/10 border-yellow-400/40",
-    text: "text-yellow-300/80",
+    bg: "bg-amber-500/10 border-amber-500/40",
+    text: "text-amber-300",
     icon: Hourglass,
     label: (c: string) => `Starts ${c}`,
   },
-  // today — slightly dimmer yellow
+  // today — amber warmth
   today: {
-    bg: "bg-yellow-400/10 border-yellow-400/40",
-    text: "text-yellow-300/80",
+    bg: "bg-amber-500/10 border-amber-500/40",
+    text: "text-amber-300",
     icon: CalendarClock,
     label: (c: string) => `Today · ${c}`,
   },
-  // upcoming — slightly dimmer yellow
+  // upcoming — amber warmth
   upcoming: {
-    bg: "bg-yellow-400/10 border-yellow-400/40",
-    text: "text-yellow-300/80",
+    bg: "bg-amber-500/10 border-amber-500/40",
+    text: "text-amber-300",
     icon: CalendarClock,
     label: (c: string) => `Starts ${c}`,
   },

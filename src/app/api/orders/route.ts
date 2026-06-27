@@ -45,6 +45,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Party not found" }, { status: 404 });
   }
 
+  // Validate the user exists — prevents foreign-key constraint violations
+  // when a browser has a stale user ID in localStorage from a previous session.
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    return NextResponse.json(
+      {
+        error: "Your session has expired. Please log in again to continue.",
+        code: "USER_NOT_FOUND",
+      },
+      { status: 401 },
+    );
+  }
+
   const currency = currencyForCity(party.city);
   const totalAmount = items.reduce(
     (sum: number, it: any) => sum + it.unitPrice * it.quantity,

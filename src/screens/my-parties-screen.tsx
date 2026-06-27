@@ -40,7 +40,7 @@ export function MyPartiesScreen() {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h1 className="flex-1 font-display text-lg font-bold text-yellow-400">
+        <h1 className="flex-1 font-display text-lg font-bold text-amber-400">
           My parties
         </h1>
       </header>
@@ -77,7 +77,7 @@ export function MyPartiesScreen() {
             action={
               <button
                 onClick={openCreate}
-                className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
+                className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
               >
                 Launch a vibe
               </button>
@@ -87,7 +87,7 @@ export function MyPartiesScreen() {
 
         {!isLoading && parties.length > 0 && (
           <>
-            <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-yellow-300">
+            <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-amber-300">
               <CalendarClock className="h-3.5 w-3.5" /> {parties.length} parties hosted
             </div>
             {parties.map((p) => (

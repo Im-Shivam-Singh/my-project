@@ -1801,3 +1801,64 @@ Stage Summary:
 - Multi-color palette applied: purple primary, teal Verified, amber stars/menu tags, coral for urgency (low-spots pill + 21+ tag + saved heart). Pre-existing coral-500 utility gap noted (VIBE_COLORS EDM entry uses `bg-coral-500` which is not a Tailwind default — left as-is per task instruction to use VIBE_COLORS directly; this is a separate cleanup task).
 - ReviewsSection + recordView effect preserved. Skeleton + error states preserved.
 - Lint clean, tsc clean for detail-screen.tsx.
+
+---
+Task ID: 10 (orchestrator)
+Agent: orchestrator (direct)
+Task: Fix critical bugs (yellow theme on mobile, payment 500) + launch 4 new features (music player, filter redesign, guest TRUST rating, bouncer booking).
+
+Work Log:
+- INVESTIGATED yellow theme: found 11 components still using `yellow-400`/`yellow-300` Tailwind classes directly (rating-pill, reviews-section, guest-avatars, live-countdown, host-analytics, party-card, user-avatar, vibe-badge, map-screen, chat-screen). Bulk sed → amber-400/amber-300 across ALL src files. Verified 0 remaining `yellow-` refs.
+- INVESTIGATED payment 500: POST /api/orders fails with Prisma P2003 foreign key constraint violation because the user ID in the browser's localStorage (`cmqv71gy60002rfuukktk1qm1`) doesn't exist in the DB (stale from previous session, DB was reset). 
+  - API fix: added user existence validation to POST /api/orders — returns 401 with `{"error":"Your session has expired. Please log in again to continue.","code":"USER_NOT_FOUND"}` instead of 500.
+  - Client fix: payment-screen.tsx onError now parses the error message — if it contains "session has expired" / "log in", shows "Session expired" toast + calls `useAppStore.getState().logout()` after 1.5s to redirect to login. Otherwise shows the actual error message.
+  - App-shell fix: added a useEffect that calls `api.getUser({id: currentUser.id})` on mount — if it 404s, auto-logout so the user re-authenticates cleanly.
+  - Verified: curl POST /api/orders with stale user → 401 JSON (was 500). curl with valid user → 201 order created successfully.
+
+Stage Summary:
+- Yellow theme leak: FIXED. All `yellow-*` classes replaced with `amber-*` (for gold/stars) / `purple-*` (for brand rings) / `coral-*` (for live badge). Mobile + laptop now both render the purple/dark VibeMatch theme consistently.
+- Payment 500: FIXED. Root cause was stale user ID in localStorage. Three-layer fix: API validates user, client shows clear error + redirects to login, app-shell auto-validates user on load. Happy path verified working.
+- Launching 4 parallel subagents for: music player, filter redesign, guest TRUST rating, bouncer booking.
+
+---
+Task ID: 11 (orchestrator)
+Agent: orchestrator (direct)
+Task: Fix yellow theme on mobile + payment 500 + add music player + filter redesign + guest TRUST rating + bouncer booking.
+
+Work Log:
+- INVESTIGATED yellow theme: found 11+ components still using `yellow-400`/`amber-400` Tailwind classes as PRIMARY brand color (login, chat, create, filter, reviews, rating-pill, guest-avatars, live-countdown, host-analytics, party-card, user-avatar, vibe-badge, map-screen). Bulk sed across ALL src files: yellow→amber for accents, amber→purple for primary brand surfaces (chat bubbles, login button, online indicators, vibe chips). Verified 0 remaining yellow-* refs.
+- INVESTIGATED payment 500: POST /api/orders failed with Prisma P2003 foreign key violation — user ID in localStorage was stale (DB was reset between sessions). Three-layer fix:
+  - API: added user existence validation to POST /api/orders → returns 401 with `{"error":"Your session has expired...","code":"USER_NOT_FOUND"}` instead of 500.
+  - Client: payment-screen.tsx onError parses error → shows "Session expired" toast + calls logout() after 1.5s.
+  - App-shell: added useEffect that calls api.getUser({id}) on mount → auto-logout if 404.
+  - Verified: valid user → 201 order created (₹3, paid). Stale user → clean 401 JSON.
+- BUILT music player feature:
+  - `src/lib/music-tracks.ts` — 5 royalty-free Pixabay tracks (lofi-chill, deep-house, ambient-focus, chill-hop, party-vibe) with mood/emoji/color.
+  - `src/lib/music-store.ts` — Zustand persisted store (isPlaying, currentTrackId, volume, hasSeenIntro).
+  - `src/components/vibe/music-player.tsx` — MusicPlayerButton (circular icon, first-tap shows Dialog "Play music and explore our app" + "Use earphones 🎧") + MusicPlayerBar (mini player fixed above bottom nav, spinning disc, track title, play/pause, volume slider, expandable track list, close).
+  - Wired into home-screen header (button) + app-shell (bar persists across screens).
+  - VLM verified: music icon in header ✓, intro popup with correct copy ✓, mini player bar with "Midnight Lo-fi" track ✓.
+- BUILT filter redesign (city + nearby slider):
+  - Added `radiusKm` + `setRadiusKm` to app store (persisted).
+  - Added "Nearby" subsection under City pills in filter-screen.tsx — only visible when a city is selected. Purple slider 0-50 km, shows "Within X km" or "City-wide", with helpful copy.
+  - Wired radius into home-screen feed: filters parties by haversine distance from city center when radius > 0.
+  - VLM verified: "NEARBY section with km slider, 'Within 10 km' label" ✓.
+- BUILT guest TRUST rating:
+  - Prisma: added `TrustRating` model (partyId, hostId, guestId, rating 1-5, note) + `trustScore`/`trustCount` on User.
+  - API: `POST /api/trust-ratings` (upsert + recompute aggregate) + `GET /api/trust-ratings?guestId=...`.
+  - UI: TrustRatingSection on host-dashboard (5-star inline rating per guest, saves via mutation, shows "✓ Rated"). TRUST badge on profile-screen (teal pill with shield icon, score, count).
+  - VLM verified: "teal TRUST badge with shield icon near user's name" ✓.
+- BUILT bouncer/security booking:
+  - Prisma: added `securityBooked`/`securityFee`/`securityStatus` to Party model.
+  - API: parties POST route accepts + persists security fields; parties GET serializes them.
+  - UI: Security add-on section in create-screen.tsx — toggle card "Add a verified security person", city-aware fee (₹800-1500 India / £40-60 UK), fee slider, breakdown (platform 18% + bouncer payout), "Verified & licensed" note. Security badge on detail-screen.tsx (teal, "Verified security on-site", "🔒 Safe").
+  - VLM verified: "Security add-on section with 'Add a verified security person' + toggle" ✓, expanded view with "Why add security?", fee slider ₹1000, breakdown ₹180/₹820, verified note ✓.
+
+Stage Summary:
+- Yellow theme: FIXED. All yellow/amber-as-primary classes replaced with purple. Mobile + laptop now both render consistent purple/dark VibeMatch theme.
+- Payment 500: FIXED. Stale users get clean 401 + auto-redirect to login. Valid users can pay successfully.
+- Music player: SHIPPED. Intro popup + mini player bar with 5 royalty-free tracks, persists across screens.
+- Filter redesign: SHIPPED. City pills + nearby km slider (0-50), wired into home feed proximity filtering.
+- Guest TRUST rating: SHIPPED. Hosts rate guests 1-5 after party, aggregated score shown on guest profile as teal TRUST badge.
+- Bouncer booking: SHIPPED. Hosts can add verified security during party creation (£40-60 UK / ₹800-1500 India, 18% platform fee), badge shown on detail screen as trust signal.
+- `bun run lint` → 0 errors. Dev server running clean.

@@ -41,8 +41,8 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
   if (a.partyCount === 0) {
     return (
       <section className="flex flex-col items-center rounded-3xl border border-white/10 bg-card p-6 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-400/10">
-          <TrendingUp className="h-6 w-6 text-yellow-400" />
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/10">
+          <TrendingUp className="h-6 w-6 text-amber-400" />
         </div>
         <p className="text-sm font-semibold">No analytics yet</p>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -63,8 +63,8 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
       {/* Header strip */}
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 font-display text-sm font-bold">
-          <TrendingUp className="h-4 w-4 text-yellow-400" />
-          <span className="text-yellow-400">Analytics</span>
+          <TrendingUp className="h-4 w-4 text-amber-400" />
+          <span className="text-amber-400">Analytics</span>
         </h2>
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
           {a.partyCount} {a.partyCount === 1 ? "party" : "parties"}
@@ -74,26 +74,26 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
       {/* A. Stats grid (2x2) */}
       <div className="grid grid-cols-2 gap-2">
         <StatCard
-          icon={<Eye className="h-4 w-4 text-yellow-400" />}
-          iconBg="bg-yellow-400/10"
+          icon={<Eye className="h-4 w-4 text-amber-400" />}
+          iconBg="bg-amber-400/10"
           value={a.totalViews.toLocaleString()}
           label="Total views"
         />
         <StatCard
-          icon={<Inbox className="h-4 w-4 text-yellow-400" />}
-          iconBg="bg-yellow-400/10"
+          icon={<Inbox className="h-4 w-4 text-amber-400" />}
+          iconBg="bg-amber-400/10"
           value={a.totalRequests.toLocaleString()}
           label="Total requests"
         />
         <StatCard
-          icon={<CheckCircle className="h-4 w-4 text-yellow-400" />}
-          iconBg="bg-yellow-400/10"
+          icon={<CheckCircle className="h-4 w-4 text-amber-400" />}
+          iconBg="bg-amber-400/10"
           value={`${a.acceptanceRate}%`}
           label="Acceptance rate"
         />
         <StatCard
-          icon={<Star className="h-4 w-4 text-yellow-400" />}
-          iconBg="bg-yellow-400/10"
+          icon={<Star className="h-4 w-4 text-amber-400" />}
+          iconBg="bg-amber-400/10"
           value={ratingDisplay}
           label="Avg rating"
         />
@@ -103,7 +103,7 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
       <div>
         <div className="mb-1.5 flex items-center justify-between text-[11px]">
           <span className="flex items-center gap-1.5 font-medium text-foreground">
-            <Users className="h-3.5 w-3.5 text-yellow-400" /> Capacity filled
+            <Users className="h-3.5 w-3.5 text-amber-400" /> Capacity filled
           </span>
           <span className="text-muted-foreground">
             {a.totalGuests} / {a.totalCapacity} guests confirmed
@@ -111,7 +111,7 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-secondary">
           <div
-            className="h-full rounded-full bg-yellow-400 transition-all duration-700 ease-out"
+            className="h-full rounded-full bg-amber-400 transition-all duration-700 ease-out"
             style={{ width: `${capacityPct}%` }}
           />
         </div>
@@ -164,7 +164,7 @@ export function HostAnalytics({ hostId }: { hostId: string }) {
                     className={cn(
                       "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
                       isTop
-                        ? "bg-yellow-400 text-black"
+                        ? "bg-amber-400 text-black"
                         : "bg-white/5 text-muted-foreground",
                     )}
                   >
@@ -229,8 +229,8 @@ function FunnelPill({
   // Bumble single-accent: pending & accepted use yellow (varied opacity),
   // rejected is muted grey (terminal/negative state).
   const styles: Record<typeof color, string> = {
-    amber: "border-yellow-400/30 bg-yellow-400/5 text-yellow-300/80",
-    emerald: "border-yellow-400/50 bg-yellow-400/15 text-yellow-300",
+    amber: "border-amber-400/30 bg-amber-400/5 text-amber-300/80",
+    emerald: "border-amber-400/50 bg-amber-400/15 text-amber-300",
     rose: "border-white/10 bg-white/5 text-muted-foreground",
   };
   return (

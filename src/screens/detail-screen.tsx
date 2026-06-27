@@ -343,6 +343,28 @@ export function DetailScreen() {
             </section>
           )}
 
+          {/* Security booking badge — shows when the host has booked a bouncer.
+              This is a major trust signal, especially for women guests. */}
+          {party.securityBooked && (
+            <section className="rounded-2xl border border-teal-500/30 bg-teal-500/8 p-3 flex items-start gap-3 animate-screen-in">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-500/20 text-teal-300">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">
+                  Verified security on-site
+                </p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                  Host has booked a licensed security person for this party.
+                  Go worry-free — show up, vibe, and feel safe.
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-teal-500/15 px-2 py-0.5 text-[10px] font-semibold text-teal-300">
+                🔒 Safe
+              </span>
+            </section>
+          )}
+
           {/* Who's going — guest initials, locked until payment */}
           <section className="glass rounded-2xl p-3">
             <span className="eyebrow">Who's going</span>

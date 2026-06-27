@@ -39,6 +39,10 @@ interface AppState {
   setVibeFilter: (v: string | null) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+  // Nearby radius (km) — when > 0 and a city is selected, the home feed
+  // filters parties within this radius of the city center.
+  radiusKm: number;
+  setRadiusKm: (km: number) => void;
 
   // saved/liked parties (persisted)
   savedPartyIds: string[];
@@ -100,6 +104,8 @@ export const useAppStore = create<AppState>()(
       setVibeFilter: (v) => set({ vibeFilter: v }),
       searchQuery: "",
       setSearchQuery: (q) => set({ searchQuery: q }),
+      radiusKm: 10,
+      setRadiusKm: (km) => set({ radiusKm: Math.max(0, Math.min(50, km)) }),
 
       savedPartyIds: [],
       toggleSaved: (id) =>
@@ -129,6 +135,7 @@ export const useAppStore = create<AppState>()(
         currentUser: state.currentUser,
         authed: state.authed,
         cityFilter: state.cityFilter,
+        radiusKm: state.radiusKm,
         userLocation: state.userLocation,
       }),
     },

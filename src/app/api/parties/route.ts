@@ -26,6 +26,9 @@ function serialize(p: any): Party {
     lat: p.lat,
     lng: p.lng,
     guestCount: p.guestCount,
+    securityBooked: p.securityBooked,
+    securityFee: p.securityFee,
+    securityStatus: p.securityStatus,
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -110,6 +113,8 @@ export async function POST(req: NextRequest) {
     coverUrl,
     lat,
     lng,
+    securityBooked,
+    securityFee,
   } = body;
 
   if (!title || !city || !area || !date || !time || !hostName) {
@@ -139,6 +144,9 @@ export async function POST(req: NextRequest) {
       lat: typeof lat === "number" ? lat : null,
       lng: typeof lng === "number" ? lng : null,
       guestCount: 0,
+      securityBooked: Boolean(securityBooked),
+      securityFee: Number(securityFee) || 0,
+      securityStatus: securityBooked ? "requested" : "",
     },
   });
 

@@ -30,11 +30,11 @@ export function VibeBadge({
     <Tag
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border bg-yellow-400/15 text-yellow-300 border-yellow-400/45 font-semibold transition",
+        "inline-flex items-center gap-1 rounded-full border bg-amber-400/15 text-amber-300 border-amber-400/45 font-semibold transition",
         sizing,
         onClick &&
-          "hover:bg-yellow-400/25 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 cursor-pointer",
-        active && "ring-2 ring-yellow-400 ring-offset-1 ring-offset-background",
+          "hover:bg-amber-400/25 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 cursor-pointer",
+        active && "ring-2 ring-amber-400 ring-offset-1 ring-offset-background",
         className,
       )}
     >

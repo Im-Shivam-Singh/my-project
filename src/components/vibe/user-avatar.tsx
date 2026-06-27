@@ -27,7 +27,7 @@ export function UserAvatar({
     <div
       className={cn(
         "relative shrink-0",
-        ring && "rounded-full ring-2 ring-yellow-400",
+        ring && "rounded-full ring-2 ring-amber-400",
         className,
       )}
       style={{ width: size, height: size }}
@@ -54,7 +54,7 @@ export function UserAvatar({
       {ring && (
         <span
           aria-hidden
-          className="absolute bottom-0 right-0 block rounded-full bg-yellow-400 ring-2 ring-background"
+          className="absolute bottom-0 right-0 block rounded-full bg-amber-400 ring-2 ring-background"
           style={{
             width: Math.max(8, Math.round(size * 0.22)),
             height: Math.max(8, Math.round(size * 0.22)),

@@ -37,13 +37,13 @@ export function InboxScreen() {
             <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">
               Messages
             </p>
-            <h1 className="font-display text-2xl font-extrabold text-yellow-400">
+            <h1 className="font-display text-2xl font-extrabold text-amber-400">
               Inbox
             </h1>
           </div>
           <button
             onClick={() => setScreen("home")}
-            className="flex h-10 items-center gap-1.5 rounded-full border border-white/10 bg-card px-3 text-xs font-medium text-white/80 transition hover:border-yellow-400/50 hover:text-yellow-300"
+            className="flex h-10 items-center gap-1.5 rounded-full border border-white/10 bg-card px-3 text-xs font-medium text-white/80 transition hover:border-amber-400/50 hover:text-amber-300"
           >
             <Search className="h-4 w-4" /> Find
           </button>
@@ -76,7 +76,7 @@ export function InboxScreen() {
             action={
               <button
                 onClick={() => setScreen("home")}
-                className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
+                className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition active:scale-95"
               >
                 Explore parties
               </button>
@@ -96,11 +96,11 @@ export function InboxScreen() {
                     onClick={() => openThread(t.id)}
                     className={cn(
                       "group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition glass press-feedback",
-                      unread ? "border border-yellow-400/50" : "border border-white/10 hover:border-yellow-400/40",
+                      unread ? "border border-amber-400/50" : "border border-white/10 hover:border-amber-400/40",
                     )}
                   >
                     <div className="relative">
-                      <span className="relative block rounded-full ring-2 ring-yellow-400/60">
+                      <span className="relative block rounded-full ring-2 ring-amber-400/60">
                         <UserAvatar
                           name={t.otherUser?.name || "User"}
                           src={t.otherUser?.avatarUrl}
@@ -108,7 +108,7 @@ export function InboxScreen() {
                         />
                       </span>
                       {unread && (
-                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow-400 px-1 text-[10px] font-bold text-black vibe-live-ring ring-2 ring-background">
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-black vibe-live-ring ring-2 ring-background">
                           {t.unreadCount}
                         </span>
                       )}
