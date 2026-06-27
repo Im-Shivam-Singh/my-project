@@ -82,7 +82,7 @@ export function AppShell() {
 
   return (
     <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[480px] flex-col overflow-hidden">
-      <main className="relative flex-1 overflow-hidden pb-28">
+      <main className="relative flex-1 overflow-hidden pb-32">
         {/* keyed by current screen so the transition re-fires on screen change */}
         <div key={current} className="h-full animate-screen-in">
           {current === "login" && <LoginScreen />}

@@ -70,7 +70,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-[480px] items-end justify-around px-3 pb-[max(env(safe-area-inset-bottom),10px)] pt-2"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-[480px] items-end justify-around px-3 pb-[max(env(safe-area-inset-bottom),14px)] pt-2"
       aria-label="Primary"
     >
       {/* Glass shell with purple top edge + glow */}
@@ -134,7 +134,7 @@ function NavButton({
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium transition-all duration-200",
+        "group relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium transition-all duration-200 active:scale-95",
         active
           ? "text-purple-300"
           : "text-muted-foreground/80 hover:text-foreground",
@@ -196,7 +196,7 @@ function CreateButton({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       aria-label="Launch a vibe"
-      className="group relative -mt-7 flex shrink-0 flex-col items-center"
+      className="group relative -mt-6 flex shrink-0 flex-col items-center"
     >
       {/* Soft purple glow halo behind the FAB */}
       <span
@@ -216,7 +216,7 @@ function CreateButton({ onClick }: { onClick: () => void }) {
         />
       </span>
       {/* Tiny label under FAB */}
-      <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-purple-300/80 transition-colors group-hover:text-purple-300">
+      <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-purple-300/90 transition-colors group-hover:text-purple-200">
         Host
       </span>
     </button>

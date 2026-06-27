@@ -351,7 +351,7 @@ export function DetailScreen() {
   return (
     <div className="flex h-full flex-col animate-screen-in">
       {/* Scrollable content */}
-      <div className="fancy-scrollbar flex-1 overflow-y-auto pb-40">
+      <div className="fancy-scrollbar flex-1 overflow-y-auto pb-44">
         {/* ── HERO / MEDIA GALLERY ───────────────────────────────────── */}
         <MediaGallery
           key={party.id}
@@ -381,7 +381,7 @@ export function DetailScreen() {
                 {feeLabel} entry
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground/90">
               Pay once · drinks add-on available after
             </p>
           </section>
@@ -440,7 +440,7 @@ export function DetailScreen() {
                     <ShieldCheck className="h-3 w-3" /> Verified
                   </span>
                 </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-0.5 text-xs text-muted-foreground/90">
                   <span className="text-amber-300">★★★★★</span>{" "}
                   <span className="font-medium text-foreground/80">
                     {host.rating.toFixed(1)}
@@ -451,10 +451,10 @@ export function DetailScreen() {
               {!isOwn && (
                 <button
                   onClick={messageHost}
-                  className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-500/10 px-3 text-xs font-semibold text-purple-300 transition active:scale-95"
+                  className="flex h-9 shrink-0 items-center gap-1 rounded-xl border border-purple-500/40 bg-purple-500/10 px-2.5 text-[11px] font-semibold text-purple-300 transition active:scale-95 hover:bg-purple-500/15"
                 >
                   <MessageCircle className="h-3.5 w-3.5" />
-                  Message
+                  <span className="truncate">Message</span>
                 </button>
               )}
             </section>
@@ -571,7 +571,7 @@ export function DetailScreen() {
       </div>
 
       {/* ── STICKY CTA — Join for £N · get your spot ────────────────── */}
-      <div className="fixed inset-x-0 bottom-[84px] z-30 mx-auto max-w-[480px] px-4">
+      <div className="fixed inset-x-0 bottom-[88px] z-30 mx-auto max-w-[480px] px-4">
         <div className="flex items-center gap-2">
           {/* Save / heart toggle */}
           <button

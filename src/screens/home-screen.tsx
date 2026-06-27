@@ -159,12 +159,12 @@ export function HomeScreen() {
 
         {/* Search */}
         <form onSubmit={onSearchSubmit} className="relative mt-3">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
           <input
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             placeholder="Search areas, themes…"
-            className="w-full rounded-xl border border-border bg-secondary py-2.5 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+            className="w-full rounded-xl border border-border bg-secondary py-2.5 pl-10 pr-9 text-sm leading-none text-foreground placeholder:text-muted-foreground/80 focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/25"
           />
           {localSearch && (
             <button
@@ -180,11 +180,11 @@ export function HomeScreen() {
 
         {/* Tabs */}
         <div className="mt-3 flex gap-1 rounded-xl bg-secondary p-1">
-          <TabButton active={tab === "house"} onClick={() => setTab("house")}>
-            🏠 House parties
+          <TabButton active={tab === "house"} onClick={() => setTab("house")} emoji="🏠">
+            House parties
           </TabButton>
-          <TabButton active={tab === "social"} onClick={() => setTab("social")}>
-            ☕ Social meetups
+          <TabButton active={tab === "social"} onClick={() => setTab("social")} emoji="☕">
+            Social meetups
           </TabButton>
         </div>
       </header>
@@ -194,7 +194,7 @@ export function HomeScreen() {
         {/* Sub-header */}
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="font-display text-base font-bold">Happening near you</h2>
-          <span className="text-xs text-purple-300">{parties.length} vibes</span>
+          <span className="text-xs font-medium text-purple-200">{parties.length} vibes</span>
         </div>
 
         {/* City filter chips */}
@@ -322,21 +322,24 @@ function TabButton({
   active,
   onClick,
   children,
+  emoji,
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  emoji: string;
 }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "flex-1 rounded-lg py-2 text-xs font-medium transition-colors",
+        "flex-1 rounded-lg py-2 text-xs font-medium transition-all duration-200",
         active
-          ? "bg-purple-500/25 text-purple-200"
-          : "text-muted-foreground hover:text-foreground",
+          ? "bg-purple-500/25 text-purple-200 shadow-sm shadow-purple-500/10"
+          : "text-muted-foreground hover:text-foreground hover:bg-white/5",
       )}
     >
+      <span className={cn("mr-1 transition-transform duration-200 inline-block", active && "scale-110")}>{emoji}</span>
       {children}
     </button>
   );
@@ -355,10 +358,10 @@ function CityChip({
     <button
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+        "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200 active:scale-95",
         active
           ? "border-purple-500/50 bg-purple-500/25 text-purple-200"
-          : "border-border bg-secondary text-muted-foreground hover:text-foreground",
+          : "border-border bg-secondary text-muted-foreground hover:text-foreground hover:border-purple-500/30",
       )}
     >
       {label}
@@ -380,21 +383,21 @@ function VibeStory({
   return (
     <button
       onClick={onClick}
-      className="flex shrink-0 flex-col items-center gap-1.5"
+      className="flex shrink-0 flex-col items-center gap-1.5 transition-transform active:scale-95"
     >
       <span
         className={cn(
-          "flex h-14 w-14 items-center justify-center rounded-full border-2 text-2xl transition-all",
+          "flex h-14 w-14 items-center justify-center rounded-full border-2 text-2xl transition-all duration-200",
           active
             ? "border-purple-400 bg-purple-500/20 scale-105 glow-violet"
-            : "border-border bg-secondary",
+            : "border-border bg-secondary hover:border-purple-500/30 hover:bg-white/5",
         )}
       >
         {emoji}
       </span>
       <span
         className={cn(
-          "text-[10px] font-medium",
+          "text-[10px] font-medium transition-colors",
           active ? "text-purple-300" : "text-muted-foreground",
         )}
       >
@@ -457,14 +460,16 @@ function PartyCardNew({
       tabIndex={0}
       onClick={() => onOpen(party.id)}
       onKeyDown={(e) => e.key === "Enter" && onOpen(party.id)}
-      className="group overflow-hidden rounded-2xl border border-border bg-white/[0.04] transition-all hover:border-purple-500/40 hover:bg-white/[0.06] cursor-pointer"
+      className="group overflow-hidden rounded-2xl border border-border bg-white/[0.04] transition-all duration-200 hover:border-purple-500/40 hover:bg-white/[0.06] active:scale-[0.98] cursor-pointer"
     >
       {/* Cover */}
       <div
         className="relative flex h-28 items-center justify-center"
         style={{ background: HERO_BG[firstVibe] ?? "#1a1035" }}
       >
-        <span className="text-4xl">{VIBE_EMOJI[firstVibe] ?? "🎉"}</span>
+        {/* Gradient overlay for text readability */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+        <span className="relative text-4xl">{VIBE_EMOJI[firstVibe] ?? "🎉"}</span>
 
         {/* Theme pill (bottom-left) */}
         <span className="absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
@@ -481,7 +486,7 @@ function PartyCardNew({
             {left} left!
           </span>
         ) : (
-          <span className="absolute bottom-2 right-2 rounded-md bg-purple-500/80 px-2 py-0.5 text-[10px] font-medium text-purple-foreground">
+          <span className="absolute bottom-2 right-2 rounded-md bg-purple-500/90 px-2 py-0.5 text-[10px] font-medium text-white">
             {going} going
           </span>
         )}
