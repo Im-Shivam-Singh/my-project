@@ -325,7 +325,7 @@ export function CreateScreen() {
   return (
     <div className="flex h-full flex-col animate-screen-in">
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-white/10 glass px-3 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-white/10 glass px-3 py-3 pt-[max(env(safe-area-inset-top),12px)] lg:px-6">
         <button
           onClick={goBack}
           className="flex h-10 w-10 items-center justify-center rounded-full glass border border-white/10 text-white hover:bg-purple-400/10 active:scale-95 transition"
@@ -343,8 +343,8 @@ export function CreateScreen() {
         </div>
       </header>
 
-      <div className="fancy-scrollbar flex-1 overflow-y-auto p-4">
-        <div className="glass-strong rounded-3xl border border-purple-400/40 p-4 space-y-6">
+      <div className="fancy-scrollbar flex-1 overflow-y-auto p-4 lg:px-6">
+        <div className="glass-strong rounded-3xl border border-purple-400/40 p-4 space-y-6 lg:mx-auto lg:max-w-2xl">
           {/* Photos & videos gallery uploader */}
           <section className="space-y-2">
             <div className="flex items-baseline justify-between gap-2">
@@ -537,7 +537,7 @@ export function CreateScreen() {
           </section>
 
           {/* City + Area */}
-          <section className="grid grid-cols-2 gap-3">
+          <section className="grid grid-cols-2 gap-3 lg:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-white flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" aria-hidden />
@@ -571,7 +571,7 @@ export function CreateScreen() {
           </section>
 
           {/* Date + Time */}
-          <section className="grid grid-cols-2 gap-3">
+          <section className="grid grid-cols-2 gap-3 lg:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="flex items-center gap-1.5 text-white">
                 <CalendarDays className="h-3.5 w-3.5 text-purple-400" /> Date

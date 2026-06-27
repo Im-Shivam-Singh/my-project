@@ -31,7 +31,7 @@ export function InboxScreen() {
 
   return (
     <div className="flex h-full flex-col animate-screen-in">
-      <header className="sticky top-0 z-20 glass-strong border-b border-white/10 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 glass-strong border-b border-white/10 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)] lg:px-6">
         <div className="relative flex items-center justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">
@@ -50,7 +50,7 @@ export function InboxScreen() {
         </div>
       </header>
 
-      <div className="fancy-scrollbar flex-1 overflow-y-auto px-2 py-3">
+      <div className="fancy-scrollbar flex-1 overflow-y-auto px-2 py-3 lg:px-4">
         {isLoading && (
           <div className="space-y-2 px-2">
             {[0, 1, 2, 3].map((i) => (
@@ -85,7 +85,7 @@ export function InboxScreen() {
         )}
 
         {!isLoading && threads.length > 0 && (
-          <ul className="space-y-2">
+          <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3">
             {threads.map((t) => {
               const last = t.lastMessage;
               const isMine = last?.senderId === currentUser?.id;

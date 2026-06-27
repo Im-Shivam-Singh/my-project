@@ -103,7 +103,7 @@ export function ProfileScreen() {
 
   return (
     <div className="flex h-full flex-col animate-screen-in">
-      <header className="sticky top-0 z-20 flex items-center justify-between glass-strong border-b border-white/10 px-4 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+      <header className="sticky top-0 z-20 flex items-center justify-between glass-strong border-b border-white/10 px-4 py-3 pt-[max(env(safe-area-inset-top),12px)] lg:px-6">
         <h1 className="font-display text-xl font-bold text-amber-400">
           Profile
         </h1>
@@ -116,7 +116,7 @@ export function ProfileScreen() {
         </button>
       </header>
 
-      <div className="fancy-scrollbar flex-1 overflow-y-auto px-4 pb-6">
+      <div className="fancy-scrollbar flex-1 overflow-y-auto px-4 pb-6 lg:px-6">
         {/* Hero */}
         <section className="relative mt-4 overflow-hidden rounded-3xl glass border border-white/10 p-5">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-amber-400 opacity-30" />
@@ -162,14 +162,14 @@ export function ProfileScreen() {
         </section>
 
         {/* Stats — uniform yellow */}
-        <section className="mt-4 grid grid-cols-3 gap-3">
+        <section className="mt-4 grid grid-cols-3 gap-3 lg:grid-cols-3 lg:gap-4">
           <Stat icon={<Sparkles className="h-4 w-4 text-amber-400" />} label="Vibes" value={user.vibes} delay={0} />
           <Stat icon={<Flame className="h-4 w-4 text-amber-400" />} label="Hosted" value={user.hosted} delay={60} />
           <Stat icon={<Star className="h-4 w-4 text-amber-400" />} label="Rating" value={user.rating.toFixed(1)} delay={120} />
         </section>
 
         {/* Vibe score card with tier + progress */}
-        <section className="mt-4 overflow-hidden rounded-3xl glass border border-white/10 p-5">
+        <section className="mt-4 overflow-hidden rounded-3xl glass border border-white/10 p-5 lg:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] uppercase tracking-[0.2em] text-purple-300 font-semibold">
@@ -219,7 +219,7 @@ export function ProfileScreen() {
           <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] uppercase tracking-[0.2em] text-white/50">
             <Trophy className="h-3.5 w-3.5 text-amber-400" /> Achievements
           </h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 lg:grid-cols-6">
             {achievements.map((a) => (
               <div
                 key={a.label}

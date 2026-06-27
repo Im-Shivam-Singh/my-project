@@ -351,7 +351,7 @@ export function DetailScreen() {
   return (
     <div className="flex h-full flex-col animate-screen-in">
       {/* Scrollable content */}
-      <div className="fancy-scrollbar flex-1 overflow-y-auto pb-44">
+      <div className="fancy-scrollbar flex-1 overflow-y-auto pb-44 lg:pb-8">
         {/* ── HERO / MEDIA GALLERY ───────────────────────────────────── */}
         <MediaGallery
           key={party.id}
@@ -370,210 +370,262 @@ export function DetailScreen() {
         />
 
         {/* ── BODY ─────────────────────────────────────────────────── */}
-        <div className="space-y-4 p-4">
-          {/* Title row */}
-          <section className="space-y-1.5">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <h1 className="flex-1 font-display text-xl font-bold leading-tight text-foreground">
-                {party.title}
-              </h1>
-              <span className="shrink-0 rounded-lg bg-purple-500/20 px-2.5 py-1 text-sm font-medium text-purple-300">
-                {feeLabel} entry
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">
-              Pay once · drinks add-on available after
-            </p>
-          </section>
-
-          {/* Meta grid 2×2 */}
-          <section className="grid grid-cols-2 gap-2">
-            <MetaCell
-              emoji="📅"
-              text={`${formatDateLabel(party.date)} · ${formatTime(party.time)}`}
-            />
-            <MetaCell emoji="🕑" text={`Ends ~${formatTime(endTime)}`} />
-            <MetaCell emoji="📍" text={`${party.area}, ${party.city}`} />
-            <MetaCell emoji="👥" text={`Max ${party.maxGuests} guests`} />
-          </section>
-
-          {/* Tag row — multi-color vibe chips + visual 21+/Students tags */}
-          <section className="flex flex-wrap gap-1.5">
-            {vibes.map((v) => {
-              const cls =
-                v === "EDM"
-                  ? "bg-purple-500/15 text-purple-300 font-medium border-purple-500/45"
-                  : VIBE_COLORS[v] ||
-                    "bg-purple-500/15 text-purple-300 border-purple-500/45";
-              return (
-                <span
-                  key={v}
-                  className={cn(
-                    "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
-                    cls,
-                  )}
-                >
-                  {v}
+        <div className="space-y-4 p-4 lg:grid lg:grid-cols-5 lg:gap-8 lg:space-y-0">
+          {/* Left column — party info */}
+          <div className="space-y-4 lg:col-span-3">
+            {/* Title row */}
+            <section className="space-y-1.5">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <h1 className="flex-1 font-display text-xl font-bold leading-tight text-foreground lg:text-2xl">
+                  {party.title}
+                </h1>
+                <span className="shrink-0 rounded-lg bg-purple-500/20 px-2.5 py-1 text-sm font-medium text-purple-300">
+                  {feeLabel} entry
                 </span>
-              );
-            })}
-            {party.fee > 0 && (
-              <span className="rounded-full border border-coral/35 bg-coral/10 px-2.5 py-0.5 text-[11px] font-semibold text-coral">
-                21+
-              </span>
-            )}
-            <span className="rounded-full border border-amber-500/35 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300">
-              Students
-            </span>
-          </section>
+              </div>
+              <p className="text-sm text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+                Pay once · drinks add-on available after
+              </p>
+            </section>
 
-          {/* Host card — with teal Verified badge */}
-          {host && (
-            <section className="glass flex items-center gap-3 rounded-2xl p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-500/30 text-sm font-bold text-purple-200">
-                {host.name.slice(0, 1).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    {host.name}
-                  </p>
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-teal-500/15 px-2 py-0.5 text-[10px] font-semibold text-teal-300">
-                    <ShieldCheck className="h-3 w-3" /> Verified
+            {/* Meta grid 2×2 */}
+            <section className="grid grid-cols-2 gap-2">
+              <MetaCell
+                emoji="📅"
+                text={`${formatDateLabel(party.date)} · ${formatTime(party.time)}`}
+              />
+              <MetaCell emoji="🕑" text={`Ends ~${formatTime(endTime)}`} />
+              <MetaCell emoji="📍" text={`${party.area}, ${party.city}`} />
+              <MetaCell emoji="👥" text={`Max ${party.maxGuests} guests`} />
+            </section>
+
+            {/* Tag row — multi-color vibe chips + visual 21+/Students tags */}
+            <section className="flex flex-wrap gap-1.5">
+              {vibes.map((v) => {
+                const cls =
+                  v === "EDM"
+                    ? "bg-purple-500/15 text-purple-300 font-medium border-purple-500/45"
+                    : VIBE_COLORS[v] ||
+                      "bg-purple-500/15 text-purple-300 border-purple-500/45";
+                return (
+                  <span
+                    key={v}
+                    className={cn(
+                      "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                      cls,
+                    )}
+                  >
+                    {v}
                   </span>
-                </div>
-                <p className="mt-0.5 text-xs text-muted-foreground/90">
-                  <span className="text-amber-300">★★★★★</span>{" "}
-                  <span className="font-medium text-foreground/80">
-                    {host.rating.toFixed(1)}
-                  </span>{" "}
-                  · {host.hosted} parties
+                );
+              })}
+              {party.fee > 0 && (
+                <span className="rounded-full border border-coral/35 bg-coral/10 px-2.5 py-0.5 text-[11px] font-semibold text-coral">
+                  21+
+                </span>
+              )}
+              <span className="rounded-full border border-amber-500/35 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300">
+                Students
+              </span>
+            </section>
+
+            {/* About this party */}
+            {party.description && (
+              <section className="space-y-1.5">
+                <span className="eyebrow">About this party</span>
+                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                  {party.description}
                 </p>
-              </div>
-              {!isOwn && (
-                <button
-                  onClick={messageHost}
-                  className="flex h-9 shrink-0 items-center gap-1 rounded-xl border border-purple-500/40 bg-purple-500/10 px-2.5 text-[11px] font-semibold text-purple-300 transition active:scale-95 hover:bg-purple-500/15"
-                >
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  <span className="truncate">Message</span>
-                </button>
+              </section>
+            )}
+
+            {/* Menu preview */}
+            <section className="glass rounded-2xl p-3">
+              <span className="eyebrow">Menu preview</span>
+              {menuItems.length === 0 ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  No pre-order menu
+                </p>
+              ) : (
+                <ul className="mt-2.5 space-y-2">
+                  {menuItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 text-sm"
+                    >
+                      <span className="flex min-w-0 items-center gap-2 text-foreground">
+                        <span className="text-base leading-none">
+                          {item.emoji}
+                        </span>
+                        <span className="truncate font-medium">{item.name}</span>
+                      </span>
+                      <span className="shrink-0 font-medium text-purple-300">
+                        {currency}
+                        {item.price}
+                      </span>
+                    </li>
+                  ))}
+                  {menuOverflow > 0 && (
+                    <li className="text-xs text-muted-foreground">
+                      +{menuOverflow} more
+                    </li>
+                  )}
+                </ul>
               )}
             </section>
-          )}
 
-          {/* Security booking badge — shows when the host has booked a bouncer.
-              This is a major trust signal, especially for women guests. */}
-          {party.securityBooked && (
-            <section className="rounded-2xl border border-teal-500/30 bg-teal-500/8 p-3 flex items-start gap-3 animate-screen-in">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-500/20 text-teal-300">
-                <ShieldCheck className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">
-                  Verified security on-site
-                </p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                  Host has booked a licensed security person for this party.
-                  Go worry-free — show up, vibe, and feel safe.
-                </p>
-              </div>
-              <span className="shrink-0 rounded-full bg-teal-500/15 px-2 py-0.5 text-[10px] font-semibold text-teal-300">
-                🔒 Safe
-              </span>
-            </section>
-          )}
+            {/* Reviews — KEEP existing ReviewsSection component */}
+            {party.id && <ReviewsSection partyId={party.id} />}
+          </div>
 
-          {/* Who's going — guest initials, locked until payment */}
-          <section className="glass rounded-2xl p-3">
-            <span className="eyebrow">Who's going</span>
-            <div className="mt-2 flex items-center gap-3">
-              <div className="flex items-center">
-                {GUEST_INITIALS.map((letter, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-full border border-card text-[11px] font-bold",
-                      GUEST_AVATAR_COLORS[i % GUEST_AVATAR_COLORS.length],
-                    )}
-                    style={{
-                      marginLeft: i === 0 ? 0 : -8,
-                      zIndex: GUEST_INITIALS.length - i,
-                    }}
-                  >
-                    {letter}
-                  </div>
-                ))}
-                {going > GUEST_INITIALS.length && (
-                  <div
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-card bg-white/5 text-[10px] font-bold text-muted-foreground"
-                    style={{ marginLeft: -8 }}
-                  >
-                    +{going - GUEST_INITIALS.length}
-                  </div>
-                )}
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {going} going
-              </span>
-            </div>
-            <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-              <Lock className="h-3 w-3" /> Full names visible after payment
-            </p>
-          </section>
-
-          {/* About this party */}
-          {party.description && (
-            <section className="space-y-1.5">
-              <span className="eyebrow">About this party</span>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                {party.description}
-              </p>
-            </section>
-          )}
-
-          {/* Menu preview */}
-          <section className="glass rounded-2xl p-3">
-            <span className="eyebrow">Menu preview</span>
-            {menuItems.length === 0 ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                No pre-order menu
-              </p>
-            ) : (
-              <ul className="mt-2.5 space-y-2">
-                {menuItems.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-center justify-between gap-3 text-sm"
-                  >
-                    <span className="flex min-w-0 items-center gap-2 text-foreground">
-                      <span className="text-base leading-none">
-                        {item.emoji}
-                      </span>
-                      <span className="truncate font-medium">{item.name}</span>
+          {/* Right column — host/chat sidebar */}
+          <div className="space-y-4 lg:col-span-2">
+            {/* Host card — with teal Verified badge */}
+            {host && (
+              <section className="glass flex items-center gap-3 rounded-2xl p-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-500/30 text-sm font-bold text-purple-200">
+                  {host.name.slice(0, 1).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {host.name}
+                    </p>
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-teal-500/15 px-2 py-0.5 text-[10px] font-semibold text-teal-300">
+                      <ShieldCheck className="h-3 w-3" /> Verified
                     </span>
-                    <span className="shrink-0 font-medium text-purple-300">
-                      {currency}
-                      {item.price}
-                    </span>
-                  </li>
-                ))}
-                {menuOverflow > 0 && (
-                  <li className="text-xs text-muted-foreground">
-                    +{menuOverflow} more
-                  </li>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground/90">
+                    <span className="text-amber-300">★★★★★</span>{" "}
+                    <span className="font-medium text-foreground/80">
+                      {host.rating.toFixed(1)}
+                    </span>{" "}
+                    · {host.hosted} parties
+                  </p>
+                </div>
+                {!isOwn && (
+                  <button
+                    onClick={messageHost}
+                    className="flex h-9 shrink-0 items-center gap-1 rounded-xl border border-purple-500/40 bg-purple-500/10 px-2.5 text-[11px] font-semibold text-purple-300 transition active:scale-95 hover:bg-purple-500/15"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    <span className="truncate">Message</span>
+                  </button>
                 )}
-              </ul>
+              </section>
             )}
-          </section>
 
-          {/* Reviews — KEEP existing ReviewsSection component */}
-          {party.id && <ReviewsSection partyId={party.id} />}
+            {/* Security booking badge — shows when the host has booked a bouncer.
+                This is a major trust signal, especially for women guests. */}
+            {party.securityBooked && (
+              <section className="rounded-2xl border border-teal-500/30 bg-teal-500/8 p-3 flex items-start gap-3 animate-screen-in">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-500/20 text-teal-300">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    Verified security on-site
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                    Host has booked a licensed security person for this party.
+                    Go worry-free — show up, vibe, and feel safe.
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-teal-500/15 px-2 py-0.5 text-[10px] font-semibold text-teal-300">
+                  🔒 Safe
+                </span>
+              </section>
+            )}
+
+            {/* Who's going — guest initials, locked until payment */}
+            <section className="glass rounded-2xl p-3">
+              <span className="eyebrow">Who's going</span>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="flex items-center">
+                  {GUEST_INITIALS.map((letter, i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex h-7 w-7 items-center justify-center rounded-full border border-card text-[11px] font-bold",
+                        GUEST_AVATAR_COLORS[i % GUEST_AVATAR_COLORS.length],
+                      )}
+                      style={{
+                        marginLeft: i === 0 ? 0 : -8,
+                        zIndex: GUEST_INITIALS.length - i,
+                      }}
+                    >
+                      {letter}
+                    </div>
+                  ))}
+                  {going > GUEST_INITIALS.length && (
+                    <div
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-card bg-white/5 text-[10px] font-bold text-muted-foreground"
+                      style={{ marginLeft: -8 }}
+                    >
+                      +{going - GUEST_INITIALS.length}
+                    </div>
+                  )}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {going} going
+                </span>
+              </div>
+              <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                <Lock className="h-3 w-3" /> Full names visible after payment
+              </p>
+            </section>
+
+            {/* Desktop CTA — only visible on lg+ screens */}
+            <div className="hidden lg:block">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSaveToggle}
+                  className={cn(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition active:scale-95",
+                    saved
+                      ? "border-coral/50 bg-coral/15 text-coral"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground",
+                  )}
+                  aria-label={saved ? "Unsave" : "Save"}
+                >
+                  <Heart className={cn("h-5 w-5", saved && "fill-coral")} />
+                </button>
+                {isOwn ? (
+                  <button
+                    onClick={() => setScreen("manage-party")}
+                    className="press-feedback glow-violet flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground"
+                  >
+                    Manage your party
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleJoin}
+                    className={cn(
+                      "press-feedback flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition",
+                      isFull
+                        ? "bg-white/8 text-muted-foreground"
+                        : "glow-violet bg-primary text-primary-foreground",
+                    )}
+                  >
+                    {isFull ? (
+                      "Sold out — join waitlist"
+                    ) : (
+                      <>
+                        <span>Join for {feeLabel}</span>
+                        <span className="opacity-50">·</span>
+                        <span>get your spot</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── STICKY CTA — Join for £N · get your spot ────────────────── */}
-      <div className="fixed inset-x-0 bottom-[88px] z-30 mx-auto max-w-[480px] px-4">
+      {/* ── STICKY CTA — Join for £N · get your spot (mobile only) ──── */}
+      <div className="fixed inset-x-0 bottom-[88px] z-30 px-4 lg:hidden">
         <div className="flex items-center gap-2">
           {/* Save / heart toggle */}
           <button
@@ -625,7 +677,7 @@ export function DetailScreen() {
       <Sheet open={spotSheetOpen} onOpenChange={setSpotSheetOpen}>
         <SheetContent
           side="bottom"
-          className="mx-auto max-w-[480px] rounded-t-3xl border-white/10 glass-strong p-0"
+          className="mx-auto rounded-t-3xl border-white/10 glass-strong p-0 lg:max-w-lg"
         >
           <SheetHeader className="px-5 pt-5 pb-2 text-left">
             <SheetTitle className="font-display text-lg text-foreground">

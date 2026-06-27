@@ -121,9 +121,10 @@ export function HomeScreen() {
   return (
     <div className="flex h-full flex-col">
       {/* Sticky header */}
-      <header className="sticky top-0 z-20 glass-strong px-4 pt-3 pb-3">
+      <header className="sticky top-0 z-20 glass-strong px-4 pt-3 pb-3 lg:px-6 lg:pt-4 lg:pb-4">
         <div className="flex items-center justify-between">
-          <div className="font-display text-lg font-extrabold tracking-tight">
+          {/* Hide VibeMatch logo on desktop since sidebar shows it */}
+          <div className="font-display text-lg font-extrabold tracking-tight lg:hidden">
             Vibe<span className="text-purple-400">Match</span>
           </div>
           <div className="flex items-center gap-2">
@@ -164,7 +165,7 @@ export function HomeScreen() {
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             placeholder="Search areas, themes…"
-            className="w-full rounded-xl border border-border bg-secondary py-2.5 pl-10 pr-9 text-sm leading-none text-foreground placeholder:text-muted-foreground/80 focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/25"
+            className="w-full rounded-xl border border-border bg-secondary py-2.5 pl-10 pr-9 text-sm leading-none text-foreground placeholder:text-muted-foreground/80 focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/25 lg:max-w-md"
           />
           {localSearch && (
             <button
@@ -190,15 +191,15 @@ export function HomeScreen() {
       </header>
 
       {/* Scrollable feed */}
-      <div className="fancy-scrollbar flex-1 overflow-y-auto px-4 pb-32 pt-4">
+      <div className="fancy-scrollbar flex-1 overflow-y-auto px-4 pb-32 pt-4 lg:px-6 lg:pb-8">
         {/* Sub-header */}
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="font-display text-base font-bold">Happening near you</h2>
+          <h2 className="font-display text-base font-bold lg:text-lg">Happening near you</h2>
           <span className="text-xs font-semibold text-purple-200">{parties.length} vibes</span>
         </div>
 
         {/* City filter chips */}
-        <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
+        <div className="no-scrollbar -mx-4 mb-4 flex flex-wrap gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0 lg:overflow-visible">
           <CityChip
             active={!cityFilter}
             onClick={() => setCityFilter(null)}
@@ -215,7 +216,7 @@ export function HomeScreen() {
         </div>
 
         {/* Vibe filter stories */}
-        <div className="no-scrollbar -mx-4 mb-5 flex gap-3 overflow-x-auto px-4">
+        <div className="no-scrollbar -mx-4 mb-5 flex gap-3 overflow-x-auto px-4 lg:mx-0 lg:px-0 lg:overflow-visible lg:flex-wrap">
           <VibeStory
             active={!vibeFilter}
             onClick={() => setVibeFilter(null)}
@@ -298,9 +299,9 @@ export function HomeScreen() {
           </div>
         )}
 
-        {/* Party cards */}
+        {/* Party cards — responsive grid */}
         {!isLoading && !isError && parties.length > 0 && (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {parties.map((p) => (
               <PartyCardNew key={p.id} party={p} onOpen={openParty} />
             ))}
@@ -537,7 +538,7 @@ function PartyCardNew({
 
 function FeedSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {[0, 1, 2].map((i) => (
         <div
           key={i}
