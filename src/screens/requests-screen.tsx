@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Inbox as InboxIcon, Check, X, Clock } from "lucide-react";
+import { ChevronLeft, Inbox as InboxIcon, Check, X, Clock, Play, Video as VideoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -173,6 +173,18 @@ export function RequestsScreen() {
                     <p className="mt-1 text-sm text-foreground/90">
                       {r.introMessage}
                     </p>
+                    {/* Intro video — host can preview before approving */}
+                    {r.introVideoUrl && (
+                      <div className="mt-2 overflow-hidden rounded-xl border border-white/10">
+                        <video
+                          src={r.introVideoUrl}
+                          poster={r.introVideoPoster ?? undefined}
+                          controls
+                          playsInline
+                          className="h-32 w-full bg-black object-cover"
+                        />
+                      </div>
+                    )}
                     {r.status === "pending" ? (
                       <div className="mt-2 flex gap-2">
                         <button

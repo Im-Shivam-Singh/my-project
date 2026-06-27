@@ -11,6 +11,8 @@ import type {
   MenuItem,
   Order,
   Ticket,
+  GroupChat,
+  GroupChatMessage,
 } from "@/lib/types";
 
 async function jfetch<T>(url: string, init?: RequestInit): Promise<T> {
@@ -36,11 +38,12 @@ async function jfetch<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   // parties
-  listParties: (params: { city?: string | null; vibe?: string | null; q?: string } = {}) => {
+  listParties: (params: { city?: string | null; vibe?: string | null; q?: string; profession?: string | null } = {}) => {
     const sp = new URLSearchParams();
     if (params.city) sp.set("city", params.city);
     if (params.vibe) sp.set("vibe", params.vibe);
     if (params.q) sp.set("q", params.q);
+    if (params.profession) sp.set("profession", params.profession);
     const qs = sp.toString();
     return jfetch<{ parties: Party[] }>(`/api/parties${qs ? `?${qs}` : ""}`);
   },
@@ -176,6 +179,54 @@ export const api = {
     jfetch<{ id: string; status: string }>(`/api/requests/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    }),
+
+  // ===== Group chat (unlocked after first payment) =====
+  // GET /api/group-chats?partyId=...&userId=... → returns the group chat for a
+  // party (members + messages). Returns 404 if the group chat isn't enabled
+  // yet (no paid guests).
+  getGroupChat: (partyId: string, userId: string) =>
+    jfetch<{ groupChat: GroupChat }>(
+      `/api/group-chats?partyId=${partyId}&userId=${userId}`,
+    ),
+  // POST /api/group-chats — send a text message to the group chat
+  sendGroupMessage: (groupChatId: string, senderId: string, content: string) =>
+    jfetch<{ message: GroupChatMessage }>(`/api/group-chats`, {
+      method: "POST",
+      body: JSON.stringify({ groupChatId, senderId, content }),
+    }),
+
+  // ===== Host manage-party: menu + media CRUD (after creation) =====
+  addMenuItem: (input: {
+    partyId: string;
+    name: string;
+    price: number;
+    emoji: string;
+    category: "drink" | "snack" | "soft";
+  }) =>
+    jfetch<{ item: MenuItem }>(`/api/menus`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  deleteMenuItem: (id: string) =>
+    jfetch<{ id: string }>(`/api/menus/${id}`, { method: "DELETE" }),
+
+  // Add a media item (image/video URL) to an existing party's gallery.
+  addPartyMedia: (partyId: string, item: { url: string; type: "image" | "video"; caption?: string }) =>
+    jfetch<{ media: any }>(`/api/parties/${partyId}/media`, {
+      method: "POST",
+      body: JSON.stringify(item),
+    }),
+  // Remove a media item by id
+  deletePartyMedia: (partyId: string, mediaId: string) =>
+    jfetch<{ id: string }>(`/api/parties/${partyId}/media?id=${mediaId}`, {
+      method: "DELETE",
+    }),
+  // Toggle group-chat-enabled flag (host manual control from manage-party)
+  setGroupChatEnabled: (partyId: string, enabled: boolean) =>
+    jfetch<{ party: Party }>(`/api/parties/${partyId}/media`, {
+      method: "PATCH",
+      body: JSON.stringify({ groupChatEnabled: enabled }),
     }),
 
   // menu items for a party

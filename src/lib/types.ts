@@ -113,6 +113,8 @@ export interface Party {
   securityFee?: number;
   securityStatus?: string;
   locationRevealAt?: string | null; // ISO datetime when exact address drops
+  // New (purchase-flow rewrite) — unlocks group chat once first guest pays
+  groupChatEnabled?: boolean;
   createdAt: string;
   // Media gallery — full list (image + video). Empty in list payloads,
   // populated on the GET /api/parties/[id] route.
@@ -145,6 +147,10 @@ export interface JoinRequest {
   introMessage: string;
   status: "pending" | "accepted" | "rejected";
   requesterId?: string | null;
+  // New (purchase-flow rewrite)
+  threadId?: string | null;
+  introVideoUrl?: string | null;
+  introVideoPoster?: string | null;
   createdAt: string;
 }
 
@@ -152,6 +158,11 @@ export interface JoinRequestInput {
   partyId: string;
   requesterName: string;
   introMessage: string;
+  // New — optional intro video + the 1:1 thread to link
+  introVideoUrl?: string;
+  introVideoPoster?: string;
+  threadId?: string;
+  requesterId?: string;
 }
 
 export interface VibeUser {
@@ -194,6 +205,10 @@ export interface ChatMessage {
   content: string;
   read: boolean;
   createdAt: string;
+  // New (purchase-flow rewrite)
+  kind?: "text" | "video" | "system" | "payment";
+  mediaUrl?: string | null;
+  requestId?: string | null;
 }
 
 // Party review — submitted by guests after attending
@@ -324,7 +339,54 @@ export type Screen =
   | "admin"
   | "requests"
   | "saved"
-  | "map";
+  | "map"
+  // New (purchase-flow rewrite)
+  | "manage-party"
+  | "group-chat";
+
+// ===== Group chat (unlocked after first payment) =====
+export interface GroupChatMessage {
+  id: string;
+  groupChatId: string;
+  senderId: string;
+  content: string;
+  kind: "text" | "system" | "offer";
+  offerBrand?: string | null;
+  createdAt: string;
+  // joined for UI
+  sender?: { id: string; name: string; avatarUrl?: string | null };
+}
+
+export interface GroupChatMember {
+  id: string;
+  userId: string;
+  name: string;
+  avatarUrl?: string | null;
+  joinedAt: string;
+}
+
+export interface GroupChat {
+  id: string;
+  partyId: string;
+  members: GroupChatMember[];
+  messages: GroupChatMessage[];
+}
+
+// Referral offer brands surfaced inside the group chat once it's enabled.
+// Revenue model: platform earns affiliate/referral commissions when guests
+// order via these cards (Swiggy/Zomato food, Blinkit/Zepto/Instamart/BigBasket
+// groceries, Flipkart Minutes quick-commerce).
+export const REFERRAL_BRANDS = [
+  { id: "swiggy", name: "Swiggy", emoji: "🍔", color: "bg-orange-500/15 text-orange-300 border-orange-500/45", offer: "20% off party food delivery" },
+  { id: "zomato", name: "Zomato", emoji: "🍽️", color: "bg-rose-500/15 text-rose-300 border-rose-500/45", offer: "Flat ₹100 off on orders above ₹499" },
+  { id: "blinkit", name: "Blinkit", emoji: "⚡", color: "bg-yellow-500/15 text-yellow-300 border-yellow-500/45", offer: "10-min drinks delivery · 15% off" },
+  { id: "zepto", name: "Zepto", emoji: "🚀", color: "bg-purple-500/15 text-purple-300 border-purple-500/45", offer: "10-min snacks + ice · ₹50 off" },
+  { id: "bigbasket", name: "BigBasket", emoji: "🛒", color: "bg-green-500/15 text-green-300 border-green-500/45", offer: "Bulk party supplies · 25% off" },
+  { id: "instamart", name: "Instamart", emoji: "📦", color: "bg-teal-500/15 text-teal-300 border-teal-500/45", offer: "15-min mixers & soft drinks · 12% off" },
+  { id: "flipkart", name: "Flipkart Minutes", emoji: "🛍️", color: "bg-blue-500/15 text-blue-300 border-blue-500/45", offer: "Speakers & decor in 10 mins · 20% off" },
+] as const;
+
+export type ReferralBrandId = (typeof REFERRAL_BRANDS)[number]["id"];
 
 export function parseVibes(vibes: string): string[] {
   if (!vibes) return [];

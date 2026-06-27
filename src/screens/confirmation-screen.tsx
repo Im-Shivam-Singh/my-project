@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 export function ConfirmationScreen() {
   const currentUser = useAppStore((s) => s.currentUser);
   const selectedOrderId = useAppStore((s) => s.selectedOrderId);
+  const setSelectedPartyId = useAppStore((s) => s.setSelectedPartyId);
   const goBack = useAppStore((s) => s.goBack);
   const setScreen = useAppStore((s) => s.setScreen);
 
@@ -247,11 +248,14 @@ export function ConfirmationScreen() {
         {/* ── CTAs ───────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => setScreen("inbox")}
+            onClick={() => {
+              setSelectedPartyId(party.id);
+              setScreen("group-chat");
+            }}
             className="press-feedback glow-violet flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
           >
             <MessageCircle className="h-4 w-4" />
-            Open chat
+            Open group chat
           </button>
           <button
             onClick={() => setScreen("tickets")}

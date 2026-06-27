@@ -23,6 +23,7 @@ function serialize(p: any): Party {
     securityBooked: p.securityBooked,
     securityFee: p.securityFee,
     securityStatus: p.securityStatus,
+    groupChatEnabled: p.groupChatEnabled,
     createdAt: p.createdAt.toISOString(),
     media: Array.isArray(p.media)
       ? (p.media

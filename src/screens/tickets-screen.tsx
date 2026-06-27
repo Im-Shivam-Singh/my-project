@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Ticket as TicketIcon, RefreshCw, QrCode } from "lucide-react";
+import { Ticket as TicketIcon, RefreshCw, QrCode, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -151,6 +151,14 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
   const party = ticket.party;
   const addOns = preOrderItems(ticket);
   const sym = party ? currencyForCity(party.city) : "£";
+  const setSelectedPartyId = useAppStore((s) => s.setSelectedPartyId);
+  const setScreen = useAppStore((s) => s.setScreen);
+
+  const openGroupChat = () => {
+    if (!party) return;
+    setSelectedPartyId(party.id);
+    setScreen("group-chat");
+  };
 
   if (!party) return null;
 
@@ -255,6 +263,15 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
       >
         <TicketIcon className="h-4 w-4" />
         Ready · show QR to host
+      </button>
+
+      {/* ---- Open group chat (active events entry point) ---- */}
+      <button
+        onClick={openGroupChat}
+        className="press-feedback glass flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white ring-1 ring-purple-500/40 transition hover:bg-purple-500/10 hover:text-purple-200"
+      >
+        <MessageCircle className="h-4 w-4 text-purple-bright" />
+        Open group chat
       </button>
     </div>
   );

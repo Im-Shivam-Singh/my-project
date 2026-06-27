@@ -23,7 +23,9 @@ import { CountdownScreen } from "@/screens/countdown-screen";
 import { PaymentScreen } from "@/screens/payment-screen";
 import { ConfirmationScreen } from "@/screens/confirmation-screen";
 import { HostDashboardScreen } from "@/screens/host-dashboard-screen";
+import { ManagePartyScreen } from "@/screens/manage-party-screen";
 import { AdminScreen } from "@/screens/admin-screen";
+import { GroupChatScreen } from "@/screens/group-chat-screen";
 import { MusicPlayerBar } from "@/components/vibe/music-player";
 
 export function AppShell() {
@@ -102,7 +104,9 @@ export function AppShell() {
           {current === "payment" && <PaymentScreen />}
           {current === "confirmation" && <ConfirmationScreen />}
           {current === "host-dashboard" && <HostDashboardScreen />}
+          {current === "manage-party" && <ManagePartyScreen />}
           {current === "admin" && <AdminScreen />}
+          {current === "group-chat" && <GroupChatScreen />}
         </div>
       </main>
       <MusicPlayerBar />

@@ -51,6 +51,7 @@ model User {
   tickets      Ticket[]
   trustGiven   TrustRating[] @relation("TrustGiven")
   trustReceived TrustRating[] @relation("TrustReceived")
+  groupMembers GroupChatMember[]
 }
 
 model Party {
@@ -83,6 +84,11 @@ model Party {
   securityStatus   String   @default("") // "" | "requested" | "confirmed" | "completed"
   // When the exact address is revealed to confirmed guests (spec slide 6 — location drop)
   locationRevealAt DateTime?
+  // ===== New (purchase-flow rewrite) =====
+  // Flipped to true once the first guest pays for a spot. Unlocks the group
+  // chat for that party (shown in the guest's "Active events" section). Host
+  // can also flip it manually from the manage-party screen.
+  groupChatEnabled Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -96,6 +102,7 @@ model Party {
   tickets   Ticket[]
   trustRatings TrustRating[]
   media     PartyMedia[]
+  groupChat GroupChat?
 }
 
 // ===== Party media gallery — host can attach multiple photos + videos =====
@@ -123,6 +130,14 @@ model JoinRequest {
   introMessage  String
   status        String   @default("pending") // pending | accepted | rejected
   requesterId   String?
+  // ===== New (purchase-flow rewrite) =====
+  // 1:1 chat thread with the host that was opened when the guest clicked
+  // "Get your spot". Lets the chat screen show the approval status + Pay CTA.
+  threadId      String?
+  // Optional intro video the guest attached to their application — played
+  // inline in the host's requests list so they can vet the guest quickly.
+  introVideoUrl   String?
+  introVideoPoster String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -151,6 +166,15 @@ model Message {
   receiverId String
   content    String
   read       Boolean  @default(false)
+  // ===== New (purchase-flow rewrite) =====
+  // kind = "text" (default) | "video" (intro clip) | "system" (approval
+  // status updates rendered as centered pills) | "payment" (a WhatsApp-like
+  // "Pay {amount}" CTA card the guest taps to complete checkout).
+  kind       String   @default("text")
+  mediaUrl   String?
+  // For payment-cta messages: the join-request id this payment corresponds to,
+  // so the chat can mark it paid once the order goes through.
+  requestId  String?
   createdAt  DateTime @default(now())
 
   thread   ChatThread @relation(fields: [threadId], references: [id])
@@ -285,4 +309,50 @@ model TrustRating {
 
   @@unique([partyId, guestId]) // one trust rating per guest per party
   @@index([guestId])
+}
+
+// ===== Group chat (unlocked after first payment) — spec purchase-flow rewrite =====
+// One group chat per party. Created when the first guest pays (or the host
+// flips groupChatEnabled). All paid guests + the host are members. Hosts the
+// referral-offer cards (Swiggy/Zomato/Blinkit/Zepto/BigBasket/Instamart/Flipkart).
+model GroupChat {
+  id        String   @id @default(cuid())
+  partyId   String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  party    Party              @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  members  GroupChatMember[]
+  messages GroupChatMessage[]
+
+  @@index([partyId])
+}
+
+model GroupChatMember {
+  id          String   @id @default(cuid())
+  groupChatId String
+  userId      String
+  joinedAt    DateTime @default(now())
+
+  groupChat GroupChat @relation(fields: [groupChatId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupChatId, userId])
+  @@index([userId])
+}
+
+model GroupChatMessage {
+  id          String   @id @default(cuid())
+  groupChatId String
+  senderId    String
+  content     String
+  // kind = "text" | "system" | "offer" (referral card)
+  kind        String   @default("text")
+  // For offer messages: which brand (swiggy|zomato|blinkit|zepto|bigbasket|instamart|flipkart)
+  offerBrand  String?
+  createdAt   DateTime @default(now())
+
+  groupChat GroupChat @relation(fields: [groupChatId], references: [id], onDelete: Cascade)
+
+  @@index([groupChatId])
 }

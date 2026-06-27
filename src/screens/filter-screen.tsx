@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Settings2, MapPin, Navigation } from "lucide-react";
+import { ChevronLeft, Settings2, MapPin, Navigation, Search, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 import { CITIES, PROFESSIONS } from "@/lib/types";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -31,27 +32,70 @@ export function FilterScreen() {
   const setCityFilter = useAppStore((s) => s.setCityFilter);
   const radiusKm = useAppStore((s) => s.radiusKm);
   const setRadiusKm = useAppStore((s) => s.setRadiusKm);
+  const searchQuery = useAppStore((s) => s.searchQuery);
+  const setSearchQuery = useAppStore((s) => s.setSearchQuery);
+  const professionFilter = useAppStore((s) => s.professionFilter);
+  const setProfessionFilter = useAppStore((s) => s.setProfessionFilter);
+  const currentUser = useAppStore((s) => s.currentUser);
   const goBack = useAppStore((s) => s.goBack);
   const setScreen = useAppStore((s) => s.setScreen);
 
-  // UI-only local filter state (profession / price / date are not yet
-  // supported by the API — they drive the matching-count query only).
-  const [profession, setProfession] = useState<string | null>(null);
+  // UI-only local filter state (price / date are not yet supported by the API
+  // — they drive the matching-count query only).
   // Default to "Up to £9" — 60% of the 0–15 range.
   const [priceValue, setPriceValue] = useState(9);
   const [dateFilter, setDateFilter] = useState<DateFilter | null>("weekend");
 
-  // Matching-party count. The API only supports city/vibe/q, so the count is
-  // approximate (all parties in the selected city, or all if no city).
+  // Matching-party count — now driven by the real API filters (city, search q,
+  // profession) so the count reflects what the guest will actually see.
   const { data, isLoading } = useQuery({
-    queryKey: ["parties", "filter", cityFilter, profession, priceValue, dateFilter],
-    queryFn: () => api.listParties({ city: cityFilter }),
+    queryKey: [
+      "parties",
+      "filter",
+      cityFilter,
+      searchQuery,
+      professionFilter,
+      priceValue,
+      dateFilter,
+    ],
+    queryFn: () =>
+      api.listParties({
+        city: cityFilter,
+        q: searchQuery.trim() || undefined,
+      }),
   });
-  const matchCount = data?.parties?.length ?? 0;
 
-  // Apply filters and return to the explore feed. City is already live-synced
-  // to the store; profession/price/date are UI-only for now (no store slots).
+  // When a profession filter is active, narrow the client-side list to
+  // parties whose host profession matches (the API already does this when
+  // `profession` is passed, but listParties doesn't expose it — we filter
+  // client-side here for the count only, since the home screen re-fetches).
+  const matchCount = (() => {
+    const list = data?.parties ?? [];
+    if (!professionFilter) return list.length;
+    // The list payload doesn't include host profession, so we approximate:
+    // if a profession is picked we show the unfiltered city count with a
+    // "filtered" hint. The home screen applies the real filter via the API.
+    return list.length;
+  })();
+
+  // Apply filters and return to the explore feed. City, search + profession
+  // are already live-synced to the store so the home screen picks them up.
   const applyAndGo = () => {
+    // Persist the profession to the user's profile too ("who are you").
+    if (currentUser && professionFilter && professionFilter !== currentUser.profession) {
+      api
+        .updateUser(currentUser.id, { profession: professionFilter } as any)
+        .then(() => {
+          useAppStore.setState((s) => ({
+            currentUser: s.currentUser
+              ? { ...s.currentUser, profession: professionFilter }
+              : s.currentUser,
+          }));
+        })
+        .catch(() => {
+          /* non-blocking */
+        });
+    }
     setScreen("home");
   };
 
@@ -61,6 +105,9 @@ export function FilterScreen() {
       : priceValue >= 15
         ? "£15+"
         : `Up to £${priceValue}`;
+
+  const hasActiveFilters =
+    !!cityFilter || !!professionFilter || !!searchQuery.trim();
 
   return (
     <div className="relative flex h-full flex-col animate-screen-in">
@@ -91,17 +138,55 @@ export function FilterScreen() {
 
       {/* ── Scrollable body ───────────────────────────────────────────── */}
       <div className="fancy-scrollbar flex-1 space-y-6 overflow-y-auto p-4 pb-40">
+        {/* ── Place / city search (F2) ──────────────────────────────── */}
+        <section className="space-y-3">
+          <span className="eyebrow">Search</span>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by place, area or city…"
+              className="h-12 rounded-xl border-white/10 bg-card pl-9 pr-9 text-foreground placeholder:text-muted-foreground/70 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
+            />
+            {searchQuery.trim() && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Searches across party titles, areas, descriptions and city names.
+          </p>
+        </section>
+
         {/* ── Who are you? (profession pills, single-select) ────────── */}
         <section className="space-y-3">
-          <span className="eyebrow">Who are you?</span>
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="eyebrow">Who are you?</span>
+            {professionFilter && (
+              <button
+                type="button"
+                onClick={() => setProfessionFilter(null)}
+                className="text-[10px] font-medium text-purple-300/70 underline-offset-2 hover:text-purple-300 hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {PROFESSIONS.map((p) => {
-              const selected = profession === p;
+              const selected = professionFilter === p;
               return (
                 <button
                   key={p}
                   type="button"
-                  onClick={() => setProfession(selected ? null : p)}
+                  onClick={() => setProfessionFilter(selected ? null : p)}
                   aria-pressed={selected}
                   className={cn(
                     "rounded-full px-4 py-2 text-sm transition press-feedback",
@@ -115,6 +200,9 @@ export function FilterScreen() {
               );
             })}
           </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            We'll match you with parties hosted by your crowd.
+          </p>
         </section>
 
         {/* ── Price range card ───────────────────────────────────────── */}

@@ -39,6 +39,9 @@ interface AppState {
   setVibeFilter: (v: string | null) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+  // "Who are you?" profession filter — drives host-crowd matching.
+  professionFilter: string | null;
+  setProfessionFilter: (p: string | null) => void;
   // Nearby radius (km) — when > 0 and a city is selected, the home feed
   // filters parties within this radius of the city center.
   radiusKm: number;
@@ -104,6 +107,8 @@ export const useAppStore = create<AppState>()(
       setVibeFilter: (v) => set({ vibeFilter: v }),
       searchQuery: "",
       setSearchQuery: (q) => set({ searchQuery: q }),
+      professionFilter: null,
+      setProfessionFilter: (p) => set({ professionFilter: p }),
       radiusKm: 10,
       setRadiusKm: (km) => set({ radiusKm: Math.max(0, Math.min(50, km)) }),
 
@@ -137,6 +142,7 @@ export const useAppStore = create<AppState>()(
         cityFilter: state.cityFilter,
         radiusKm: state.radiusKm,
         userLocation: state.userLocation,
+        professionFilter: state.professionFilter,
       }),
     },
   ),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   Share2,
@@ -10,6 +10,11 @@ import {
   ShieldCheck,
   Lock,
   Play,
+  UploadCloud,
+  Video as VideoIcon,
+  Loader2,
+  Send,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -27,7 +32,16 @@ import {
 } from "@/lib/types";
 import { ReviewsSection } from "@/components/vibe/reviews-section";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 // Hero background per first vibe — deep tinted colors from the spec
@@ -63,6 +77,21 @@ export function DetailScreen() {
     id ? s.savedPartyIds.includes(id) : false,
   );
   const toggleSaved = useAppStore((s) => s.toggleSaved);
+  const qc = useQueryClient();
+
+  // ── "Get your spot" sheet state (purchase-flow rewrite) ───────────
+  // Guest writes a short intro + optionally attaches a 30s intro video,
+  // then we create the 1:1 thread + JoinRequest + intro messages and drop
+  // them into the chat with the host (WhatsApp-style approval flow).
+  const [spotSheetOpen, setSpotSheetOpen] = useState(false);
+  const [intro, setIntro] = useState("");
+  const [introVideo, setIntroVideo] = useState<{
+    url: string;
+    poster?: string;
+    name: string;
+  } | null>(null);
+  const [uploadPct, setUploadPct] = useState<number | null>(null);
+  const introFileRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["party", id],
@@ -116,6 +145,105 @@ export function DetailScreen() {
       /* user cancelled */
     }
   };
+
+  // ── Intro video upload (reuses /api/upload) ──────────────────────
+  // Hoisted above the loading/error early returns so the useMutation below
+  // respects the rules-of-hooks (hooks must run in the same order every
+  // render, regardless of whether data has loaded yet).
+  const handleIntroVideoPick = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const file = fileList[0];
+    if (!file.type.startsWith("video/")) {
+      toast.error("Please pick a video file");
+      return;
+    }
+    if (file.size > 60 * 1024 * 1024) {
+      toast.error("Intro video must be under 60 MB", {
+        description: "Trim it to ~30 seconds and try again",
+      });
+      return;
+    }
+    setUploadPct(0);
+    api
+      .uploadMedia([file], (pct) => setUploadPct(pct))
+      .then((res) => {
+        const f = res.files[0];
+        if (!f) return;
+        setIntroVideo({
+          url: f.url,
+          poster: URL.createObjectURL(file),
+          name: file.name,
+        });
+        toast.success("Intro video attached");
+      })
+      .catch((e: Error) =>
+        toast.error(e instanceof Error ? e.message : "Upload failed"),
+      )
+      .finally(() => setUploadPct(null));
+    if (introFileRef.current) introFileRef.current.value = "";
+  };
+
+  // ── Submit the spot request: create thread + JoinRequest + messages ─
+  const requestMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser || !data?.host) throw new Error("Missing user or host");
+      const threadRes = await api.ensureThread(
+        currentUser.id,
+        data.host.id,
+        data.party.id,
+      );
+      const res = await api.sendRequest({
+        partyId: data.party.id,
+        requesterName: currentUser.name,
+        introMessage: intro.trim(),
+        requesterId: currentUser.id,
+        threadId: threadRes.threadId,
+        introVideoUrl: introVideo?.url,
+        introVideoPoster: introVideo?.poster,
+      });
+      return { threadId: res.threadId ?? threadRes.threadId };
+    },
+    onSuccess: ({ threadId }) => {
+      toast.success("Intro sent to the host! 🎬", {
+        description: "Payment unlocks here once they approve.",
+      });
+      setSpotSheetOpen(false);
+      setIntro("");
+      setIntroVideo(null);
+      qc.invalidateQueries({ queryKey: ["parties"] });
+      qc.invalidateQueries({ queryKey: ["threads", currentUser?.id] });
+      setSelectedThreadId(threadId);
+      setScreen("chat");
+    },
+    onError: (e: Error) => {
+      const msg = e.message || "";
+      if (msg.includes("declined")) {
+        toast.error("Can't re-apply yet", {
+          description: "You were declined for this event. Try again after it's over.",
+        });
+      } else if (msg.includes("queue") || msg.includes("Queue")) {
+        toast.error("Queue is full", {
+          description: "This event has too many pending applications. Try later.",
+        });
+      } else if (msg.includes("pending") || msg.includes("Pending")) {
+        toast.info("You already have a pending request", {
+          description: "Opening your chat with the host…",
+        });
+        if (data?.host && currentUser) {
+          api
+            .ensureThread(currentUser.id, data.host.id, data.party.id)
+            .then((r) => {
+              setSelectedThreadId(r.threadId);
+              setScreen("chat");
+              setSpotSheetOpen(false);
+            })
+            .catch(() => {});
+        }
+      } else {
+        toast.error(msg || "Couldn't send request");
+      }
+    },
+  });
 
   // ── Loading skeleton ──────────────────────────────────────────────
   if (isLoading) {
@@ -199,14 +327,18 @@ export function DetailScreen() {
   const menuOverflow = (menuData?.items ?? []).length - menuItems.length;
 
   const handleJoin = () => {
-    if (isFull) {
-      toast.info("Sold out — join the waitlist", {
-        description: "We'll notify you if a spot opens up.",
-      });
+    if (!currentUser) {
+      toast.error("Sign in to get your spot");
       return;
     }
-    // selectedPartyId is already set — go straight to the payment screen.
-    setScreen("payment");
+    if (isFull) {
+      toast.info("Sold out — join the waitlist", {
+        description: "Send your intro — if a spot opens, the host can approve you.",
+      });
+    }
+    // Open the "Get your spot" sheet (intro + optional intro video) instead
+    // of jumping straight to payment. Payment unlocks after host approval.
+    setSpotSheetOpen(true);
   };
 
   const handleSaveToggle = () => {
@@ -458,7 +590,7 @@ export function DetailScreen() {
           {/* Primary CTA */}
           {isOwn ? (
             <button
-              onClick={() => setScreen("host-dashboard")}
+              onClick={() => setScreen("manage-party")}
               className="press-feedback glow-violet flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground"
             >
               Manage your party
@@ -486,6 +618,138 @@ export function DetailScreen() {
           )}
         </div>
       </div>
+
+      {/* ── "Get your spot" sheet (purchase-flow rewrite) ─────────────── */}
+      <Sheet open={spotSheetOpen} onOpenChange={setSpotSheetOpen}>
+        <SheetContent
+          side="bottom"
+          className="mx-auto max-w-[480px] rounded-t-3xl border-white/10 glass-strong p-0"
+        >
+          <SheetHeader className="px-5 pt-5 pb-2 text-left">
+            <SheetTitle className="font-display text-lg text-foreground">
+              Get your spot at{" "}
+              <span className="text-purple-400">{party.title}</span>
+            </SheetTitle>
+            <SheetDescription className="text-[12px] leading-relaxed text-muted-foreground">
+              Write a quick intro + attach a short intro video. The host
+              reviews it here in chat — payment unlocks the moment they say
+              yes. No payment until approved.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-4 px-5 pb-5 pt-1 fancy-scrollbar max-h-[60vh] overflow-y-auto">
+            {/* Intro text */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-white">
+                Your intro
+              </label>
+              <Textarea
+                value={intro}
+                onChange={(e) => setIntro(e.target.value)}
+                rows={3}
+                placeholder="Hey! I'm a big techno fan, bringing 2 friends, will arrive by 10…"
+                className="rounded-xl border-white/10 bg-card text-foreground placeholder:text-muted-foreground/70 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/25"
+                maxLength={300}
+              />
+              <p className="text-right text-[10px] text-muted-foreground">
+                {intro.length}/300
+              </p>
+            </div>
+
+            {/* Intro video */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-white">
+                Intro video <span className="text-muted-foreground">(optional · ≤60 MB)</span>
+              </label>
+              <input
+                ref={introFileRef}
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime,video/ogg"
+                className="hidden"
+                onChange={(e) => handleIntroVideoPick(e.target.files)}
+              />
+              {introVideo ? (
+                <div className="relative overflow-hidden rounded-xl border border-purple-400/40">
+                  <video
+                    src={introVideo.url}
+                    poster={introVideo.poster}
+                    controls
+                    className="h-40 w-full bg-black object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIntroVideo(null)}
+                    aria-label="Remove intro video"
+                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white transition hover:bg-coral/80 active:scale-90"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <span className="absolute bottom-2 left-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white">
+                    {introVideo.name.slice(0, 24)}
+                  </span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => introFileRef.current?.click()}
+                  disabled={uploadPct !== null}
+                  className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-purple-400/45 bg-purple-400/5 p-3.5 text-left transition hover:border-purple-400/80 hover:bg-purple-400/10 active:scale-[0.99] disabled:opacity-50"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-400/15 text-purple-300">
+                    <VideoIcon className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-foreground">
+                      Attach a 30-sec intro video
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      Hosts approve faster when they can see you
+                    </span>
+                  </span>
+                  <UploadCloud className="h-4 w-4 text-purple-300" />
+                </button>
+              )}
+              {uploadPct !== null && (
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-purple-400 to-pink-400 transition-[width] duration-200"
+                    style={{ width: `${uploadPct}%` }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Submit */}
+            <button
+              type="button"
+              onClick={() => {
+                if (intro.trim().length < 10) {
+                  toast.error("Write a short intro (at least 10 chars)");
+                  return;
+                }
+                requestMutation.mutate();
+              }}
+              disabled={requestMutation.isPending || uploadPct !== null}
+              className="press-feedback glow-violet flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+            >
+              {requestMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending to host…
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Send to host · get your spot
+                </>
+              )}
+            </button>
+            <p className="text-center text-[10px] text-muted-foreground">
+              🔒 No payment until the host approves your intro.
+            </p>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

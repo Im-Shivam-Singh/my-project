@@ -648,7 +648,24 @@ export function CreateScreen() {
                 max={100}
                 step={1}
                 value={form.maxGuests}
-                onChange={(e) => set("maxGuests", Number(e.target.value))}
+                onChange={(e) => {
+                  const next = Number(e.target.value);
+                  // F1: if the host drops maxGuests to ≤15 while security is
+                  // booked, auto-unset the bouncer add-on (it's gated to 15+).
+                  if (next <= 15 && form.securityBooked) {
+                    setForm((f) => ({
+                      ...f,
+                      maxGuests: next,
+                      securityBooked: false,
+                      securityFee: 0,
+                    }));
+                    toast.info("Security add-on removed", {
+                      description: "Bouncer add-on needs 15+ guests.",
+                    });
+                  } else {
+                    set("maxGuests", next);
+                  }
+                }}
                 className="vibe-slider h-2 flex-1"
                 style={
                   {
@@ -670,30 +687,44 @@ export function CreateScreen() {
               Hosts can opt in to add a verified security person for the
               night. £40-60 (UK) / ₹800-1500 (India) for 4 hours. Platform
               takes 15-20% booking fee; bouncer gets the rest after the event.
-              This is a major trust signal — especially for women guests. */}
+              This is a major trust signal — especially for women guests.
+              F1: only enabled when maxGuests > 15 — smaller gatherings don't
+              need a bouncer, and the add-on cost doesn't pencil out. */}
           <section className="space-y-2">
             <Label className="text-white flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-teal-400" />
               Security add-on (optional)
             </Label>
-            <button
-              type="button"
-              onClick={() => {
+            {(() => {
+              const securityGated = form.maxGuests <= 15;
+              const handleToggle = () => {
+                if (securityGated) {
+                  toast.info("Security unlocks at 15+ guests", {
+                    description: "Bump the max-guests slider above 15 to add a verified bouncer.",
+                  });
+                  return;
+                }
                 const next = !form.securityBooked;
                 setForm((f) => ({
                   ...f,
                   securityBooked: next,
                   securityFee: next ? securityFeeDefault : 0,
                 }));
-              }}
-              aria-pressed={form.securityBooked}
-              className={cn(
-                "w-full rounded-2xl border p-3.5 text-left transition active:scale-[0.98]",
-                form.securityBooked
-                  ? "border-teal-500/50 bg-teal-500/10 ring-1 ring-teal-500/30"
-                  : "border-white/10 bg-white/5 hover:border-teal-500/40",
-              )}
-            >
+              };
+              return (
+              <button
+                type="button"
+                onClick={handleToggle}
+                aria-pressed={form.securityBooked}
+                aria-disabled={securityGated}
+                className={cn(
+                  "w-full rounded-2xl border p-3.5 text-left transition active:scale-[0.98]",
+                  securityGated && "opacity-60 cursor-not-allowed active:scale-100",
+                  form.securityBooked
+                    ? "border-teal-500/50 bg-teal-500/10 ring-1 ring-teal-500/30"
+                    : "border-white/10 bg-white/5 hover:border-teal-500/40",
+                )}
+              >
               <div className="flex items-start gap-3">
                 <div
                   className={cn(
@@ -710,27 +741,36 @@ export function CreateScreen() {
                     <p className="text-sm font-semibold text-foreground">
                       Add a verified security person
                     </p>
-                    <span
-                      className={cn(
-                        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
-                        form.securityBooked ? "bg-teal-500" : "bg-secondary",
-                      )}
-                    >
+                    {securityGated ? (
+                      <span className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        🔒 15+ guests
+                      </span>
+                    ) : (
                       <span
                         className={cn(
-                          "absolute top-1 left-1 h-4 w-4 rounded-full bg-white transition-transform",
-                          form.securityBooked && "translate-x-5",
+                          "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                          form.securityBooked ? "bg-teal-500" : "bg-secondary",
                         )}
-                      />
-                    </span>
+                      >
+                        <span
+                          className={cn(
+                            "absolute top-1 left-1 h-4 w-4 rounded-full bg-white transition-transform",
+                            form.securityBooked && "translate-x-5",
+                          )}
+                        />
+                      </span>
+                    )}
                   </div>
                   <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                    {currency}{securityFeeMin}–{currency}{securityFeeMax} for 4 hours ·
-                    platform takes {platformFeePct}% · bouncer paid after event
+                    {securityGated
+                      ? "Unlocks when you raise max guests above 15 — bigger crowds benefit most from on-site security."
+                      : `${currency}${securityFeeMin}–${currency}${securityFeeMax} for 4 hours · platform takes ${platformFeePct}% · bouncer paid after event`}
                   </p>
                 </div>
               </div>
             </button>
+            );
+            })()}
 
             {form.securityBooked && (
               <div className="animate-screen-in rounded-2xl border border-teal-500/20 bg-teal-500/5 p-3.5 space-y-3">

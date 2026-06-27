@@ -2,7 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { JoinRequestInput } from "@/lib/types";
 
-// POST /api/requests  — send a "Request to Connect"
+// ── Purchase-flow rewrite ─────────────────────────────────────────────
+// Guest clicks "Get your spot" on the detail screen → writes an intro +
+// optional short intro video → we (1) ensure a 1:1 chat thread with the
+// host, (2) create a pending JoinRequest linked to that thread + video,
+// (3) drop the intro text + intro video into the thread so the host can
+// vet them in the requests list, and (4) post a system message telling the
+// guest approval is pending. The guest's spot is NOT reserved yet — the
+// host must accept, after which a "Pay" CTA appears in the chat (WhatsApp-
+// style). Payment (POST /api/orders) is what finally bumps guestCount.
+
+// F4 — queue limit: cap pending applications at 2× capacity so a party
+// can't be rushed by a wave of simultaneous applicants. Hosts process the
+// pending queue; once it drains, more can apply.
+function queueLimit(maxGuests: number) {
+  return Math.max(2, maxGuests * 2);
+}
+
+// F5 — re-apply lockout: a guest who was rejected for a party can't apply
+// again to the SAME party until it's over (party date + 1 day). Prevents
+// spam-reapplying after a host says no.
+function partyIsOver(date: string, time: string): boolean {
+  try {
+    const start = new Date(`${date}T${time || "00:00"}:00`);
+    // "over" = 24h after the start (a party + its wind-down)
+    return Date.now() > start.getTime() + 24 * 3_600_000;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: NextRequest) {
   let body: JoinRequestInput;
   try {
@@ -11,7 +40,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { partyId, requesterName, introMessage } = body;
+  const {
+    partyId,
+    requesterName,
+    introMessage,
+    introVideoUrl,
+    introVideoPoster,
+    threadId: providedThreadId,
+    requesterId: providedRequesterId,
+  } = body;
 
   if (!partyId || !requesterName || !introMessage) {
     return NextResponse.json(
@@ -20,33 +57,169 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const party = await db.party.findUnique({ where: { id: partyId } });
+  const party = await db.party.findUnique({
+    where: { id: partyId },
+    include: { host: true },
+  });
   if (!party) {
     return NextResponse.json({ error: "Party not found" }, { status: 404 });
   }
+  if (!party.host) {
+    return NextResponse.json(
+      { error: "This party has no host to message" },
+      { status: 400 },
+    );
+  }
 
-  // try to associate with a user by name
-  const requester = await db.user.findFirst({ where: { name: requesterName } });
+  // Resolve the requester user (prefer the explicitly-passed id, fall back
+  // to a name lookup so older callers keep working).
+  const requester = providedRequesterId
+    ? await db.user.findUnique({ where: { id: providedRequesterId } })
+    : await db.user.findFirst({ where: { name: requesterName } });
 
+  // ── F5: re-apply lockout ──────────────────────────────────────────
+  if (requester) {
+    const priorRejected = await db.joinRequest.findFirst({
+      where: {
+        partyId,
+        requesterId: requester.id,
+        status: "rejected",
+      },
+    });
+    if (priorRejected && !partyIsOver(party.date, party.time)) {
+      return NextResponse.json(
+        {
+          error:
+            "You were declined for this event. You can't re-apply until it's over.",
+          code: "REAPPLY_LOCKED",
+        },
+        { status: 409 },
+      );
+    }
+    // Also block duplicate pending applications (don't let the same guest
+    // spam-apply while their first one is still pending).
+    const priorPending = await db.joinRequest.findFirst({
+      where: {
+        partyId,
+        requesterId: requester.id,
+        status: "pending",
+      },
+    });
+    if (priorPending) {
+      return NextResponse.json(
+        {
+          error: "You already have a pending request for this event.",
+          code: "ALREADY_PENDING",
+          threadId: priorPending.threadId,
+        },
+        { status: 409 },
+      );
+    }
+  }
+
+  // ── F4: queue limit ──────────────────────────────────────────────
+  const pendingCount = await db.joinRequest.count({
+    where: { partyId, status: "pending" },
+  });
+  const limit = queueLimit(party.maxGuests);
+  if (pendingCount >= limit) {
+    return NextResponse.json(
+      {
+        error:
+          "This event's application queue is full right now. Try again later.",
+        code: "QUEUE_FULL",
+        queueLimit: limit,
+      },
+      { status: 429 },
+    );
+  }
+
+  // ── Ensure the 1:1 host↔guest thread ─────────────────────────────
+  let threadId = providedThreadId ?? null;
+  if (!threadId) {
+    const existing = await db.chatThread.findFirst({
+      where: {
+        OR: [
+          { userAId: requester!.id, userBId: party.host.id },
+          { userAId: party.host.id, userBId: requester!.id },
+        ],
+      },
+    });
+    threadId = existing?.id ?? null;
+    if (!threadId) {
+      const t = await db.chatThread.create({
+        data: {
+          userAId: requester!.id,
+          userBId: party.host.id,
+          partyId,
+        },
+      });
+      threadId = t.id;
+    }
+  }
+
+  // ── Create the JoinRequest (linked to thread + intro video) ──────
   const request = await db.joinRequest.create({
     data: {
       partyId,
       requesterName,
       introMessage,
-      requesterId: requester?.id,
+      requesterId: requester?.id ?? null,
+      threadId,
+      introVideoUrl: introVideoUrl ?? null,
+      introVideoPoster: introVideoPoster ?? null,
     },
   });
 
-  // increment party guest count optimistically (the host will confirm)
-  await db.party.update({
-    where: { id: partyId },
-    data: { guestCount: { increment: 1 } },
+  // ── Drop the intro text + video + system notice into the thread ─
+  // Intro text (from guest → host)
+  await db.message.create({
+    data: {
+      threadId,
+      senderId: requester!.id,
+      receiverId: party.host.id,
+      content: introMessage,
+      kind: "text",
+    },
   });
+  // Intro video (if attached) — rendered as a tappable video message
+  if (introVideoUrl) {
+    await db.message.create({
+      data: {
+        threadId,
+        senderId: requester!.id,
+        receiverId: party.host.id,
+        content: "Intro video 🎬",
+        kind: "video",
+        mediaUrl: introVideoUrl,
+        requestId: request.id,
+      },
+    });
+  }
+  // System notice to the guest (so the chat explains the wait)
+  await db.message.create({
+    data: {
+      threadId,
+      senderId: party.host.id,
+      receiverId: requester!.id,
+      content:
+        "⏳ Waiting for host approval. You'll be notified here — payment unlocks once the host says yes.",
+      kind: "system",
+    },
+  });
+  await db.chatThread.update({
+    where: { id: threadId },
+    data: { updatedAt: new Date() },
+  });
+
+  // NOTE: guestCount is intentionally NOT bumped here. The spot is only
+  // reserved once the host accepts AND the guest pays (POST /api/orders).
 
   return NextResponse.json(
     {
       id: request.id,
-      message: "Request sent! The host will get back to you shortly.",
+      threadId,
+      message: "Request sent! The host will review your intro and reply here.",
       status: request.status,
     },
     { status: 201 },

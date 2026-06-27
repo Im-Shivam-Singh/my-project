@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-// PATCH /api/requests/[id]  { status: "accepted" | "rejected" }
-// Updates a join request status (host action). When accepting, also bumps
-// guestCount is left as-is (already incremented on POST). On rejection we
-// decrement guestCount back so the slot is released.
+// ── PATCH /api/requests/[id]  { status: "accepted" | "rejected" } ─────
+// Host action from the requests screen. On accept we post a WhatsApp-style
+// "Pay {amount}" CTA message into the 1:1 thread so the guest can pay
+// directly from the chat. On reject we post a system message informing the
+// guest. guestCount is untouched here (it only moves on payment).
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -29,26 +30,73 @@ export async function PATCH(
   if (!existing) {
     return NextResponse.json({ error: "Request not found" }, { status: 404 });
   }
+  // Idempotent — no-op if the status is already the target.
+  if (existing.status === status) {
+    return NextResponse.json({ id, status });
+  }
 
-  // If we are rejecting a previously-accepted or pending request, free the slot
-  if (status === "rejected" && existing.status !== "rejected") {
-    await db.party.update({
-      where: { id: existing.partyId },
-      data: { guestCount: { decrement: 1 } },
-    });
-  }
-  // If re-accepting a previously-rejected request, re-bump the count
-  if (status === "accepted" && existing.status === "rejected") {
-    await db.party.update({
-      where: { id: existing.partyId },
-      data: { guestCount: { increment: 1 } },
-    });
-  }
+  const party = await db.party.findUnique({
+    where: { id: existing.partyId },
+    include: { host: true },
+  });
 
   const updated = await db.joinRequest.update({
     where: { id },
     data: { status },
   });
+
+  // ── Post the approval / rejection notice into the 1:1 thread ──────
+  if (existing.threadId && party?.host && existing.requesterId) {
+    const threadId = existing.threadId;
+    const hostId = party.host.id;
+    const guestId = existing.requesterId;
+
+    if (status === "accepted") {
+      // System notice
+      await db.message.create({
+        data: {
+          threadId,
+          senderId: hostId,
+          receiverId: guestId,
+          content: `✅ ${party.host.name} approved your request. Pay below to lock your spot.`,
+          kind: "system",
+        },
+      });
+      // Payment CTA — the guest taps this to go to checkout. The amount is
+      // the party entry fee; we embed it in the content for the chat UI.
+      const currency = ["Delhi", "Mumbai", "Bangalore", "Goa", "Pune"].includes(
+        party.city,
+      )
+        ? "₹"
+        : "£";
+      await db.message.create({
+        data: {
+          threadId,
+          senderId: hostId,
+          receiverId: guestId,
+          content: `Pay ${currency}${party.fee}${party.fee === 0 ? " (free entry — tap to confirm)" : " to confirm your spot"}`,
+          kind: "payment",
+          requestId: existing.id,
+        },
+      });
+    } else {
+      // Rejected
+      await db.message.create({
+        data: {
+          threadId,
+          senderId: hostId,
+          receiverId: guestId,
+          content:
+            "❌ Your request was declined for this event. You can't re-apply until it's over.",
+          kind: "system",
+        },
+      });
+    }
+    await db.chatThread.update({
+      where: { id: threadId },
+      data: { updatedAt: new Date() },
+    });
+  }
 
   return NextResponse.json({ id: updated.id, status: updated.status });
 }

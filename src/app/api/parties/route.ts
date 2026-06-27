@@ -29,6 +29,7 @@ function serialize(p: any): Party {
     securityBooked: p.securityBooked,
     securityFee: p.securityFee,
     securityStatus: p.securityStatus,
+    groupChatEnabled: p.groupChatEnabled,
     createdAt: p.createdAt.toISOString(),
     // Intentionally empty in list payloads to keep the response small.
     // The full media list is only included on the GET /api/parties/[id] route.
@@ -36,13 +37,14 @@ function serialize(p: any): Party {
   };
 }
 
-// GET /api/parties?city=Delhi&vibe=Techno&q=rooftop
+// GET /api/parties?city=Delhi&vibe=Techno&q=rooftop&profession=Student
 // GET /api/parties?lat=28.61&lng=77.20&radiusKm=5  — proximity filter (map view)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const city = searchParams.get("city");
   const vibe = searchParams.get("vibe");
   const q = searchParams.get("q")?.trim().toLowerCase();
+  const profession = searchParams.get("profession");
 
   const lat = searchParams.get("lat");
   const lng = searchParams.get("lng");
@@ -52,10 +54,13 @@ export async function GET(req: NextRequest) {
     !Number.isNaN(parseFloat(lat)) && !Number.isNaN(parseFloat(lng)) &&
     !Number.isNaN(parseFloat(radiusKm));
 
+  // When a profession filter is set, include the host so we can filter by
+  // host.profession ("who are you" → find parties hosted by your crowd).
   const parties = await db.party.findMany({
     where: {
       ...(city ? { city } : {}),
     },
+    include: profession ? { host: true } : undefined,
     orderBy: { createdAt: "desc" },
     take: 200,
   });
@@ -65,11 +70,21 @@ export async function GET(req: NextRequest) {
     filtered = filtered.filter((p) => parseVibes(p.vibes).includes(vibe));
   }
   if (q) {
+    // Search across title, area, description, AND city so a "place / city"
+    // search query surfaces matching parties.
     filtered = filtered.filter(
       (p) =>
         p.title.toLowerCase().includes(q) ||
         p.area.toLowerCase().includes(q) ||
+        p.city.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q),
+    );
+  }
+  if (profession) {
+    // Filter to parties whose host's profession matches (parties without a
+    // host user are dropped).
+    filtered = filtered.filter(
+      (p) => (p as any).host?.profession === profession,
     );
   }
 

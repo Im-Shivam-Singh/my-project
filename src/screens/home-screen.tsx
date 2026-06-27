@@ -53,6 +53,7 @@ export function HomeScreen() {
   const cityFilter = useAppStore((s) => s.cityFilter);
   const vibeFilter = useAppStore((s) => s.vibeFilter);
   const searchQuery = useAppStore((s) => s.searchQuery);
+  const professionFilter = useAppStore((s) => s.professionFilter);
   const setCityFilter = useAppStore((s) => s.setCityFilter);
   const setVibeFilter = useAppStore((s) => s.setVibeFilter);
   const setSearchQuery = useAppStore((s) => s.setSearchQuery);
@@ -65,12 +66,13 @@ export function HomeScreen() {
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["parties", cityFilter, vibeFilter, searchQuery],
+    queryKey: ["parties", cityFilter, vibeFilter, searchQuery, professionFilter],
     queryFn: () =>
       api.listParties({
         city: cityFilter,
         vibe: vibeFilter,
         q: searchQuery || undefined,
+        profession: professionFilter || undefined,
       }),
   });
 

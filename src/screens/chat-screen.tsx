@@ -15,6 +15,10 @@ import {
   Check,
   CheckCheck,
   Sparkles,
+  Lock,
+  Play,
+  CreditCard,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -60,6 +64,7 @@ export function ChatScreen() {
   const goBack = useAppStore((s) => s.goBack);
   const currentUser = useAppStore((s) => s.currentUser);
   const setScreen = useAppStore((s) => s.setScreen);
+  const setSelectedPartyId = useAppStore((s) => s.setSelectedPartyId);
   const qc = useQueryClient();
 
   const { socket, online } = useChatSocket(currentUser?.id);
@@ -84,6 +89,9 @@ export function ChatScreen() {
 
   const messages = data?.messages ?? [];
   const other = data?.otherUser ?? null;
+  // The thread's party context — needed so the "Pay" CTA can route the guest
+  // to the payment screen with the right party selected.
+  const partyId = data?.thread?.partyId ?? null;
 
   // live messages via socket
   useEffect(() => {
@@ -337,6 +345,72 @@ export function ChatScreen() {
               const reactionEntries = Object.entries(msgReactions).filter(
                 ([, c]) => c > 0,
               );
+              const kind = (m.kind ?? "text") as
+                | "text"
+                | "video"
+                | "system"
+                | "payment";
+
+              // ── System messages: centered pill (approval status notices) ──
+              if (kind === "system") {
+                return (
+                  <div key={m.id} className="my-2 flex justify-center">
+                    <span className="inline-flex max-w-[85%] items-center gap-1.5 rounded-full glass px-3 py-1.5 text-center text-[11px] leading-relaxed text-white/70 ring-1 ring-white/10">
+                      <Clock className="h-3 w-3 shrink-0 text-purple-400" />
+                      {m.content}
+                    </span>
+                  </div>
+                );
+              }
+
+              // ── Payment CTA: WhatsApp-style "Pay {amount}" card ──────────
+              if (kind === "payment") {
+                return (
+                  <div
+                    key={m.id}
+                    className={cn(
+                      "my-2 flex",
+                      mine ? "justify-start" : "justify-end",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!partyId) {
+                          toast.error("Couldn't open payment");
+                          return;
+                        }
+                        setSelectedPartyId(partyId);
+                        setScreen("payment");
+                      }}
+                      className="w-[78%] rounded-2xl border border-teal-500/40 bg-gradient-to-br from-teal-500/15 to-purple-500/10 p-3.5 text-left transition active:scale-[0.99] hover:border-teal-400/70"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-500/20 text-teal-300">
+                          <CreditCard className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-teal-300">
+                            Payment approved
+                          </p>
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {m.content}
+                          </p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-teal-500 px-3 py-1.5 text-[11px] font-bold text-black">
+                          Pay
+                        </span>
+                      </div>
+                      <p className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <Lock className="h-2.5 w-2.5" /> Tap to pay · spot locks
+                        after checkout
+                      </p>
+                    </button>
+                  </div>
+                );
+              }
+
+              // ── Video + text bubbles ──────────────────────────────────────
               return (
                 <div
                   key={m.id}
@@ -356,36 +430,70 @@ export function ChatScreen() {
                       <span className="w-6" />
                     ))}
                   <div className="relative max-w-[75%]">
-                    <div
-                      onClick={() =>
-                        setReactingFor((cur) => (cur === m.id ? null : m.id))
-                      }
-                      className={cn(
-                        "cursor-pointer rounded-2xl px-3 py-2 text-sm transition",
-                        mine
-                          ? "rounded-br-md bg-purple-500 text-black"
-                          : "rounded-bl-md glass text-white ring-1 ring-white/10",
-                        reactingFor === m.id && "ring-2 ring-purple-500/70",
-                      )}
-                    >
-                      <p className="whitespace-pre-line break-words">
-                        {m.content}
-                      </p>
+                    {kind === "video" && m.mediaUrl ? (
                       <div
+                        onClick={() =>
+                          setReactingFor((cur) => (cur === m.id ? null : m.id))
+                        }
                         className={cn(
-                          "mt-0.5 flex items-center justify-end gap-1 text-[10px]",
-                          mine ? "text-black/60" : "text-muted-foreground",
+                          "relative cursor-pointer overflow-hidden rounded-2xl transition",
+                          mine
+                            ? "rounded-br-md bg-purple-500"
+                            : "rounded-bl-md glass ring-1 ring-white/10",
+                          reactingFor === m.id && "ring-2 ring-purple-500/70",
                         )}
                       >
-                        {relativeTime(m.createdAt)}
-                        {mine &&
-                          (m.read ? (
-                            <CheckCheck className="h-3 w-3 text-purple-700" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          ))}
+                        <video
+                          src={m.mediaUrl}
+                          controls
+                          playsInline
+                          className="h-44 w-full min-w-[180px] bg-black object-cover"
+                        />
+                        <p className="px-3 py-1.5 text-[11px] text-white/80">
+                          {m.content}
+                        </p>
+                        <div className="flex items-center justify-end gap-1 px-3 pb-1.5 text-[10px] text-black/60">
+                          {relativeTime(m.createdAt)}
+                          {mine &&
+                            (m.read ? (
+                              <CheckCheck className="h-3 w-3 text-purple-700" />
+                            ) : (
+                              <Check className="h-3 w-3" />
+                            ))}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div
+                        onClick={() =>
+                          setReactingFor((cur) => (cur === m.id ? null : m.id))
+                        }
+                        className={cn(
+                          "cursor-pointer rounded-2xl px-3 py-2 text-sm transition",
+                          mine
+                            ? "rounded-br-md bg-purple-500 text-black"
+                            : "rounded-bl-md glass text-white ring-1 ring-white/10",
+                          reactingFor === m.id && "ring-2 ring-purple-500/70",
+                        )}
+                      >
+                        <p className="whitespace-pre-line break-words">
+                          {m.content}
+                        </p>
+                        <div
+                          className={cn(
+                            "mt-0.5 flex items-center justify-end gap-1 text-[10px]",
+                            mine ? "text-black/60" : "text-muted-foreground",
+                          )}
+                        >
+                          {relativeTime(m.createdAt)}
+                          {mine &&
+                            (m.read ? (
+                              <CheckCheck className="h-3 w-3 text-purple-700" />
+                            ) : (
+                              <Check className="h-3 w-3" />
+                            ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Reaction chips under bubble */}
                     {reactionEntries.length > 0 && (

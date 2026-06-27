@@ -100,5 +100,79 @@ export async function POST(req: NextRequest) {
     data: { guestCount: { increment: 1 } },
   });
 
+  // ── Unlock the group chat for this party + add the paying guest ──
+  // The group chat is the "active event" room where all paid guests + the
+  // host coordinate. It's created on the first payment and the guest is
+  // added as a member. The host is auto-added too (so they're present from
+  // the start). Referral-offer cards are seeded once on creation.
+  await ensureGroupChat(partyId, userId, party.hostId);
+
   return NextResponse.json({ order, ticket }, { status: 201 });
 }
+
+// ── Group chat bootstrap ──────────────────────────────────────────────
+// Idempotent: creates the GroupChat for a party on first payment, flips
+// party.groupChatEnabled, and ensures both the paying guest + the host are
+// members. Seeds a welcome system message + the 7 referral-offer cards so
+// the revenue model (affiliate referrals) is visible from message #1.
+async function ensureGroupChat(
+  partyId: string,
+  guestId: string,
+  hostId: string | null,
+) {
+  const existing = await db.groupChat.findUnique({ where: { partyId } });
+  if (existing) {
+    // Add the new guest as a member if not already.
+    await db.groupChatMember.upsert({
+      where: { groupChatId_userId: { groupChatId: existing.id, userId: guestId } },
+      create: { groupChatId: existing.id, userId: guestId },
+      update: {},
+    });
+    await db.party.update({
+      where: { id: partyId },
+      data: { groupChatEnabled: true },
+    });
+    return;
+  }
+
+  const memberIds = hostId ? [hostId, guestId] : [guestId];
+  const gc = await db.groupChat.create({
+    data: {
+      partyId,
+      members: {
+        create: memberIds.map((uid) => ({ userId: uid })),
+      },
+      messages: {
+        create: [
+          {
+            senderId: guestId,
+            content: "Group chat unlocked 🎉 Say hi to everyone before the night!",
+            kind: "system",
+          },
+          // Seed the 7 referral offers — the platform's ad revenue model.
+          ...BRAND_SEED.map((b) => ({
+            senderId: guestId,
+            content: `${b.name}: ${b.offer}`,
+            kind: "offer" as const,
+            offerBrand: b.id,
+          })),
+        ],
+      },
+    },
+  });
+  await db.party.update({
+    where: { id: partyId },
+    data: { groupChatEnabled: true },
+  });
+  return gc;
+}
+
+const BRAND_SEED = [
+  { id: "swiggy", name: "Swiggy", offer: "20% off party food delivery" },
+  { id: "zomato", name: "Zomato", offer: "Flat ₹100 off on orders above ₹499" },
+  { id: "blinkit", name: "Blinkit", offer: "10-min drinks delivery · 15% off" },
+  { id: "zepto", name: "Zepto", offer: "10-min snacks + ice · ₹50 off" },
+  { id: "bigbasket", name: "BigBasket", offer: "Bulk party supplies · 25% off" },
+  { id: "instamart", name: "Instamart", offer: "15-min mixers & soft drinks · 12% off" },
+  { id: "flipkart", name: "Flipkart Minutes", offer: "Speakers & decor in 10 mins · 20% off" },
+];
