@@ -2178,3 +2178,80 @@ Stage Summary:
 - Message button properly sized and truncated; no text cutoff
 - Micro-interactions (active:scale) added to cards, chips, vibe stories, and nav buttons
 - All changes pass ESLint; dev server running cleanly
+
+---
+Task ID: 3+4
+Agent: DevOps + Docs Agent
+Task: Improve GitHub Actions workflow and README
+
+Work Log:
+- Read existing deploy.yml, README.md, worklog.md, and .env to understand current state
+- Improved .github/workflows/deploy.yml:
+  - Added build job between lint and deploy that runs `bun run build` with env vars (DATABASE_URL, NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_API_URL, NEXT_PUBLIC_SOCKET_URL)
+  - Added Bun dependency caching (actions/cache@v4) with bun.lockb key to all jobs
+  - Added explicit bun-version: latest to setup-bun steps
+  - Added env vars for build job (NEXT_PUBLIC_API_URL, NEXT_PUBLIC_SOCKET_URL, etc.)
+  - Added upload-artifact step for build output
+  - Added failure notification step for PR deployments (comments on PR when deploy fails)
+  - Made deploy-preview and deploy-production depend on build (not just lint)
+  - Enhanced success comment on PRs with formatting (commit SHA, emoji header)
+- Created .github/workflows/ci.yml for all-push CI:
+  - Triggers on all branches (push + PR to any branch)
+  - Concurrency group to cancel superseded runs
+  - Lint job: ESLint check
+  - Typecheck job: `tsc --noEmit` for type safety
+  - Build job: depends on lint + typecheck, verifies Next.js build with env vars
+  - ci-status aggregate job for branch protection rules
+  - Bun caching on all jobs
+- Improved README.md:
+  - Added "Live Demo" link with Vercel URL placeholder
+  - Added CI badge to header badges
+  - Added "Screenshots" section with placeholder grid (6 screenshot slots)
+  - Added "Project Architecture" section with ASCII diagram and key design decisions
+  - Added "Environment Variables" section with table of all vars + .env example
+  - Added "Roadmap" section with 9 planned features
+  - Improved "Deployment" section with step-by-step Vercel setup (6 detailed steps)
+  - Added "Credits & Acknowledgments" section
+  - Added "Back to Top" link
+- Created .env.example file with all documented env vars
+
+Stage Summary:
+- deploy.yml now has lint → build → deploy pipeline with caching, env vars, and error notifications
+- ci.yml provides quality gates (lint + typecheck + build) on every push to any branch
+- README.md is comprehensive with architecture, env vars, roadmap, deployment guide, and credits
+- .env.example created for developer onboarding
+
+---
+Task ID: 2
+Agent: UI Bug Fix Agent
+Task: Fix remaining UI bugs across home, detail, profile, and nav screens
+
+Work Log:
+- Home screen (home-screen.tsx):
+  1. Heart icon: Changed to explicit fill-transparent when unsaved, fill-coral-500 + text-coral-500 when saved (was showing solid even unsaved)
+  2. Vibes count text: Changed from font-medium to font-semibold for better visibility
+  3. Vibe story circles: Removed scale-105 from active state so "All" circle doesn't appear bigger than others
+  4. Search bar icon: Moved from left-3 to left-3.5 to align with pl-10 input padding
+  5. User avatar in header: Changed from text-purple-foreground to text-white + added ring-2 ring-purple-400/30 for contrast
+  6. "Going" badge on party cards: Changed from bg-purple-500/90 font-medium to bg-purple-500 font-semibold for better contrast
+- Detail screen (detail-screen.tsx):
+  1. "Pay once · drinks add-on available after" text: Changed from text-xs to text-sm, added whitespace-nowrap overflow-hidden text-ellipsis to prevent ugly truncation
+  2. Host section alignment: Confirmed items-center already present on flex container
+  3. EDM vibe tag: Added special case in detail screen to use text-purple-300 font-medium for better contrast instead of coral
+  4. MetaCell text contrast: Changed from text-foreground/90 to text-foreground/80 per QA request
+- Profile screen (profile-screen.tsx):
+  1. "VIBE SCORE" label: Changed from text-white/50 to text-purple-300 font-semibold for better contrast
+  2. Stats cards spacing: Added flex flex-col items-center gap-1 to standardize vertical spacing, removed mt-1 from value, changed label from text-[11px] to text-xs
+  3. Edit Profile button: Already had items-center gap-1.5 — confirmed alignment is correct
+- Bottom nav (bottom-nav.tsx):
+  1. HOST label centering: Added text-center to the Host label span
+  2. Nav icons contrast: Changed inactive state from text-muted-foreground/80 to text-muted-foreground (benefits from the 0.75 bump)
+- Global CSS (globals.css):
+  1. Bumped --muted-foreground from 0.70 to 0.75 in both :root and .dark for better readability across the app
+
+Stage Summary:
+- All QA-reported UI bugs fixed across 5 files
+- Lint passes cleanly with zero errors
+- Dev server compiles successfully
+- Color palette (purple/teal/amber/coral) preserved throughout
+- Mobile-first design constraints maintained
