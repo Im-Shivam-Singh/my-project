@@ -227,4 +227,41 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+
+  // ===== Media uploads (host photos + videos for a party) =====
+  // Posts a multipart/form-data payload to /api/upload. Returns one entry
+  // per file with a { url, type, name, size } shape. `onProgress` is optional
+  // and reports 0..100 for the current upload (used by the create-screen
+  // progress bar). We use a raw fetch + XMLHttpRequest wrapper because the
+  // native fetch API doesn't expose upload progress events.
+  uploadMedia: (
+    files: File[],
+    onProgress?: (pct: number) => void,
+  ): Promise<{
+    files: { url: string; type: "image" | "video"; name: string; size: number }[];
+  }> =>
+    new Promise((resolve, reject) => {
+      const fd = new FormData();
+      for (const f of files) fd.append("file", f, f.name);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/upload");
+      xhr.responseType = "json";
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(xhr.response as any);
+        } else {
+          const msg =
+            (xhr.response && xhr.response.error) ||
+            `Upload failed (${xhr.status})`;
+          reject(new Error(msg));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.send(fd);
+    }),
 };

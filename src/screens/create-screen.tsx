@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ImagePlus, Video, Play, X, CalendarDays, Clock, IndianRupee, Users, Check, Sparkles, ShieldCheck, Info } from "lucide-react";
+import { ChevronLeft, ImagePlus, Video, Play, X, CalendarDays, Clock, IndianRupee, Users, Check, Sparkles, ShieldCheck, Info, UploadCloud, Loader2, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -96,6 +96,127 @@ export function CreateScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  // ── Device upload state ──────────────────────────────────────────────
+  // Tracks which media URLs came from the host's own device (so we can show
+  // a "Your upload" pill), plus the in-flight upload progress (0..100).
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedUrls, setUploadedUrls] = useState<Set<string>>(new Set());
+  const [uploadPct, setUploadPct] = useState<number | null>(null);
+  // Track object URLs for uploaded videos so we can show a real poster frame
+  // in the gallery + live preview (without a separate poster upload).
+  const [videoPosterMap, setVideoPosterMap] = useState<Record<string, string>>({});
+
+  const uploadMutation = useMutation({
+    mutationFn: ({
+      files,
+      onProgress,
+    }: {
+      files: File[];
+      onProgress?: (pct: number) => void;
+    }) => api.uploadMedia(files, onProgress),
+    onMutate: () => setUploadPct(0),
+    onSuccess: (data, variables) => {
+      const remainingSlots = MAX_MEDIA - mediaFull;
+      const accepted = data.files.slice(0, Math.max(0, remainingSlots));
+      if (data.files.length > accepted.length) {
+        toast.warning(
+          `Only ${accepted.length} of ${data.files.length} added — gallery is full`,
+        );
+      }
+      if (accepted.length === 0) {
+        toast.error("Gallery is full — remove an item first");
+        return;
+      }
+      // Build local object-URL posters for uploaded videos so the gallery +
+      // live preview show a real frame without a separate poster upload.
+      const newPosters: Record<string, string> = {};
+      accepted.forEach((f) => {
+        const idx = data.files.indexOf(f);
+        const file = variables.files[idx];
+        if (file && f.type === "video") {
+          newPosters[f.url] = URL.createObjectURL(file);
+        }
+      });
+      if (Object.keys(newPosters).length > 0) {
+        setVideoPosterMap((m) => ({ ...m, ...newPosters }));
+      }
+      setUploadedUrls((s) => {
+        const next = new Set(s);
+        accepted.forEach((f) => next.add(f.url));
+        return next;
+      });
+      // Prepend uploaded media so the host's own photo/video becomes the
+      // cover (the default preset placeholder gets pushed back). We add them
+      // in reverse so the first-selected upload ends up at position 0.
+      [...accepted].reverse().forEach((f) =>
+        addMedia({ url: f.url, type: f.type, caption: f.name }, { prepend: true }),
+      );
+      const addedImages = accepted.filter((f) => f.type === "image").length;
+      const addedVideos = accepted.filter((f) => f.type === "video").length;
+      const parts: string[] = [];
+      if (addedImages) parts.push(`${addedImages} photo${addedImages > 1 ? "s" : ""}`);
+      if (addedVideos) parts.push(`${addedVideos} video${addedVideos > 1 ? "s" : ""}`);
+      toast.success(`Uploaded ${parts.join(" + ")}`);
+    },
+    onError: (e: Error) =>
+      toast.error(e instanceof Error ? e.message : "Upload failed"),
+    onSettled: () => setUploadPct(null),
+  });
+
+  const handleFilePick = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
+    const slotsLeft = MAX_MEDIA - mediaFull;
+    if (slotsLeft <= 0) {
+      toast.error(`Gallery is full (${MAX_MEDIA} max)`);
+      return;
+    }
+    // Pre-validate on the client so we fail fast with a friendlier message.
+    const validTypes = new Set([
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/avif",
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+      "video/ogg",
+    ]);
+    const bad = files.find((f) => !validTypes.has(f.type));
+    if (bad) {
+      toast.error(`Unsupported file: ${bad.name}`, {
+        description: "Use JPG, PNG, WebP, GIF, MP4, WebM, or MOV",
+      });
+      return;
+    }
+    const tooBigImage = files.find(
+      (f) => f.type.startsWith("image/") && f.size > 10 * 1024 * 1024,
+    );
+    if (tooBigImage) {
+      toast.error(`"${tooBigImage.name}" is over 10 MB`, {
+        description: "Resize the image and try again",
+      });
+      return;
+    }
+    const tooBigVideo = files.find(
+      (f) => f.type.startsWith("video/") && f.size > 60 * 1024 * 1024,
+    );
+    if (tooBigVideo) {
+      toast.error(`"${tooBigVideo.name}" is over 60 MB`, {
+        description: "Trim the clip and try again",
+      });
+      return;
+    }
+    const toUpload = files.slice(0, slotsLeft);
+    if (files.length > slotsLeft) {
+      toast.warning(`Only ${slotsLeft} slot${slotsLeft > 1 ? "s" : ""} left — adding the first ${slotsLeft}`);
+    }
+    uploadMutation.mutate({ files: toUpload });
+    // reset the input so the same file can be re-picked if needed
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   // Security fee is city-dependent: £40-60 for UK, ₹800-1500 for India.
   // We pick the midpoint of the range as the default when the host toggles
   // the bouncer add-on on.
@@ -131,7 +252,7 @@ export function CreateScreen() {
     media: items,
   });
 
-  const addMedia = (item: MediaItem) => {
+  const addMedia = (item: MediaItem, opts?: { prepend?: boolean }) => {
     setForm((f) => {
       const current = f.media ?? [];
       if (current.length >= MAX_MEDIA) {
@@ -140,7 +261,10 @@ export function CreateScreen() {
       }
       // Skip exact-duplicate URLs (e.g. tapping the same preset twice).
       if (current.some((m) => m.url === item.url)) return f;
-      const next = [...current, item];
+      // `prepend` puts the new item at the front so it becomes the cover —
+      // used for host-uploaded media so their own photo is featured, not the
+      // default preset placeholder.
+      const next = opts?.prepend ? [item, ...current] : [...current, item];
       return { ...f, ...syncCoverFromMedia(next) };
     });
   };
@@ -233,86 +357,167 @@ export function CreateScreen() {
               </span>
             </div>
 
-            {/* Preview tiles — horizontally scrollable list with add tile at end */}
+            {/* Hidden multi-file input — opened by the "Upload" tile + the
+                "Upload from device" button inside the picker dialog. Accepts
+                the same image + video types we whitelist server-side. */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime,video/ogg"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFilePick(e.target.files)}
+            />
+
+            {/* Upload progress bar — only visible while a upload is in flight */}
+            {uploadPct !== null && (
+              <div className="animate-screen-in rounded-xl border border-purple-400/30 bg-purple-400/5 p-2.5">
+                <div className="mb-1 flex items-center gap-2 text-[11px] text-purple-200">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span className="font-medium">
+                    Uploading… {uploadPct}%
+                  </span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-purple-400 to-pink-400 transition-[width] duration-200 ease-out"
+                    style={{ width: `${uploadPct}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Preview tiles — horizontally scrollable list with two add tiles at end */}
             <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-              {media.map((m, i) => (
-                <div
-                  key={`${m.url}-${i}`}
-                  className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-purple-400/30"
-                >
-                  {m.type === "image" ? (
-                    <img
-                      src={m.url}
-                      alt={i === 0 ? "Cover" : `Media ${i + 1}`}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <>
+              {media.map((m, i) => {
+                const isUploaded = uploadedUrls.has(m.url);
+                // Resolve a poster for video tiles: prefer the local object
+                // URL we captured at upload time, then the preset poster,
+                // then fall back to the video URL itself.
+                const videoPoster =
+                  videoPosterMap[m.url] ||
+                  VIDEO_PRESETS.find((v) => v.url === m.url)?.poster ||
+                  m.url;
+                return (
+                  <div
+                    key={`${m.url}-${i}`}
+                    className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-purple-400/30"
+                  >
+                    {m.type === "image" ? (
                       <img
-                        src={
-                          VIDEO_PRESETS.find((v) => v.url === m.url)?.poster ||
-                          m.url
-                        }
-                        alt={`Video ${i + 1}`}
+                        src={m.url}
+                        alt={i === 0 ? "Cover" : `Media ${i + 1}`}
                         className="h-full w-full object-cover"
                         loading="lazy"
                       />
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/45">
-                        <Play className="h-5 w-5 fill-white text-white" />
+                    ) : (
+                      <>
+                        <img
+                          src={videoPoster}
+                          alt={`Video ${i + 1}`}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/45">
+                          <Play className="h-5 w-5 fill-white text-white" />
+                        </span>
+                      </>
+                    )}
+                    {i === 0 && (
+                      <span className="absolute left-1 top-1 rounded-md bg-purple-500/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        COVER
                       </span>
-                    </>
-                  )}
-                  {i === 0 && (
-                    <span className="absolute left-1 top-1 rounded-md bg-purple-500/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                      COVER
-                    </span>
-                  )}
-                  {/* Remove button */}
-                  <button
-                    type="button"
-                    onClick={() => removeMediaAt(i)}
-                    aria-label={`Remove media ${i + 1}`}
-                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/65 text-white transition hover:bg-coral/80 active:scale-90"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                  {/* Make-cover button (only for non-first items) */}
-                  {i > 0 && (
+                    )}
+                    {/* "Your upload" pill — distinguishes host-uploaded media
+                        from stock presets in the gallery. */}
+                    {isUploaded && (
+                      <span className="absolute bottom-1 left-1 rounded bg-teal-500/90 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white shadow">
+                        <Camera className="mr-0.5 inline h-2 w-2" />
+                        Yours
+                      </span>
+                    )}
+                    {/* Remove button */}
                     <button
                       type="button"
-                      onClick={() => makeCoverAt(i)}
-                      className="absolute bottom-1 right-1 rounded-md bg-black/65 px-1.5 py-0.5 text-[9px] font-semibold text-white/90 transition hover:bg-purple-500/80 active:scale-95"
+                      onClick={() => removeMediaAt(i)}
+                      aria-label={`Remove media ${i + 1}`}
+                      className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/65 text-white transition hover:bg-coral/80 active:scale-90"
                     >
-                      Use as cover
+                      <X className="h-3 w-3" />
                     </button>
-                  )}
-                </div>
-              ))}
+                    {/* Make-cover button (only for non-first items) */}
+                    {i > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => makeCoverAt(i)}
+                        className="absolute bottom-1 right-1 rounded-md bg-black/65 px-1.5 py-0.5 text-[9px] font-semibold text-white/90 transition hover:bg-purple-500/80 active:scale-95"
+                      >
+                        Use as cover
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
 
-              {/* Add tile */}
+              {/* Upload-from-device tile — primary affordance. Always shown
+                  (even when full) so the host can swap: they remove a tile
+                  then upload. Disabled only while an upload is in flight. */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadPct !== null || mediaFull >= MAX_MEDIA}
+                className="flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-teal-400/55 bg-teal-400/5 text-teal-200 transition hover:border-teal-400/90 hover:bg-teal-400/10 active:scale-95 disabled:opacity-40 disabled:active:scale-100"
+                aria-label="Upload photos or videos from your device"
+              >
+                <UploadCloud className="h-5 w-5" />
+                <span className="text-[10px] font-semibold leading-none">
+                  Upload
+                </span>
+                <span className="text-[8px] text-teal-300/70 leading-none">
+                  from device
+                </span>
+              </button>
+
+              {/* Presets tile — secondary affordance, opens the picker dialog */}
               {mediaFull < MAX_MEDIA && (
                 <button
                   type="button"
                   onClick={() => setPickerOpen(true)}
-                  className="flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-purple-400/45 bg-purple-400/5 text-purple-300 transition hover:border-purple-400/80 hover:bg-purple-400/10 active:scale-95"
-                  aria-label="Add photo or video"
+                  disabled={uploadPct !== null}
+                  className="flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-purple-400/45 bg-purple-400/5 text-purple-300 transition hover:border-purple-400/80 hover:bg-purple-400/10 active:scale-95 disabled:opacity-40 disabled:active:scale-100"
+                  aria-label="Pick from preset photos and videos"
                 >
                   <ImagePlus className="h-5 w-5" />
-                  <span className="text-[10px] font-semibold">Add</span>
+                  <span className="text-[10px] font-semibold">Presets</span>
                 </button>
               )}
             </div>
 
-            {/* Quick inline picker button (secondary affordance) */}
-            <button
-              type="button"
-              onClick={() => setPickerOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-purple-400/40 bg-purple-400/10 px-3 py-1.5 text-[11px] font-medium text-purple-200 transition hover:bg-purple-400/15 active:scale-95"
-            >
-              <Sparkles className="h-3 w-3" />
-              Pick from presets
-            </button>
+            {/* Primary inline upload button + format hint */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadPct !== null || mediaFull >= MAX_MEDIA}
+                className="inline-flex items-center gap-1.5 rounded-full border border-teal-400/50 bg-teal-400/10 px-3 py-1.5 text-[11px] font-semibold text-teal-200 transition hover:bg-teal-400/20 active:scale-95 disabled:opacity-40 disabled:active:scale-100"
+              >
+                <UploadCloud className="h-3 w-3" />
+                Upload from device
+              </button>
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                disabled={uploadPct !== null}
+                className="inline-flex items-center gap-1.5 rounded-full border border-purple-400/40 bg-purple-400/10 px-3 py-1.5 text-[11px] font-medium text-purple-200 transition hover:bg-purple-400/15 active:scale-95 disabled:opacity-40 disabled:active:scale-100"
+              >
+                <Sparkles className="h-3 w-3" />
+                Pick from presets
+              </button>
+            </div>
+            <p className="text-[10px] leading-relaxed text-muted-foreground">
+              JPG / PNG / WebP / GIF up to 10 MB · MP4 / WebM / MOV up to 60 MB.
+              Your uploads stay private until you launch.
+            </p>
           </section>
 
           {/* Title */}
@@ -684,6 +889,7 @@ export function CreateScreen() {
                   }
                   if (first?.type === "video") {
                     const poster =
+                      videoPosterMap[first.url] ||
                       VIDEO_PRESETS.find((v) => v.url === first.url)?.poster ||
                       form.coverUrl ||
                       "";
@@ -787,15 +993,46 @@ export function CreateScreen() {
               Add photo or video
             </DialogTitle>
             <DialogDescription className="text-[11px] text-muted-foreground">
-              Pick from presets · {mediaFull}/{MAX_MEDIA} added
+              Upload your own or pick from presets · {mediaFull}/{MAX_MEDIA} added
             </DialogDescription>
           </DialogHeader>
 
           <div className="max-h-[60vh] space-y-4 overflow-y-auto fancy-scrollbar pr-1">
+            {/* Upload-from-device block — primary, shown at the top of the
+                picker so it's the first thing hosts see. */}
+            <button
+              type="button"
+              onClick={() => {
+                setPickerOpen(false);
+                // give the dialog a tick to close before opening the file picker
+                setTimeout(() => fileInputRef.current?.click(), 60);
+              }}
+              disabled={uploadPct !== null || mediaFull >= MAX_MEDIA}
+              className={cn(
+                "group flex w-full items-center gap-3 rounded-2xl border-2 border-dashed border-teal-400/55 bg-teal-400/5 p-3.5 text-left transition active:scale-[0.99]",
+                "hover:border-teal-400/90 hover:bg-teal-400/10 disabled:opacity-40 disabled:active:scale-100",
+              )}
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-400/15 text-teal-300 transition group-hover:bg-teal-400/25">
+                <UploadCloud className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-teal-100">
+                  Upload from your device
+                </span>
+                <span className="block text-[11px] leading-snug text-teal-300/70">
+                  Photos up to 10 MB · videos up to 60 MB · multi-select supported
+                </span>
+              </span>
+              <span className="rounded-full bg-teal-400/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-teal-200">
+                Open
+              </span>
+            </button>
+
             {/* Preset cover images */}
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-purple-300">
-                <ImagePlus className="h-3 w-3" /> Photos
+                <ImagePlus className="h-3 w-3" /> Preset photos
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {COVER_PRESETS.map((url) => {
@@ -831,7 +1068,7 @@ export function CreateScreen() {
             {/* Preset stock videos */}
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-purple-300">
-                <Video className="h-3 w-3" /> Short clips
+                <Video className="h-3 w-3" /> Preset clips
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {VIDEO_PRESETS.map((v) => {

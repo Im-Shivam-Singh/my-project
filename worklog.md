@@ -1943,3 +1943,49 @@ Stage Summary:
 - Bottom nav: IMPROVED. Active pill + glowing top dot + icon scale + FAB with halo + gradient top edge + pulsing unread dot. VLM-verified.
 - Party media: SHIPPED. PartyMedia Prisma model + create-screen uploader (6-item cap, preset picker with images + Pexels videos) + detail-screen swipeable gallery (h-56, scroll-snap, dot indicator, thumbnail strip) + party-card video badge. VLM-verified.
 - `bun run lint` clean. Dev server running healthy on port 3000 (process 10536, SID 10523, persistent across bash sessions via setsid -f).
+
+---
+Task ID: 2
+Agent: orchestrator (user-requested feature)
+Task: Allow hosts to upload their own photos and videos when launching a new vibe (instead of only picking from stock presets).
+
+Work Log:
+- Reviewed existing CreateScreen — already had a media gallery + preset picker (Unsplash photos + Pexels videos) but no device-upload path. PartyMedia Prisma model already existed with `type: "image" | "video"`, `position`, `caption` fields.
+- Created `/api/upload/route.ts` (POST, multipart/form-data):
+  - Accepts up to 6 files per request under the `file` field.
+  - Whitelist: images (JPG/PNG/WebP/GIF/AVIF, ≤10 MB) + videos (MP4/WebM/MOV/OGG, ≤60 MB).
+  - Saves to `public/uploads/` with collision-safe filename (`{timestamp}-{uuid8}-{slug}.{ext}`).
+  - Returns `{ files: [{ url, type, name, size }] }` (201) or `{ error }` (400/500).
+  - Route segment config: `runtime = "nodejs"`, `maxDuration = 60`.
+- Updated `next.config.ts`: `experimental.serverActions.bodySizeLimit = "64mb"` so the multipart body isn't rejected.
+- Added `api.uploadMedia(files, onProgress)` helper in `src/lib/api.ts` — wraps the upload in XMLHttpRequest (native fetch can't report upload progress), reports 0..100 via callback, resolves with the `{ files }` payload.
+- Updated `src/screens/create-screen.tsx`:
+  - Hidden `<input type="file" accept="..." multiple>` controlled by a ref.
+  - `uploadMutation` (TanStack Query) runs `api.uploadMedia` with progress tracking; on success prepends uploaded items to the gallery (so the host's own photo becomes the cover, pushing the default preset placeholder back) + creates local object-URL posters for uploaded videos so the gallery + live-preview show a real frame.
+  - `handleFilePick` does client-side pre-validation (type + size) for friendlier, faster error messages before the network round-trip.
+  - Extended `addMedia(item, { prepend? })` so uploaded items go to position 0.
+  - Gallery UI now has TWO add tiles: a teal "Upload from device" tile (primary) + a purple "Presets" tile (secondary). Plus inline pill buttons ("Upload from device" / "Pick from presets") and a format/size hint line.
+  - Upload progress bar (animated purple→pink gradient) appears above the tiles while an upload is in flight.
+  - Each uploaded tile gets a teal "YOURS" badge (with Camera icon) so hosts can distinguish their uploads from stock presets.
+  - Video tiles resolve a poster via: local object-URL (uploaded) → preset poster (Pexels) → video URL fallback.
+  - Live-preview card uses the same poster resolution so uploaded videos show a real frame.
+  - Picker dialog now leads with a prominent "Upload from your device" CTA card (teal, with size/multi-select hint) above the preset grids; clicking it closes the dialog and opens the native file picker.
+- Verified `public/uploads/` is served statically by Next.js (already public).
+
+Verification (curl + agent-browser + VLM glm-4.6v):
+- curl POST `/api/upload` with a 21 KB JPG → 201, `{url:"/uploads/...jpg", type:"image"}`, file written to disk + served at HTTP 200. ✓
+- curl POST `/api/upload` with a 2 KB MP4 (type=video/mp4) → 201, `{type:"video"}`. ✓
+- curl POST `/api/upload` with a .txt file → 400 "Unsupported file type: text/plain. Allowed: JPG, PNG, WebP, GIF, AVIF, MP4, WebM, MOV." ✓
+- curl POST `/api/upload` with empty body → 400 "Expected multipart/form-data". ✓
+- agent-browser (390×844): logged in → onboarding (Delhi, skip vibes) → Explore → FAB → Create screen. New UI renders: "Upload from device" tile + "Presets" tile + inline buttons + format hint. ✓
+- `agent-browser upload 'input[type=file]' /tmp/party-cover.jpg` (vibrant pink/purple gradient test image generated via PIL) → progress bar showed briefly → tile appeared at position 0 with COVER + YOURS badges (prepend worked). ✓
+- Filled title "Sunset Rooftop Upload Test" + area + Chill vibe → Launch Vibe → navigated to Detail screen. ✓
+- GET `/api/parties/{id}` → `coverUrl = /uploads/...party-cover.jpg`, media[0] = uploaded image (caption "party-cover.jpg"), media[1] = default preset. ✓
+- VLM on detail screen: "main cover image at the top is a photo featuring a prominent pink/purple circular element... thumbnail indicators below." ✓
+- VLM on Explore feed (Mumbai filter, after reload): "top card titled 'Sunset Rooftop Upload Test' features a cover photo with a pink/purple gradient background and a circular design, confirming it is an uploaded photo (not a stock image)." ✓
+- `bun run lint` clean. dev.log: no runtime errors, no hydration warnings, all `/api/upload` + `/api/parties` calls 200/201. ✓
+
+Stage Summary:
+- Hosts can now upload their own photos and videos directly from their device when launching a vibe, in addition to picking from stock presets. Uploads are validated (type + size), saved locally to `public/uploads/`, persisted into the `PartyMedia` table on party creation, and rendered as the hero cover on both the party detail screen and the Explore feed card.
+- UX details: uploaded media is auto-promoted to the cover (prepend), gets a "YOURS" badge, shows a live progress bar, and supports multi-select. Uploaded videos get a local object-URL poster for instant preview. The picker dialog leads with the upload CTA.
+- Feature is fully interactive and browser-verified end-to-end. Ready for the recurring webDevReview cron to iterate further.
