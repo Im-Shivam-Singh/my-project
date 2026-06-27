@@ -12,6 +12,25 @@ connecting with hosts, and building your perfect night out.
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)](https://www.prisma.io/)
 [![Vercel](https://img.shields.io/badge/Vercel-Deploy-000?logo=vercel)](https://vercel.com/)
+[![CI](https://github.com/your-org/vibematch/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/vibematch/actions/workflows/ci.yml)
+
+**[🌐 Live Demo](https://vibematch.vercel.app)** · **[📖 Documentation](#)** · **[🐛 Report Bug](https://github.com/your-org/vibematch/issues)** · **[✨ Request Feature](https://github.com/your-org/vibematch/issues)**
+
+</div>
+
+---
+
+## 📸 Screenshots
+
+<div align="center">
+
+| 🏠 Home Feed | 🔍 Explore & Filter | 💬 Real-time Chat |
+|:---:|:---:|:---:|
+| *[Home feed with party cards]* | *[Filter by city & vibe]* | *[Socket.io powered chat]* |
+
+| 🎟️ Tickets & QR | 📊 Host Dashboard | 🗺️ Map View |
+|:---:|:---:|:---:|
+| *[Ticket with QR code]* | *[Analytics & revenue]* | *[Interactive map pins]* |
 
 </div>
 
@@ -52,6 +71,44 @@ connecting with hosts, and building your perfect night out.
 
 ---
 
+## 🏗️ Project Architecture
+
+VibeMatch follows a **monolithic Next.js architecture** with a separate micro-service for real-time features:
+
+```
+┌──────────────────────────────────────────────────────┐
+│                   Next.js App (:3000)                │
+│                                                      │
+│  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐ │
+│  │  Single Page │  │  API Routes  │  │  Prisma +   │ │
+│  │  App (SPA)   │  │  (/api/*)    │  │  SQLite     │ │
+│  │              │  │              │  │             │ │
+│  │ Zustand for  │  │ RESTful      │  │ 15+ models  │ │
+│  │ navigation & │  │ endpoints    │  │ Party, User │ │
+│  │ UI state     │  │ for CRUD     │  │ Chat, Order │ │
+│  └──────┬───────┘  └──────┬───────┘  └─────────────┘ │
+│         │                 │                           │
+└─────────┼─────────────────┼───────────────────────────┘
+          │                 │
+          │    ┌────────────┴──────────────┐
+          │    │  Socket.io Chat Service   │
+          └───▶│  (:3003)                  │
+               │  Real-time messaging &    │
+               │  group chat with          │
+               │  referral offers          │
+               └───────────────────────────┘
+```
+
+### Key Design Decisions
+
+- **Single `/` route** — The entire app lives on one page; screen transitions are managed via Zustand state, not URL routing. This enables smooth mobile transitions without page reloads.
+- **API Routes** — Next.js Route Handlers at `/api/*` provide the backend. No separate backend server needed for CRUD operations.
+- **Socket.io micro-service** — Runs on port 3003 for persistent WebSocket connections required by real-time chat. Deployed separately from the serverless Next.js app.
+- **Prisma + SQLite** — Zero-config database perfect for development. For production, migrate to a hosted database (Vercel Postgres, Turso, Neon).
+- **TanStack Query** — Handles all server state (fetching, caching, revalidation) while Zustand manages client-side UI state (current screen, filters, music player).
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -68,6 +125,9 @@ cd vibematch
 
 # Install dependencies
 bun install
+
+# Copy environment variables
+cp .env.example .env
 
 # Push the database schema
 bun run db:push
@@ -93,6 +153,29 @@ The app runs at **http://localhost:3000** and the chat micro-service at **ws://l
 | `bun run db:migrate` | Run Prisma migrations |
 | `bun run db:reset` | Reset DB & re-seed |
 | `bun run lint` | Lint with ESLint |
+
+---
+
+## 🔐 Environment Variables
+
+Create a `.env` file in the project root (see `.env.example` for a template):
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ✅ | SQLite connection string, e.g. `file:./dev.db` |
+| `NEXT_PUBLIC_APP_URL` | ✅ | Public URL of the app (used for CORS, OG images). e.g. `http://localhost:3000` in dev |
+| `NEXT_PUBLIC_API_URL` | ⬜ | Base URL for API calls. Defaults to `NEXT_PUBLIC_APP_URL/api` |
+| `NEXT_PUBLIC_SOCKET_URL` | ⬜ | URL for the Socket.io chat service. e.g. `http://localhost:3003` |
+| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | ⬜ | Google Maps API key for map features (Leaflet used as fallback) |
+
+### Example `.env`
+
+```env
+DATABASE_URL="file:./dev.db"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:3000/api"
+NEXT_PUBLIC_SOCKET_URL="http://localhost:3003"
+```
 
 ---
 
@@ -145,6 +228,10 @@ The app runs at **http://localhost:3000** and the chat micro-service at **ws://l
 │       └── ...
 ├── mini-services/
 │   └── chat-service/           # Socket.io micro-service
+├── .github/
+│   └── workflows/
+│       ├── ci.yml              # CI pipeline (lint, typecheck, build)
+│       └── deploy.yml          # Vercel deployment pipeline
 └── package.json
 ```
 
@@ -211,14 +298,83 @@ The app runs at **http://localhost:3000** and the chat micro-service at **ws://l
 
 ## 🚢 Deployment
 
-VibeMatch is built for [Vercel](https://vercel.com/) deployment:
+### Deploying to Vercel (Recommended)
 
-1. Push to your GitHub repository
-2. Import the repo in Vercel
-3. Set `DATABASE_URL` environment variable
-4. Deploy — Vercel auto-detects Next.js
+VibeMatch is optimized for [Vercel](https://vercel.com/) deployment. Follow these steps:
 
-The Socket.io chat service can be deployed separately as a serverless function or on a persistent container (Railway, Fly.io, etc.).
+#### 1. Prepare Your Repository
+
+```bash
+# Ensure all changes are committed and pushed
+git push origin main
+```
+
+#### 2. Import to Vercel
+
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Select **"Import Git Repository"**
+3. Choose your VibeMatch fork/repo
+4. Vercel will auto-detect Next.js — no framework configuration needed
+
+#### 3. Configure Environment Variables
+
+In the Vercel project settings → **Environment Variables**, add:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Your production database connection string |
+| `NEXT_PUBLIC_APP_URL` | `https://your-app.vercel.app` |
+| `NEXT_PUBLIC_API_URL` | `https://your-app.vercel.app/api` |
+| `NEXT_PUBLIC_SOCKET_URL` | URL of your deployed chat service |
+
+> **⚠️ Important:** SQLite does not work on Vercel's serverless platform. For production, use a hosted database like:
+> - [Vercel Postgres](https://vercel.com/storage/postgres)
+> - [Turso](https://turso.tech/) (SQLite-compatible edge database)
+> - [Neon](https://neon.tech/) (serverless Postgres)
+> - [PlanetScale](https://planetscale.com/) (serverless MySQL)
+
+#### 4. Deploy
+
+Click **"Deploy"** — Vercel will build and deploy automatically. Every push to `main` triggers a production deployment.
+
+#### 5. Deploy the Chat Service Separately
+
+The Socket.io chat micro-service requires persistent WebSocket connections and cannot run on serverless. Deploy it to a container platform:
+
+```bash
+# Example: Deploy to Railway
+cd mini-services/chat-service
+railway init
+railway up
+```
+
+Supported platforms: **Railway**, **Fly.io**, **Render**, **DigitalOcean App Platform**
+
+#### 6. Configure GitHub Actions (Optional)
+
+For automated deployments via CI/CD, set these GitHub secrets:
+
+| Secret | Description |
+|---|---|
+| `VERCEL_TOKEN` | Vercel API token |
+| `VERCEL_ORG_ID` | Vercel organization ID |
+| `VERCEL_PROJECT_ID` | Vercel project ID |
+
+---
+
+## 🗺️ Roadmap
+
+We're constantly improving VibeMatch. Here's what's coming next:
+
+- 🔔 **Push Notifications** — Real-time alerts for party updates, chat messages, and ticket confirmations
+- 💳 **Payment Integration** — Stripe and Razorpay support for ticket purchases and host payouts
+- 🤖 **AI-Powered Recommendations** — Smart party suggestions based on vibe preferences, past attendance, and social graph
+- ✅ **Host Verification** — KYC-like verification system for hosts with badges and trust indicators
+- 📱 **Social Media Integration** — Share parties on Instagram, WhatsApp, and Twitter; import friend lists
+- 🌍 **Multi-language Support** — i18n for Hindi, Spanish, Portuguese, and more
+- 📊 **Advanced Analytics** — Deeper host insights with attendance trends, revenue forecasting, and audience demographics
+- 🎮 **Gamification** — Badges, streaks, and leaderboards for active party-goers
+- 🛡️ **Enhanced Safety** — In-app emergency contacts, location sharing, and incident reporting
 
 ---
 
@@ -239,6 +395,38 @@ We welcome contributions! Here's how to get started:
 - Use Zustand for client state, TanStack Query for server state
 - Write descriptive commit messages
 - Test your changes with `bun run dev` before pushing
+- CI checks (lint, type check, build) must pass before merging
+
+---
+
+## 🙏 Credits & Acknowledgments
+
+- **[Next.js](https://nextjs.org/)** — The React framework for production
+- **[shadcn/ui](https://ui.shadcn.com/)** — Beautifully designed UI components
+- **[Prisma](https://www.prisma.io/)** — Next-generation ORM for Node.js & TypeScript
+- **[Socket.io](https://socket.io/)** — Real-time bidirectional event-based communication
+- **[Zustand](https://zustand-demo.pmnd.rs/)** — Bear necessities for state management
+- **[TanStack Query](https://tanstack.com/query/)** — Powerful asynchronous state management
+- **[Framer Motion](https://www.framer.com/motion/)** — Production-ready motion library for React
+- **[Leaflet](https://leafletjs.com/)** — Open-source interactive maps
+- **[Recharts](https://recharts.org/)** — Composable charting library built on React components
+- **[Vercel](https://vercel.com/)** — Platform for frontend frameworks and static sites
+
+### Contributors
+
+Thanks to all the amazing people who have contributed to VibeMatch!
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/your-org"><img src="https://via.placeholder.com/100" width="50px;" alt=""/><br /><sub><b>VibeMatch Team</b></sub></a></td>
+  </tr>
+</table>
+<!-- markdownlint-enable -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ---
 
@@ -251,5 +439,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 <div align="center">
 
 Built with 💜 by the VibeMatch team
+
+**[⬆ Back to Top](#-vibematch)**
 
 </div>
