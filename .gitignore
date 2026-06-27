@@ -50,10 +50,18 @@ test
 prompt
 
 server.log
+# Database
+db/*.db
+db/*.db-journal
+
+# Mini services
+mini-services/*/node_modules
+mini-services/*/.next
+
 # Skills directory
 /skills/
 
 # Agent scratch / transient output
 /tool-results/
 /screenshots/
-/download/
+/download/db/*.db
